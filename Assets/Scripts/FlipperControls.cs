@@ -13,7 +13,7 @@ public class FlipperControls : MonoBehaviour
     private void Awake()
     {
         hinge = GetComponent<HingeJoint>();
-        motorSpeed = Mathf.Abs(hinge.motor.targetVelocity);
+        motorSpeed = hinge.motor.targetVelocity;
     }
 
     private void OnEnable()
