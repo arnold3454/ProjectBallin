@@ -6,7 +6,7 @@ public class ScoreZone : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!other.CompareTag("Ball")) ;
+        if (!other.CompareTag("Ball")) 
         return;
 
         ScoreManager.Instance.AddScore(pointValue);
