@@ -83,7 +83,7 @@ public class MenuManager : MonoBehaviour
         Vector3 mapOrigin = mapRoot != null ? mapRoot.position : Vector3.zero;
         foreach (FlipperControls flipper in flippers)
         {
-            flipper.ScaleMotor(mapScale);
+            // Call the correct position update method on the flipper
             flipper.ApplyMapPosition(mapScale, mapOrigin, flipperInset, flipperOffset);
         }
 

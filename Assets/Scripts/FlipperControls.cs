@@ -10,6 +10,8 @@ public class FlipperControls : MonoBehaviour
     private Rigidbody body;
     private float motorSpeed;
     private float baseMotorSpeed; // Added to store the original speed
+    private float baseMotorForce;
+    private float heightOffset;
     private Vector3 baseWorldPosition;
     private Vector3 baseConnectedAnchor;
 
@@ -19,6 +21,7 @@ public class FlipperControls : MonoBehaviour
         body = GetComponent<Rigidbody>();
         body.useGravity = false;
         baseMotorSpeed = hinge.motor.targetVelocity; 
+        baseMotorForce = hinge.motor.force;
         motorSpeed = baseMotorSpeed;
         baseWorldPosition = transform.position;
         baseConnectedAnchor = hinge.connectedAnchor;
@@ -54,6 +57,18 @@ public class FlipperControls : MonoBehaviour
         motorSpeed = baseMotorSpeed * multiplier;
     }
 
+    public void UpdateStrength(float strengthMultiplier)
+    {
+        JointMotor motor = hinge.motor;
+        motor.force = baseMotorForce * Mathf.Max(0f, strengthMultiplier);
+        hinge.motor = motor;
+    }
+
+    public void UpdateHeightOffset(float offset)
+    {
+        heightOffset = offset;
+    }
+
     public void ApplyMapPosition(float mapScale, Vector3 mapOrigin, float horizontalInset, Vector3 offset)
     {
         Vector3 position = mapOrigin + (baseWorldPosition - mapOrigin) * mapScale;
@@ -65,4 +80,5 @@ public class FlipperControls : MonoBehaviour
         body.WakeUp();
         Physics.SyncTransforms();
     }
+
 }

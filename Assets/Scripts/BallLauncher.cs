@@ -17,7 +17,24 @@ public class BallLauncher : MonoBehaviour
 
     void SpawnBall()
     {
-        // Spawns the ball at the spawn point without adding forward force
-        Instantiate(ballPrefab, spawnPoint.position, spawnPoint.rotation);
+        if (ballPrefab == null || spawnPoint == null) return;
+
+        // Instantiate the ball
+        GameObject newBall = Instantiate(ballPrefab, spawnPoint.position, spawnPoint.rotation);
+
+        // Apply current settings from BallSettingsManager if it exists
+        if (BallSettingsManager.Instance != null)
+        {
+            float size = BallSettingsManager.Instance.CurrentSize;
+            float weight = BallSettingsManager.Instance.CurrentWeight;
+
+            newBall.transform.localScale = Vector3.one * size;
+
+            Rigidbody rb = newBall.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.mass = weight;
+            }
+        }
     }
 }
