@@ -9,11 +9,17 @@ public class BallLauncher : MonoBehaviour
 
     [Header("Launcher Settings")]
     public float launchForce = 20000f; 
+    private float baseLaunchForce;
+
+    private void Awake()
+    {
+        // Store the initial force set in the Inspector
+        baseLaunchForce = launchForce;
+    }
 
     void Update()
     {
-
-        if (Keyboard.current.spaceKey.wasPressedThisFrame)
+        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
         {
             LaunchBall();
         }
@@ -22,7 +28,6 @@ public class BallLauncher : MonoBehaviour
     void LaunchBall()
     {
         GameObject newBall = Instantiate(ballPrefab, spawnPoint.position, spawnPoint.rotation);
-
         
         Rigidbody rb = newBall.GetComponent<Rigidbody>();
 
@@ -30,5 +35,11 @@ public class BallLauncher : MonoBehaviour
         {
             rb.AddForce(spawnPoint.forward * launchForce);
         }
+    }
+
+    // New method to scale the launch force
+    public void ScaleLaunchForce(float multiplier)
+    {
+        launchForce = baseLaunchForce * multiplier;
     }
 }

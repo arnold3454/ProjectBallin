@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-
 [RequireComponent(typeof(HingeJoint))]
 public class FlipperControls : MonoBehaviour
 {
@@ -9,11 +8,13 @@ public class FlipperControls : MonoBehaviour
 
     private HingeJoint hinge;
     private float motorSpeed;
+    private float baseMotorSpeed; // Added to store the original speed
 
     private void Awake()
     {
         hinge = GetComponent<HingeJoint>();
-        motorSpeed = hinge.motor.targetVelocity;
+        baseMotorSpeed = hinge.motor.targetVelocity; 
+        motorSpeed = baseMotorSpeed;
     }
 
     private void OnEnable()
@@ -38,5 +39,11 @@ public class FlipperControls : MonoBehaviour
         JointMotor motor = hinge.motor;
         motor.targetVelocity = targetVelocity; 
         hinge.motor = motor;
+    }
+
+    // New method to scale the motor speed dynamically
+    public void ScaleMotor(float multiplier)
+    {
+        motorSpeed = baseMotorSpeed * multiplier;
     }
 }
