@@ -8,7 +8,7 @@ public class MenuManager : MonoBehaviour
 
     [Header("Game References")]
     [SerializeField] private Transform mapRoot; 
-    [SerializeField] private Camera mainCamera; // Reverted back to Camera
+    [SerializeField] private Camera mainCamera; 
     
     [Header("Map Scale Multipliers")]
     [SerializeField] private float smallScale = 0.8f;
@@ -57,13 +57,11 @@ public class MenuManager : MonoBehaviour
 
     private void ApplyScale(float mapScale, float cameraScale)
     {
-        // 1. Scale the map root
         if (mapRoot != null) 
         {
             mapRoot.localScale = Vector3.one * mapScale;
         }
 
-        // 2. Reverted back to FOV scaling to maintain the correct camera angle
         if (mainCamera != null)
         {
             if (mainCamera.orthographic)
@@ -80,12 +78,6 @@ public class MenuManager : MonoBehaviour
         foreach (FlipperControls flipper in flippers)
         {
             flipper.ScaleMotor(mapScale);
-        }
-
-        BallLauncher[] launchers = FindObjectsByType<BallLauncher>(FindObjectsInactive.Include);
-        foreach (BallLauncher launcher in launchers)
-        {
-            launcher.ScaleLaunchForce(mapScale);
         }
 
         ToggleMenu(); 
