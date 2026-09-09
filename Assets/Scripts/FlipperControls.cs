@@ -14,6 +14,7 @@ public class FlipperControls : MonoBehaviour
     private float heightOffset;
     private Vector3 baseWorldPosition;
     private Vector3 baseConnectedAnchor;
+    private bool tiltLocked;
 
     private void Awake()
     {
@@ -41,8 +42,22 @@ public class FlipperControls : MonoBehaviour
         flipAction.action.Disable();
     }
 
-    private void OnFlip(InputAction.CallbackContext ctx) => SetDirection(motorSpeed);
+    private void OnFlip(InputAction.CallbackContext ctx)
+    {
+        if (!tiltLocked)
+            SetDirection(motorSpeed);
+    }
+
     private void OnRelease(InputAction.CallbackContext ctx) => SetDirection(-motorSpeed);
+
+    /// <summary>Enables or disables player control while preserving this flipper's settings.</summary>
+    public void SetTiltLocked(bool isLocked)
+    {
+        tiltLocked = isLocked;
+
+        if (tiltLocked)
+            SetDirection(-motorSpeed);
+    }
 
     private void SetDirection(float targetVelocity)
     {
