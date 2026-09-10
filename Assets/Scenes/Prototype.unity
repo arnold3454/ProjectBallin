@@ -1130,9 +1130,9 @@ MonoBehaviour:
   cameraToShake: {fileID: 263126607}
   cameraShakeDuration: 0.09
   cameraShakeStrength: 0.5
-  tiltPerNudge: 1
+  tiltPerNudge: 1.2
   tiltThreshold: 3
-  tiltDecayPerSecond: 1.01
+  tiltDecayPerSecond: 0.5
   flipperLockDuration: 3
   tiltMeter: {fileID: 440665783}
 --- !u!1 &171704269
