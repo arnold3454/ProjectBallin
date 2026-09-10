@@ -82,6 +82,8 @@ public class NudgeController : MonoBehaviour
             foreach (GameObject ball in GameObject.FindGameObjectsWithTag("Ball"))
             {
                 Rigidbody ballBody = ball.GetComponent<Rigidbody>();
+                // Shake force taken from shake force manager
+                // This will also help us adjust value when we implment items
                 if (ballBody != null)
                 {
                     float shakeForce = ShakeSettingsManager.Instance != null
