@@ -84,7 +84,10 @@ public class NudgeController : MonoBehaviour
                 Rigidbody ballBody = ball.GetComponent<Rigidbody>();
                 if (ballBody != null)
                 {
-                    float xForce = horizontalForce * direction;
+                    float shakeForce = ShakeSettingsManager.Instance != null
+                        ? ShakeSettingsManager.Instance.ShakeForce
+                        : horizontalForce;
+                    float xForce = shakeForce * direction;
                     ballBody.AddForce(Vector3.right * xForce, ForceMode.Impulse);
                 }
             }
