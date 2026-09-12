@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -8,6 +9,8 @@ public class BallHitboxTrigger : MonoBehaviour
 
     [Header("Events")]
     [SerializeField] private UnityEvent onBallHit;
+
+    public event Action<Collider> BallHit;
 
     private bool hasTriggered;
 
@@ -20,6 +23,7 @@ public class BallHitboxTrigger : MonoBehaviour
             return;
 
         hasTriggered = true;
+        BallHit?.Invoke(other);
         onBallHit?.Invoke();
     }
 }
