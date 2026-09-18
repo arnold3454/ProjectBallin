@@ -9,6 +9,9 @@ public class BallLauncher : MonoBehaviour
 
     void Update()
     {
+        // No new balls once the clock has run out.
+        if (GameTimer.Instance != null && GameTimer.Instance.IsGameOver) return;
+
         if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
         {
             SpawnBall();
