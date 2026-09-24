@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97e5eeb402b616a479d9690513ea5868, type: 3}
+  m_Name: ChunkDefinition 3
+  m_EditorClassIdentifier: Assembly-CSharp::ChunkDefinition
+  chunkId: 0012
+  prefab: {fileID: 7532909169417388893, guid: 31fb47be578070a42922c79e74d9cec5, type: 3}
+  socketType: RightMiddle
+  weight: 1
+  allowRepeat: 1
+  allowRandomRotation: 0
