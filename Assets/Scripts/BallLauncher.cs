@@ -39,6 +39,15 @@ public class BallLauncher : MonoBehaviour
     [Tooltip("Let the player press space to load a ball immediately, even with one still in play.")]
     [SerializeField] private bool allowManualReload = true;
 
+    [Header("Audio")]
+    [Tooltip("Played once when the player begins charging the plunger (pull-back).")]
+    [SerializeField] private AudioClip pullBackClip;
+    [Tooltip("Played when the plunger fires and the ball is launched.")]
+    [SerializeField] private AudioClip releaseClip;
+    [SerializeField, Range(0f, 1f)] private float pullBackVolume = 1f;
+    [SerializeField, Range(0f, 1f)] private float releaseVolume = 1f;
+
+    private AudioSource audioSource;
     private Rigidbody loadedBall;
     private Collider launcherCollider;
     private Vector3 plungerRestLocalPosition;
@@ -59,6 +68,14 @@ public class BallLauncher : MonoBehaviour
             plungerVisual = transform;
 
         plungerRestLocalPosition = plungerVisual.localPosition;
+
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f;
     }
 
     private void Start()
@@ -117,6 +134,7 @@ public class BallLauncher : MonoBehaviour
             {
                 isCharging = true;
                 charge = 0f;
+                PlayPullBackSFX();
             }
 
             charge = chargeTime > 0f ? Mathf.Min(1f, charge + Time.deltaTime / chargeTime) : 1f;
@@ -193,7 +211,25 @@ public class BallLauncher : MonoBehaviour
         body.angularVelocity = Vector3.zero;
         body.AddForce(GetLaunchDirection() * Mathf.Lerp(minLaunchSpeed, maxLaunchSpeed, charge), ForceMode.VelocityChange);
 
+        PlayReleaseSFX();
+
         charge = 0f;
+    }
+
+    private void PlayPullBackSFX()
+    {
+        if (pullBackClip == null || audioSource == null)
+            return;
+
+        audioSource.PlayOneShot(pullBackClip, pullBackVolume);
+    }
+
+    private void PlayReleaseSFX()
+    {
+        if (releaseClip == null || audioSource == null)
+            return;
+
+        audioSource.PlayOneShot(releaseClip, releaseVolume);
     }
 
     private void HoldLoadedBall()
