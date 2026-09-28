@@ -4,12 +4,13 @@ using UnityEngine.InputSystem;
 /// <summary>
 /// Plunger-style ball launcher. A ball is loaded into the launch lane and held
 /// there until the player charges the plunger (hold space) and releases it.
+/// It can also fire balls on its own for items (see QueueAutoLaunch).
 /// </summary>
 public class BallLauncher : MonoBehaviour
 {
     [Header("References")]
     public GameObject ballPrefab;
-    [Tooltip("Optional. Only used when 'Use Spawn Point' is ticked - otherwise the load position is taken from the tip of this launcher's collider.")]
+    [Tooltip("Optional. Only used when 'Use Spawn Point' is ticked; otherwise the load position is taken from the tip of this launcher's collider.")]
     public Transform spawnPoint;
     [Tooltip("Tick to load balls at the Spawn transform instead of the launcher tip.")]
     [SerializeField] private bool useSpawnPoint;
@@ -47,6 +48,14 @@ public class BallLauncher : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float pullBackVolume = 1f;
     [SerializeField, Range(0f, 1f)] private float releaseVolume = 1f;
 
+    [Header("Auto Launch")]
+    [Tooltip("Plunger charge (0-1) used when the launcher fires a ball on its own, such as for the Launch Ball item.")]
+    [SerializeField, Range(0f, 1f)] private float autoLaunchCharge = 0.85f;
+    [Tooltip("Pause between automatic shots. The wait starts once the previous ball has left the lane.")]
+    [SerializeField] private float autoLaunchDelay = 0.5f;
+    [Tooltip("How far up the lane, measured from the plunger, to check for balls before an automatic shot so it doesn't hit them. Drawn in yellow when the launcher is selected.")]
+    [SerializeField] private float autoLaunchLaneLength = 35f;
+
     private AudioSource audioSource;
     private Rigidbody loadedBall;
     private Collider launcherCollider;
@@ -55,6 +64,8 @@ public class BallLauncher : MonoBehaviour
     private bool isCharging;
     private float reloadTimer;
     private bool ignoreHold;
+    private int pendingAutoLaunches;
+    private float autoLaunchTimer;
 
     /// <summary>0-1 charge of the plunger, for UI or audio hooks.</summary>
     public float ChargeAmount => charge;
@@ -96,6 +107,7 @@ public class BallLauncher : MonoBehaviour
         }
 
         HandleInput();
+        HandleAutoLaunch();
         HandleReload();
         HoldLoadedBall();
         UpdatePlungerVisual();
@@ -115,7 +127,7 @@ public class BallLauncher : MonoBehaviour
 
         if (loadedBall == null)
         {
-            // Nothing in the lane yet - a tap racks the next ball up. That press
+            // No ball is held on the plunger, so a tap racks one up. That press
             // only loads, so the player still gets to charge before firing.
             if (pressed && allowManualReload)
             {
@@ -146,7 +158,8 @@ public class BallLauncher : MonoBehaviour
 
     private void HandleReload()
     {
-        if (loadedBall != null || !autoReload)
+        // Don't rack the player's next ball while extra balls are still waiting to be fired.
+        if (loadedBall != null || !autoReload || pendingAutoLaunches > 0)
         {
             reloadTimer = 0f;
             return;
@@ -163,28 +176,75 @@ public class BallLauncher : MonoBehaviour
             LoadBall();
     }
 
-    /// <summary>Spawns a ball in the launch lane and parks it against the plunger.</summary>
+    private void HandleAutoLaunch()
+    {
+        if (pendingAutoLaunches <= 0)
+            return;
+
+        // Wait for the last ball to make it out of the lane (or roll back down onto
+        // the plunger) so the two don't collide on the way up.
+        float size = CurrentBallSize;
+        if (IsLaneBusy(size))
+        {
+            autoLaunchTimer = autoLaunchDelay;
+            return;
+        }
+
+        autoLaunchTimer -= Time.deltaTime;
+        if (autoLaunchTimer > 0f)
+            return;
+
+        // A ball already on the plunger (the player's parked ball, or one that
+        // rolled back down) is fired first. It isn't an extra ball, so the extra
+        // one still follows on the next shot.
+        bool plungerClear = loadedBall == null && FindBallAt(GetLoadPosition(size), 0.5f * size) == null;
+
+        LoadBall();
+        if (loadedBall == null)
+            return;
+
+        charge = autoLaunchCharge;
+        Launch();
+        autoLaunchTimer = autoLaunchDelay;
+
+        if (plungerClear)
+            pendingAutoLaunches--;
+    }
+
+    /// <summary>Parks a ball against the plunger, spawning a new one unless a loose ball is already resting there.</summary>
     public void LoadBall()
     {
         if (ballPrefab == null || loadedBall != null)
             return;
 
-        float size = BallSettingsManager.Instance != null ? BallSettingsManager.Instance.CurrentSize : 1f;
+        float size = CurrentBallSize;
+        Vector3 loadPosition = GetLoadPosition(size);
 
-        GameObject newBall = Instantiate(ballPrefab, GetLoadPosition(size), transform.rotation);
-        newBall.transform.localScale = Vector3.one * size;
-
-        Rigidbody body = newBall.GetComponent<Rigidbody>();
-        if (body == null)
+        // A weak shot can roll back down and come to rest on the plunger. Rack
+        // that ball up again rather than spawning a new one on top of it.
+        Rigidbody body = FindBallAt(loadPosition, 0.5f * size);
+        if (body != null)
         {
-            Debug.LogError("Ball prefab has no Rigidbody, so it cannot be launched.", this);
-            Destroy(newBall);
-            autoReload = false;
-            return;
+            body.linearVelocity = Vector3.zero;
+            body.angularVelocity = Vector3.zero;
         }
+        else
+        {
+            GameObject newBall = Instantiate(ballPrefab, loadPosition, transform.rotation);
+            newBall.transform.localScale = Vector3.one * size;
 
-        if (BallSettingsManager.Instance != null)
-            body.mass = BallSettingsManager.Instance.CurrentWeight;
+            body = newBall.GetComponent<Rigidbody>();
+            if (body == null)
+            {
+                Debug.LogError("Ball prefab has no Rigidbody, so it cannot be launched.", this);
+                Destroy(newBall);
+                autoReload = false;
+                return;
+            }
+
+            if (BallSettingsManager.Instance != null)
+                body.mass = BallSettingsManager.Instance.CurrentWeight;
+        }
 
         // Hold the ball still until the plunger fires it.
         body.isKinematic = true;
@@ -232,6 +292,21 @@ public class BallLauncher : MonoBehaviour
         audioSource.PlayOneShot(releaseClip, releaseVolume);
     }
 
+    /// <summary>
+    /// Makes the launcher fire extra balls into play on its own. A ball already
+    /// waiting on the plunger is fired first, then the extra balls follow.
+    /// </summary>
+    public void QueueAutoLaunch(int count = 1)
+    {
+        // Start a new batch without waiting out the delay left over from the last one.
+        if (pendingAutoLaunches <= 0)
+            autoLaunchTimer = 0f;
+
+        pendingAutoLaunches += Mathf.Max(0, count);
+    }
+
+    }
+
     private void HoldLoadedBall()
     {
         if (loadedBall == null)
@@ -265,6 +340,41 @@ public class BallLauncher : MonoBehaviour
     private Vector3 GetLaunchDirection()
     {
         return launchDirection.sqrMagnitude < 0.0001f ? Vector3.forward : launchDirection.normalized;
+    }
+
+    private static float CurrentBallSize => BallSettingsManager.Instance != null ? BallSettingsManager.Instance.CurrentSize : 1f;
+
+    /// <summary>A loose ball overlapping the given spot, or null if the spot is clear.</summary>
+    private Rigidbody FindBallAt(Vector3 position, float radius)
+    {
+        return FirstLooseBall(Physics.OverlapSphere(position, radius, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore));
+    }
+
+    /// <summary>True while a ball is moving up the lane or rolling back down it.</summary>
+    private bool IsLaneBusy(float ballSize)
+    {
+        Vector3 direction = GetLaunchDirection();
+        Vector3 loadPosition = GetLoadPosition(ballSize);
+        float radius = 0.5f * ballSize;
+
+        // Start one ball-width up from the plunger so a ball sitting on it doesn't count.
+        Vector3 start = loadPosition + direction * (2f * radius + loadGap);
+        Vector3 end = loadPosition + direction * Mathf.Max(autoLaunchLaneLength, 2f * radius + loadGap);
+
+        return FirstLooseBall(Physics.OverlapCapsule(start, end, radius, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)) != null;
+    }
+
+    /// <summary>The first ball among the hits that isn't held by the plunger, or null.</summary>
+    private Rigidbody FirstLooseBall(Collider[] hits)
+    {
+        foreach (Collider hit in hits)
+        {
+            Rigidbody body = hit.attachedRigidbody;
+            if (body != null && body != loadedBall && !body.isKinematic && body.CompareTag("Ball"))
+                return body;
+        }
+
+        return null;
     }
 
     /// <summary>Resting spot for a ball sitting against the plunger face.</summary>
@@ -310,6 +420,8 @@ public class BallLauncher : MonoBehaviour
         }
 
         Vector3 loadPosition = GetLoadPosition(1f);
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawLine(loadPosition, loadPosition + GetLaunchDirection() * autoLaunchLaneLength);
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(loadPosition, 0.5f);
         Gizmos.DrawLine(loadPosition, loadPosition + GetLaunchDirection() * 3f);
