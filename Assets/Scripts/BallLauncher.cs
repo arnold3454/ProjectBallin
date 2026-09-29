@@ -305,8 +305,6 @@ public class BallLauncher : MonoBehaviour
         pendingAutoLaunches += Mathf.Max(0, count);
     }
 
-    }
-
     private void HoldLoadedBall()
     {
         if (loadedBall == null)
