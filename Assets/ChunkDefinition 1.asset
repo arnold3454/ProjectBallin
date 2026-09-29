@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97e5eeb402b616a479d9690513ea5868, type: 3}
   m_Name: ChunkDefinition 1
   m_EditorClassIdentifier: Assembly-CSharp::ChunkDefinition
-  chunkId: 0002
+  chunkId: ChunkB_VariantB
   prefab: {fileID: 3024365401354788764, guid: 9ae648da36ba03d42be27c95bbdc42bb, type: 3}
   socketType: LeftMiddle
   weight: 2
