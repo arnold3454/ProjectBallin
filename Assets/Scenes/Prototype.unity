@@ -1161,7 +1161,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ScoreManager
   scoreText: {fileID: 1391632141}
   scoreClip: {fileID: 8300000, guid: baf8d20e0dc2f4cb4ad0fe5a789b63d8, type: 3}
-  scoreVolume: 0.5
+  scoreVolume: 0.2
 --- !u!4 &136284776
 Transform:
   m_ObjectHideFlags: 0
@@ -1323,6 +1323,8 @@ MonoBehaviour:
   slotCount: 3
   startingItems: 1
   slotKeys: 290000002a0000002b000000
+  itemUseClip: {fileID: 8300000, guid: 2f11f921228604590ae14c3aca0f4f52, type: 3}
+  itemUseVolume: 0.4
 --- !u!1 &155672432
 GameObject:
   m_ObjectHideFlags: 0
@@ -1356,10 +1358,12 @@ MonoBehaviour:
   areaSize: {x: 27.5, y: 33}
   clearance: 1.5
   placementAttempts: 20
-  firstSpawnDelay: 5
+  firstSpawnDelay: 2.5
   minSpawnInterval: 10
   maxSpawnInterval: 15
   maxActivePickups: 2
+  spawnClip: {fileID: 8300000, guid: 6bfe180847e77411eb06125162495222, type: 3}
+  spawnVolume: 0.1
 --- !u!4 &155672434
 Transform:
   m_ObjectHideFlags: 0
@@ -1375,7 +1379,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-
 --- !u!1 &171704269
 GameObject:
   m_ObjectHideFlags: 0
@@ -2251,6 +2254,30 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 193409797319088656, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
+      propertyPath: sfxProfiles.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 193409797319088656, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
+      propertyPath: sfxProfiles.Array.data[2].tag
+      value: Item
+      objectReference: {fileID: 0}
+    - target: {fileID: 193409797319088656, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
+      propertyPath: sfxProfiles.Array.data[2].clip
+      value: 
+      objectReference: {fileID: 8300000, guid: 2f11f921228604590ae14c3aca0f4f52, type: 3}
+    - target: {fileID: 193409797319088656, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
+      propertyPath: sfxProfiles.Array.data[0].volume
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 193409797319088656, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
+      propertyPath: sfxProfiles.Array.data[2].volume
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 193409797319088656, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
+      propertyPath: sfxProfiles.Array.data[2].cooldown
+      value: 0.5
+      objectReference: {fileID: 0}
     - target: {fileID: 2290456617342231735, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.2523271
@@ -2290,6 +2317,10 @@ PrefabInstance:
     - target: {fileID: 2290456617342231735, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5271397974061694444, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
+      propertyPath: maxVolume
+      value: 0.25
       objectReference: {fileID: 0}
     - target: {fileID: 5271397974061694444, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
       propertyPath: minRollSpeed
@@ -8135,7 +8166,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: d6817d09f64a24508b077fd72e4a6829, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 0.214
+  m_Volume: 0.2
   m_Pitch: 0.47
   Loop: 1
   Mute: 0

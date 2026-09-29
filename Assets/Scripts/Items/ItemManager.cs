@@ -25,7 +25,14 @@ public class ItemManager : MonoBehaviour
     [Tooltip("Key that uses each slot's item, in slot order.")]
     [SerializeField] private Key[] slotKeys = { Key.Digit1, Key.Digit2, Key.Digit3 };
 
+    [Header("Audio")]
+    [Tooltip("Played when the player uses an item.")]
+    [SerializeField] private AudioClip itemUseClip;
+    [SerializeField, Range(0f, 1f)] private float itemUseVolume = 1f;
+
     private ItemDefinition[] slots;
+
+    private AudioSource audioSource;
 
     /// <summary>Raised with the slot index when an item is added.</summary>
     public event Action<int, ItemDefinition> ItemAdded;
@@ -41,6 +48,11 @@ public class ItemManager : MonoBehaviour
     {
         Instance = this;
         slots = new ItemDefinition[slotCount];
+
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
     }
 
     private void Start()
@@ -101,6 +113,7 @@ public class ItemManager : MonoBehaviour
         }
 
         slots[slot] = null;
+        PlayItemUseSFX();
         ItemUsed?.Invoke(slot, item);
         return true;
     }
@@ -116,6 +129,14 @@ public class ItemManager : MonoBehaviour
             : slotKeys[slot].ToString();
     }
 
+
+    private void PlayItemUseSFX()
+        {
+    if (itemUseClip == null || audioSource == null)
+    return;
+
+    audioSource.PlayOneShot(itemUseClip, itemUseVolume);
+        }
     private static bool CanUseItems()
     {
         // Items can't be used while the pause menu is open or after the clock runs out.

@@ -23,18 +23,36 @@ public class ItemPickupSpawner : MonoBehaviour
     [SerializeField] private float maxSpawnInterval = 15f;
     [SerializeField, Min(1)] private int maxActivePickups = 2;
 
+    [Header("Audio")]
+    [Tooltip("Played when an item spawns.")]
+    [SerializeField] private AudioClip spawnClip;
+    [SerializeField, Range(0f, 1f)] private float spawnVolume = 1f;
+
     private readonly List<ItemPickup> activePickups = new List<ItemPickup>();
     private float spawnTimer;
+    private AudioSource audioSource;
 
     private void Start()
     {
         spawnTimer = firstSpawnDelay;
     }
 
+    private void Awake()
+    {
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+            audioSource = gameObject.AddComponent<AudioSource>();
+
+        audioSource.spatialBlend = 0f; // 0 = fully 2D, 1 = fully 3D
+        audioSource.playOnAwake = false;
+    }
+
     private void Update()
     {
         if (GameTimer.Instance != null && GameTimer.Instance.IsGameOver)
+        {
             return;
+        }
 
         activePickups.RemoveAll(pickup => pickup == null);
         if (activePickups.Count >= maxActivePickups)
@@ -57,6 +75,9 @@ public class ItemPickupSpawner : MonoBehaviour
         ItemPickup pickup = Instantiate(pickupPrefab, point, Quaternion.identity);
         pickup.SetItem(ItemManager.Instance.GetRandomItem());
         activePickups.Add(pickup);
+
+        PlaySpawnSFX(); // <-- here
+
         return true;
     }
 
@@ -80,6 +101,16 @@ public class ItemPickupSpawner : MonoBehaviour
 
         point = transform.position;
         return false;
+    }
+
+    private void PlaySpawnSFX()
+    {
+        if (spawnClip == null || audioSource == null)
+            return;
+
+        audioSource.PlayOneShot(spawnClip, spawnVolume);
+        print($"Played spawn SFX {spawnClip.name} at volume {spawnVolume}");
+
     }
 
     private void OnDrawGizmosSelected()
