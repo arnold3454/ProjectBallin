@@ -6736,8 +6736,35 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8031063390326760670, guid: 9ffdfa315b4625246b426417f0193b16, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7641998057260601846}
   m_SourcePrefab: {fileID: 100100000, guid: 9ffdfa315b4625246b426417f0193b16, type: 3}
+--- !u!1 &7641998057260601845 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8031063390326760670, guid: 9ffdfa315b4625246b426417f0193b16, type: 3}
+  m_PrefabInstance: {fileID: 7641998057260601844}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7641998057260601846
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7641998057260601845}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0a6b30b533651e47864c3a8ab74e46d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BoardGenerator
+  layout: {fileID: 11400000, guid: 941615f6e27ff1e49b96e7227ea40458, type: 2}
+  generatedChunks: {fileID: 0}
+  seed: 12345
+  randomizeSeedOnGenerate: 1
+  generateOnStart: 0
+  warnOnOverlappingChunks: 0
+  generatedChunkScale: 0.504
 --- !u!1001 &9202137379378595358
 PrefabInstance:
   m_ObjectHideFlags: 0
