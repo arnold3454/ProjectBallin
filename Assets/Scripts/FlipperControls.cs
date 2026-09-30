@@ -6,94 +6,119 @@ public class FlipperControls : MonoBehaviour
 {
     [SerializeField] private InputActionReference flipAction;
 
-    private HingeJoint hinge;
-    private Rigidbody body;
-    private float motorSpeed;
-    private float baseMotorSpeed; // Added to store the original speed
-    private float baseMotorForce;
-    private float heightOffset;
-    private Vector3 baseWorldPosition;
-    private Vector3 baseConnectedAnchor;
-    private bool tiltLocked;
+    [Header("Audio")]
+    [Tooltip("Played when the player presses the button to activate the flipper.")]
+    [SerializeField] private AudioClip flipClip;
+    [SerializeField, Range(0f, 1f)] private float flipVolume = 1f;
 
-    private void Awake()
+private HingeJoint hinge;
+private Rigidbody body;
+private AudioSource audioSource;
+private float motorSpeed;
+private float baseMotorSpeed; // Added to store the original speed
+private float baseMotorForce;
+private float heightOffset;
+private Vector3 baseWorldPosition;
+private Vector3 baseConnectedAnchor;
+private bool tiltLocked;
+
+private void Awake()
     {
-        hinge = GetComponent<HingeJoint>();
-        body = GetComponent<Rigidbody>();
-        body.useGravity = false;
-        baseMotorSpeed = hinge.motor.targetVelocity; 
-        baseMotorForce = hinge.motor.force;
-        motorSpeed = baseMotorSpeed;
-        baseWorldPosition = transform.position;
-        baseConnectedAnchor = hinge.connectedAnchor;
+hinge = GetComponent<HingeJoint>();
+body = GetComponent<Rigidbody>();
+body.useGravity = false;
+baseMotorSpeed = hinge.motor.targetVelocity; 
+baseMotorForce = hinge.motor.force;
+motorSpeed = baseMotorSpeed;
+baseWorldPosition = transform.position;
+baseConnectedAnchor = hinge.connectedAnchor;
+
+audioSource = GetComponent<AudioSource>();
+if (audioSource == null)
+    {
+audioSource = gameObject.AddComponent<AudioSource>();
+    }
+audioSource.playOnAwake = false;
+audioSource.spatialBlend = 0f;
     }
 
-    private void OnEnable()
+private void OnEnable()
     {
-        flipAction.action.performed += OnFlip;
-        flipAction.action.canceled += OnRelease;
-        flipAction.action.Enable();
+flipAction.action.performed += OnFlip;
+flipAction.action.canceled += OnRelease;
+flipAction.action.Enable();
     }
 
-    private void OnDisable()
+private void OnDisable()
     {
-        flipAction.action.performed -= OnFlip;
-        flipAction.action.canceled -= OnRelease;
-        flipAction.action.Disable();
+flipAction.action.performed -= OnFlip;
+flipAction.action.canceled -= OnRelease;
+flipAction.action.Disable();
     }
 
-    private void OnFlip(InputAction.CallbackContext ctx)
+private void OnFlip(InputAction.CallbackContext ctx)
     {
-        if (!tiltLocked)
-            SetDirection(motorSpeed);
+if (!tiltLocked)
+    {
+SetDirection(motorSpeed);
+PlayFlipSFX();
+    }
     }
 
-    private void OnRelease(InputAction.CallbackContext ctx) => SetDirection(-motorSpeed);
+private void OnRelease(InputAction.CallbackContext ctx) => SetDirection(-motorSpeed);
 
-    /// <summary>Enables or disables player control while preserving this flipper's settings.</summary>
-    public void SetTiltLocked(bool isLocked)
+/// <summary>Enables or disables player control while preserving this flipper's settings.</summary>
+public void SetTiltLocked(bool isLocked)
     {
-        tiltLocked = isLocked;
+tiltLocked = isLocked;
 
-        if (tiltLocked)
-            SetDirection(-motorSpeed);
+if (tiltLocked)
+SetDirection(-motorSpeed);
     }
 
-    private void SetDirection(float targetVelocity)
+private void SetDirection(float targetVelocity)
     {
-        JointMotor motor = hinge.motor;
-        motor.targetVelocity = targetVelocity; 
-        hinge.motor = motor;
+JointMotor motor = hinge.motor;
+motor.targetVelocity = targetVelocity; 
+hinge.motor = motor;
     }
 
-    // New method to scale the motor speed dynamically
-    public void ScaleMotor(float multiplier)
+private void PlayFlipSFX()
     {
-        motorSpeed = baseMotorSpeed * multiplier;
+if (flipClip == null || audioSource == null)
+return;
+
+audioSource.PlayOneShot(flipClip, flipVolume);
     }
 
-    public void UpdateStrength(float strengthMultiplier)
+// New method to scale the motor speed dynamically
+public void ScaleMotor(float multiplier)
     {
-        JointMotor motor = hinge.motor;
-        motor.force = baseMotorForce * Mathf.Max(0f, strengthMultiplier);
-        hinge.motor = motor;
+motorSpeed = baseMotorSpeed * multiplier;
     }
 
-    public void UpdateHeightOffset(float offset)
+public void UpdateStrength(float strengthMultiplier)
     {
-        heightOffset = offset;
+JointMotor motor = hinge.motor;
+motor.force = baseMotorForce * Mathf.Max(0f, strengthMultiplier);
+hinge.motor = motor;
     }
 
-    public void ApplyMapPosition(float mapScale, Vector3 mapOrigin, float horizontalInset, Vector3 offset)
+public void UpdateHeightOffset(float offset)
     {
-        Vector3 position = mapOrigin + (baseWorldPosition - mapOrigin) * mapScale;
-        position.x -= Mathf.Sign(baseWorldPosition.x - mapOrigin.x) * horizontalInset * mapScale;
-        position += offset * mapScale;
-        hinge.autoConfigureConnectedAnchor = false;
-        hinge.connectedAnchor = baseConnectedAnchor + (position - baseWorldPosition);
-        body.position = position;
-        body.WakeUp();
-        Physics.SyncTransforms();
+heightOffset = offset;
+    }
+
+public void ApplyMapPosition(float mapScale, Vector3 mapOrigin, float horizontalInset, Vector3 offset)
+    {
+Vector3 position = mapOrigin + (baseWorldPosition - mapOrigin) * mapScale;
+position.x -= Mathf.Sign(baseWorldPosition.x - mapOrigin.x) * horizontalInset * mapScale;
+position += offset * mapScale;
+hinge.autoConfigureConnectedAnchor = false;
+hinge.connectedAnchor = baseConnectedAnchor + (position - baseWorldPosition);
+body.position = position;
+body.WakeUp();
+Physics.SyncTransforms();
     }
 
 }
