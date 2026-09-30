@@ -121,4 +121,14 @@ body.WakeUp();
 Physics.SyncTransforms();
     }
 
+public void RebaseMapPosition()
+{
+baseWorldPosition = transform.position;
+body.position = baseWorldPosition;
+hinge.autoConfigureConnectedAnchor = false;
+baseConnectedAnchor = transform.TransformPoint(hinge.anchor);
+hinge.connectedAnchor = baseConnectedAnchor;
+body.WakeUp();
+}
+
 }
