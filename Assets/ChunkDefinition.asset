@@ -17,4 +17,5 @@ MonoBehaviour:
   socketType: LeftMiddle
   weight: 1
   allowRepeat: 1
-  allowRandomRotation: 0
+  allowRandomRotation: 1
+  localPositionOffset: {x: 0, y: 0, z: 0}

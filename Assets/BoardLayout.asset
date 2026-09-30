@@ -16,7 +16,7 @@ MonoBehaviour:
   sockets:
   - id: 
     socketType: LeftMiddle
-    localPosition: {x: 0, y: 0, z: 0}
+    localPosition: {x: -7, y: -0.737, z: 1.38}
     localEulerAngles: {x: 0, y: 0, z: 0}
     allowedChunks:
     - {fileID: 11400000, guid: b8b4d741f71d0ff4fbc0f6531cd265b3, type: 2}
@@ -26,7 +26,7 @@ MonoBehaviour:
     randomRegionMax: {x: 0, y: 0}
   - id: 
     socketType: RightMiddle
-    localPosition: {x: 0, y: 0, z: 0}
+    localPosition: {x: 10.16, y: 0.223, z: 4.85}
     localEulerAngles: {x: 0, y: 0, z: 0}
     allowedChunks:
     - {fileID: 11400000, guid: 6e9039ebae0f58c45bff6f13df2dd407, type: 2}
@@ -35,10 +35,12 @@ MonoBehaviour:
     randomRegionMin: {x: 0, y: 0}
     randomRegionMax: {x: 0, y: 0}
   - id: 
-    socketType: 
-    localPosition: {x: 0, y: 0, z: 0}
+    socketType: CenterMiddle
+    localPosition: {x: -0.5, y: -0.52, z: -7.14}
     localEulerAngles: {x: 0, y: 0, z: 0}
-    allowedChunks: []
+    allowedChunks:
+    - {fileID: 11400000, guid: 644eb96a3310f464ea25e5bbd659105e, type: 2}
+    - {fileID: 11400000, guid: 3c02744080b1b0a4d81a5ea64a8f24d8, type: 2}
     useRandomRegion: 0
     randomRegionMin: {x: 0, y: 0}
     randomRegionMax: {x: 0, y: 0}

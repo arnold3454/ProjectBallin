@@ -15,6 +15,7 @@ public class BoardGenerator : MonoBehaviour
     [Header("Placement")]
     [SerializeField] private bool generateOnStart;
     [SerializeField] private bool warnOnOverlappingChunks;
+    [SerializeField, Range(0.1f, 1f)] private float generatedChunkScale = 0.8f;
 
     public int CurrentSeed { get; private set; }
 
@@ -55,6 +56,7 @@ public class BoardGenerator : MonoBehaviour
 
             Vector3 localPosition = GetSocketPosition(socket, random);
             Quaternion localRotation = GetSocketRotation(socket, chunk, random);
+            localPosition += localRotation * (chunk.localPositionOffset * generatedChunkScale);
             GameObject instance = Instantiate(
                 chunk.prefab,
                 generatedChunks,
@@ -62,6 +64,10 @@ public class BoardGenerator : MonoBehaviour
 
             instance.transform.localPosition = localPosition;
             instance.transform.localRotation = localRotation;
+            instance.transform.localScale *= generatedChunkScale;
+            foreach (FlipperControls flipper in instance.GetComponentsInChildren<FlipperControls>(true))
+                flipper.RebaseMapPosition();
+
             instance.name = string.IsNullOrEmpty(chunk.chunkId)
                 ? socket.id
                 : socket.id + "_" + chunk.chunkId;

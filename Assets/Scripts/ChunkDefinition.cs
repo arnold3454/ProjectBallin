@@ -19,4 +19,7 @@ public class ChunkDefinition : ScriptableObject
 
     [Tooltip("Allows the generator to choose a random rotation around the board's up axis.")]
     public bool allowRandomRotation;
+
+    [Tooltip("Placement correction in prefab-local units, applied after socket placement.")]
+    public Vector3 localPositionOffset;
 }
