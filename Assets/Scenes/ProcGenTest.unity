@@ -6762,7 +6762,7 @@ MonoBehaviour:
   generatedChunks: {fileID: 0}
   seed: 12345
   randomizeSeedOnGenerate: 1
-  generateOnStart: 0
+  generateOnStart: 1
   warnOnOverlappingChunks: 0
   generatedChunkScale: 0.504
 --- !u!1001 &9202137379378595358
