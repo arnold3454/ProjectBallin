@@ -26,7 +26,7 @@ MonoBehaviour:
     randomRegionMax: {x: 0, y: 0}
   - id: 
     socketType: RightMiddle
-    localPosition: {x: 10.16, y: 0.223, z: 4.85}
+    localPosition: {x: 9.16, y: 0.223, z: 5.34}
     localEulerAngles: {x: 0, y: 0, z: 0}
     allowedChunks:
     - {fileID: 11400000, guid: 6e9039ebae0f58c45bff6f13df2dd407, type: 2}

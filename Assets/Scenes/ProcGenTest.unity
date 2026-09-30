@@ -724,6 +724,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ScoreManager
   scoreText: {fileID: 1391632141}
+  scoreClip: {fileID: 0}
+  scoreVolume: 1
 --- !u!4 &136284776
 Transform:
   m_ObjectHideFlags: 0
@@ -863,6 +865,9 @@ MonoBehaviour:
   warningThreshold: 10
   normalColor: {r: 1, g: 1, b: 1, a: 1}
   warningColor: {r: 1, g: 0, b: 0, a: 1}
+  audioTriggerTime: 30
+  timeWarningClip: {fileID: 0}
+  timeWarningVolume: 1
 --- !u!1 &171704269
 GameObject:
   m_ObjectHideFlags: 0
@@ -6760,7 +6765,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BoardGenerator
   layout: {fileID: 11400000, guid: 941615f6e27ff1e49b96e7227ea40458, type: 2}
   generatedChunks: {fileID: 0}
-  seed: 12345
+  seed: 0
   randomizeSeedOnGenerate: 1
   generateOnStart: 1
   warnOnOverlappingChunks: 0
