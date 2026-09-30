@@ -412,4 +412,10 @@ MonoBehaviour:
     minCollisionForce: 0
     cooldown: 0.5
     lastPlayedTime: 0
+  - tag: Item
+    clip: {fileID: 8300000, guid: 2f11f921228604590ae14c3aca0f4f52, type: 3}
+    volume: 0.5
+    minCollisionForce: 0
+    cooldown: 0.5
+    lastPlayedTime: 0
   pitchVariation: 0

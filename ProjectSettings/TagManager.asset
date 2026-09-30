@@ -9,6 +9,7 @@ TagManager:
   - Bouncer
   - Wall
   - Board
+  - Item
   layers:
   - Default
   - TransparentFX
