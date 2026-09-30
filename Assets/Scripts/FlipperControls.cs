@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -5,6 +6,7 @@ using UnityEngine.InputSystem;
 public class FlipperControls : MonoBehaviour
 {
     [SerializeField] private InputActionReference flipAction;
+    private static readonly Dictionary<InputAction, int> activeActionUsers = new Dictionary<InputAction, int>();
 
     [Header("Audio")]
     [Tooltip("Played when the player presses the button to activate the flipper.")]
@@ -44,16 +46,43 @@ audioSource.spatialBlend = 0f;
 
 private void OnEnable()
     {
-flipAction.action.performed += OnFlip;
-flipAction.action.canceled += OnRelease;
-flipAction.action.Enable();
+        if (flipAction == null || flipAction.action == null)
+            return;
+
+        InputAction action = flipAction.action;
+        action.performed += OnFlip;
+        action.canceled += OnRelease;
+
+        if (activeActionUsers.TryGetValue(action, out int users))
+            activeActionUsers[action] = users + 1;
+        else
+        {
+            activeActionUsers.Add(action, 1);
+            action.Enable();
+        }
+
     }
 
 private void OnDisable()
     {
-flipAction.action.performed -= OnFlip;
-flipAction.action.canceled -= OnRelease;
-flipAction.action.Disable();
+        if (flipAction == null || flipAction.action == null)
+            return;
+
+        InputAction action = flipAction.action;
+        action.performed -= OnFlip;
+        action.canceled -= OnRelease;
+
+        if (!activeActionUsers.TryGetValue(action, out int users))
+            return;
+
+        if (users <= 1)
+        {
+            activeActionUsers.Remove(action);
+            action.Disable();
+        }
+        else
+            activeActionUsers[action] = users - 1;
+
     }
 
 private void OnFlip(InputAction.CallbackContext ctx)
@@ -104,7 +133,23 @@ motor.force = baseMotorForce * Mathf.Max(0f, strengthMultiplier);
 hinge.motor = motor;
     }
 
-public void UpdateHeightOffset(float offset)
+    public void UpdateHeightOffset(float offset)
+    {
+        heightOffset = offset;
+    }
+
+    public void RebaseMapPosition()
+    {
+        baseWorldPosition = transform.position;
+        body.position = baseWorldPosition;
+        hinge.autoConfigureConnectedAnchor = false;
+        baseConnectedAnchor = transform.TransformPoint(hinge.anchor);
+        hinge.connectedAnchor = baseConnectedAnchor;
+        body.WakeUp();
+    }
+
+    public void ApplyMapPosition(float mapScale, Vector3 mapOrigin, float horizontalInset, Vector3 offset)
+
     {
 heightOffset = offset;
     }

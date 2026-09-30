@@ -18,7 +18,7 @@ public class BallSettingsManager : MonoBehaviour
     [SerializeField] private float minWeight = 0.5f;
     [SerializeField] private float maxWeight = 30.0f;
 
-    private float currentSize = 1f;
+    private float currentSize= 1.5f;
     private float currentWeight = 1f;
 
     public float CurrentSize => currentSize;
