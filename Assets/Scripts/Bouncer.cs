@@ -38,16 +38,9 @@ public class Bouncer : MonoBehaviour
             ? bouncerCollider.bounds.center
             : transform.position;
         Vector3 awayDirection = ballCollider.bounds.center - bouncerCenter;
-        awayDirection.y = 0f;
 
         if (awayDirection.sqrMagnitude < 0.0001f)
-        {
-            awayDirection = transform.forward;
-            awayDirection.y = 0f;
-        }
-
-        if (awayDirection.sqrMagnitude < 0.0001f)
-            awayDirection = Vector3.forward;
+            awayDirection = transform.up;
 
         awayDirection.Normalize();
         Vector3 velocity = ballBody.linearVelocity;

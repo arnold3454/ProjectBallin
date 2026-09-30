@@ -38,7 +38,7 @@ public class BallLauncher : MonoBehaviour
     [SerializeField] private bool waitForDrain = true;
     [SerializeField] private float reloadDelay = 0.5f;
     [Tooltip("Let the player press space to load a ball immediately, even with one still in play.")]
-    [SerializeField] private bool allowManualReload = false;
+    [SerializeField] private bool allowManualReload = true;
 
     [Header("Audio")]
     [Tooltip("Played once when the player begins charging the plunger (pull-back).")]
@@ -57,8 +57,6 @@ public class BallLauncher : MonoBehaviour
     [SerializeField] private float autoLaunchLaneLength = 35f;
 
     private AudioSource audioSource;
-    private Rigidbody ballInLaunchLane;
-
     private Rigidbody loadedBall;
     private Collider launcherCollider;
     private Vector3 plungerRestLocalPosition;
@@ -129,20 +127,7 @@ public class BallLauncher : MonoBehaviour
 
         if (loadedBall == null)
         {
-            if (pressed && ballInLaunchLane != null)
-            {
-                loadedBall = ballInLaunchLane;
-                loadedBall.isKinematic = true;
-                charge = 0f;
-                isCharging = false;
-            }
-            else
-            {
-                // No ball is held on the plunger, so a tap racks one up. That press
-                // only loads, so the player still gets to charge before firing.
-            }
-        }
-
+            // No ball is held on the plunger, so a tap racks one up. That press
             // only loads, so the player still gets to charge before firing.
             if (pressed && allowManualReload)
             {
@@ -423,19 +408,6 @@ public class BallLauncher : MonoBehaviour
         return loadPosition;
     }
 
-    private void OnTriggerStay(Collider other)
-    {
-        if (!other.CompareTag("Ball") || loadedBall != null)
-            return;
-
-        ballInLaunchLane = other.attachedRigidbody;
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.attachedRigidbody == ballInLaunchLane)
-            ballInLaunchLane = null;
-    }
     private void OnDrawGizmosSelected()
     {
         if (!Application.isPlaying)
