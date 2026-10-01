@@ -56,7 +56,16 @@ public class BallLauncher : MonoBehaviour
     [Tooltip("How far up the lane, measured from the plunger, to check for balls before an automatic shot so it doesn't hit them. Drawn in yellow when the launcher is selected.")]
     [SerializeField] private float autoLaunchLaneLength = 35f;
 
+    [Header("Returned Balls")]
+    [Tooltip("A ball that rolls back into the launcher and slows down is re-racked so it can be launched again.")]
+    [SerializeField] private float returnGrabRadius = 1.5f;
+    [Tooltip("The ball must be moving slower than this to be grabbed.")]
+    [SerializeField] private float returnGrabMaxSpeed = 2f;
+    [Tooltip("Seconds after a launch before a ball can be grabbed again.")]
+    [SerializeField] private float returnGrabCooldown = 0.4f;
+
     private AudioSource audioSource;
+    private float lastLaunchTime = -999f;
     private Rigidbody loadedBall;
     private Collider launcherCollider;
     private Vector3 plungerRestLocalPosition;
@@ -124,6 +133,9 @@ public class BallLauncher : MonoBehaviour
 
         if (!held)
             ignoreHold = false;
+
+        if (loadedBall == null)
+            TryGrabReturnedBall();
 
         if (loadedBall == null)
         {
@@ -246,13 +258,39 @@ public class BallLauncher : MonoBehaviour
                 body.mass = BallSettingsManager.Instance.CurrentWeight;
         }
 
-        // Hold the ball still until the plunger fires it.
+        ParkBall(body);
+    }
+
+    /// <summary>Holds the ball still against the plunger until it is fired.</summary>
+    private void ParkBall(Rigidbody body)
+    {
+        body.linearVelocity = Vector3.zero;
+        body.angularVelocity = Vector3.zero;
         body.isKinematic = true;
         loadedBall = body;
 
         charge = 0f;
         isCharging = false;
         reloadTimer = 0f;
+    }
+
+    /// <summary>
+    /// Re-racks a ball that rolled back into the launcher (e.g. after a weak
+    /// shot) so the player can charge and fire it again.
+    /// </summary>
+    private void TryGrabReturnedBall()
+    {
+        // Let a freshly fired ball clear the plunger before it can be grabbed again.
+        if (Time.time - lastLaunchTime < returnGrabCooldown)
+            return;
+
+        float size = CurrentBallSize;
+        Rigidbody body = FindBallAt(GetLoadPosition(size), returnGrabRadius * size);
+        if (body == null || body.linearVelocity.sqrMagnitude > returnGrabMaxSpeed * returnGrabMaxSpeed)
+            return;
+
+        // Snap it to the plunger face; the same ball keeps its size and mass.
+        ParkBall(body);
     }
 
     /// <summary>Fires the loaded ball up the lane at the charged power.</summary>
@@ -274,6 +312,7 @@ public class BallLauncher : MonoBehaviour
         PlayReleaseSFX();
 
         charge = 0f;
+        lastLaunchTime = Time.time;
     }
 
     private void PlayPullBackSFX()
