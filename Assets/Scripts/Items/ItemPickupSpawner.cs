@@ -31,6 +31,7 @@ public class ItemPickupSpawner : MonoBehaviour
     private readonly List<ItemPickup> activePickups = new List<ItemPickup>();
     private float spawnTimer;
     private AudioSource audioSource;
+    private bool warnedNoOpenSpot;
 
     private void Start()
     {
@@ -69,12 +70,24 @@ public class ItemPickupSpawner : MonoBehaviour
     /// <summary>Spawns a pickup with a random item. Returns false if no open spot was found.</summary>
     public bool TrySpawnPickup()
     {
-        if (pickupPrefab == null || ItemManager.Instance == null || !TryFindSpawnPoint(out Vector3 point))
+        if (pickupPrefab == null)
         {
-            Debug.LogWarning($"ItemPickupSpawner {name} can't spawn a pickup because the prefab or ItemManager is missing, or no open spot was found.");
+            Debug.LogWarning($"ItemPickupSpawner {name} can't spawn a pickup because its prefab is missing.", this);
             return false;
         }
 
+        if (ItemManager.Instance == null)
+        {
+            Debug.LogWarning($"ItemPickupSpawner {name} can't spawn a pickup because ItemManager is missing.", this);
+            return false;
+        }
+
+        if (!TryFindSpawnPoint(out Vector3 point))
+        {
+            return false;
+        }
+
+        warnedNoOpenSpot = false;
         ItemPickup pickup = Instantiate(pickupPrefab, point, Quaternion.identity);
         pickup.SetItem(ItemManager.Instance.GetRandomItem());
         activePickups.Add(pickup);
@@ -89,6 +102,7 @@ public class ItemPickupSpawner : MonoBehaviour
         // Only check a thin slice at ball height so the table surface below doesn't count,
         // but walls, bumpers, balls and other pickups do.
         Vector3 halfExtents = new Vector3(clearance, 0.25f, clearance);
+        Vector3 lastPoint = transform.position;
 
         for (int i = 0; i < placementAttempts; i++)
         {
@@ -97,9 +111,53 @@ public class ItemPickupSpawner : MonoBehaviour
                 0f,
                 Random.Range(-0.5f, 0.5f) * areaSize.y);
             point = transform.position + transform.rotation * offset;
+            lastPoint = point;
 
-            if (!Physics.CheckBox(point, halfExtents, transform.rotation, Physics.AllLayers, QueryTriggerInteraction.Collide))
+            Collider[] overlaps = Physics.OverlapBox(
+                point,
+                halfExtents,
+                transform.rotation,
+                Physics.AllLayers,
+                QueryTriggerInteraction.Collide);
+            bool blocked = false;
+            foreach (Collider overlap in overlaps)
+            {
+                if (!overlap.CompareTag("Board"))
+                {
+                    blocked = true;
+                    break;
+                }
+            }
+
+            if (!blocked)
                 return true;
+        }
+
+        Collider[] blockers = Physics.OverlapBox(
+            lastPoint,
+            halfExtents,
+            transform.rotation,
+            Physics.AllLayers,
+            QueryTriggerInteraction.Collide);
+        string blockerNames = "";
+        foreach (Collider blocker in blockers)
+        {
+            if (blocker.CompareTag("Board"))
+                continue;
+
+            if (blockerNames.Length > 0)
+                blockerNames += ", ";
+
+            blockerNames += $"{blocker.name} [layer: {LayerMask.LayerToName(blocker.gameObject.layer)}]";
+        }
+
+        if (!warnedNoOpenSpot)
+        {
+            Debug.LogWarning(
+                $"ItemPickupSpawner {name} couldn't find an open spot after {placementAttempts} attempts. " +
+                $"Last candidate at {lastPoint} was blocked by: {blockerNames}",
+                this);
+            warnedNoOpenSpot = true;
         }
 
         point = transform.position;
