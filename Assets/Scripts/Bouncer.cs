@@ -33,6 +33,8 @@ public class Bouncer : MonoBehaviour
         if (ballBody == null)
             return;
 
+        ScoreManager.Instance.AddScore(1);
+
         Collider bouncerCollider = GetComponent<Collider>();
         Vector3 bouncerCenter = bouncerCollider != null
             ? bouncerCollider.bounds.center
