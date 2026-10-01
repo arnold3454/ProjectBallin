@@ -70,7 +70,10 @@ public class ItemPickupSpawner : MonoBehaviour
     public bool TrySpawnPickup()
     {
         if (pickupPrefab == null || ItemManager.Instance == null || !TryFindSpawnPoint(out Vector3 point))
+        {
+            Debug.LogWarning($"ItemPickupSpawner {name} can't spawn a pickup because the prefab or ItemManager is missing, or no open spot was found.");
             return false;
+        }
 
         ItemPickup pickup = Instantiate(pickupPrefab, point, Quaternion.identity);
         pickup.SetItem(ItemManager.Instance.GetRandomItem());
