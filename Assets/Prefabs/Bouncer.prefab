@@ -144,4 +144,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df2bffcef9d876a49ac85ea9e2d0fb39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bouncer
-  accelerationForce: 2
+  accelerationForce: 3.3

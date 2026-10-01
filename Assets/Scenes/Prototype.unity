@@ -888,7 +888,7 @@ MonoBehaviour:
   cameraShakeStrength: 0.5
   tiltPerNudge: 1
   tiltThreshold: 3
-  tiltDecayPerSecond: 1.01
+  tiltDecayPerSecond: 0.47
   flipperLockDuration: 3
   tiltMeter: {fileID: 440665783}
 --- !u!114 &136284781
