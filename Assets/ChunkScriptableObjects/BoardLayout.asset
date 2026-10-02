@@ -21,6 +21,7 @@ MonoBehaviour:
     allowedChunks:
     - {fileID: 11400000, guid: b8b4d741f71d0ff4fbc0f6531cd265b3, type: 2}
     - {fileID: 11400000, guid: 2527a5e15d6e87d458d1850d75146046, type: 2}
+    - {fileID: 11400000, guid: d12068ce0eb605f4d906e1ed0c4404a6, type: 2}
     useRandomRegion: 0
     randomRegionMin: {x: 0, y: 0}
     randomRegionMax: {x: 0, y: 0}
@@ -31,6 +32,7 @@ MonoBehaviour:
     allowedChunks:
     - {fileID: 11400000, guid: 6e9039ebae0f58c45bff6f13df2dd407, type: 2}
     - {fileID: 11400000, guid: 447c8e3168d83134984a5aa2b877838d, type: 2}
+    - {fileID: 11400000, guid: 0f7d376c887993046a4a97dcffc4bbdc, type: 2}
     useRandomRegion: 0
     randomRegionMin: {x: 0, y: 0}
     randomRegionMax: {x: 0, y: 0}
@@ -41,6 +43,8 @@ MonoBehaviour:
     allowedChunks:
     - {fileID: 11400000, guid: 644eb96a3310f464ea25e5bbd659105e, type: 2}
     - {fileID: 11400000, guid: 3c02744080b1b0a4d81a5ea64a8f24d8, type: 2}
+    - {fileID: 11400000, guid: 9adbeddadf10a5741bdcb42d37eed5f1, type: 2}
+    - {fileID: 11400000, guid: 4a2d0a17a4c89ac42a3fd6d93638099e, type: 2}
     useRandomRegion: 0
     randomRegionMin: {x: 0, y: 0}
     randomRegionMax: {x: 0, y: 0}
