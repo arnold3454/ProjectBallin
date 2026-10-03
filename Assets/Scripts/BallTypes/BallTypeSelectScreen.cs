@@ -99,6 +99,12 @@ public class BallTypeSelectScreen : MonoBehaviour
             fadeDuration = 0.08f,
         };
 
+        // Without this, a card with more text would claim a wider share of the row.
+        LayoutElement cardSize = root.gameObject.AddComponent<LayoutElement>();
+        cardSize.preferredWidth = 0f;
+        cardSize.flexibleWidth = 1f;
+        cardSize.flexibleHeight = 1f;
+
         BallType type = info.Type;
         button.onClick.AddListener(() => onPick(type));
 

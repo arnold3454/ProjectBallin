@@ -19,7 +19,7 @@ public class BallTypeManager : MonoBehaviour
     public static bool IsSelecting { get; private set; }
 
     [Header("Split Ball")]
-    [SerializeField, Min(0f)] private float splitCooldown = 1.5f;
+    [SerializeField, Min(0f)] private float splitCooldown = 5f;
     [Tooltip("The Split ball can't duplicate while this many balls are already on the table.")]
     [SerializeField, Min(2)] private int maxBalls = 8;
 

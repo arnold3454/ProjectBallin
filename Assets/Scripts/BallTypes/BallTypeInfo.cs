@@ -54,14 +54,13 @@ public class BallTypeInfo
 
         new BallTypeInfo(BallType.Bouncy, "Bouncy Ball",
             "A ball specializing in speed. This red bouncy ball will allow the player to ricochet it across the board. " +
-            "The ball feeds into the Spam Architype of play with its high speed, low weight, and increased bounciness.",
+            "It has high speed, low weight, and increased bounciness.",
             new Color(0.88f, 0.1f, 0.1f),
             points: 0.75f, weight: 0.6f, speed: 1.25f, bounciness: 0.9f),
 
         new BallTypeInfo(BallType.Split, "Split Ball",
             "A ball specializing in multiplying. This deep blue ball will allow the player to duplicate it after the player " +
-            $"activates it (press {SplitKey}). This ball enables the Spam Architype to build through number of balls on the field. " +
-            "Its weight and speed are the same as regular pinball.",
+            $"activates it (press {SplitKey}). Its weight and speed are the same as regular pinball.",
             new Color(0.05f, 0.14f, 0.68f),
             points: 0.5f),
     };
