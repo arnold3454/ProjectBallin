@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4008882512523911839}
   m_Layer: 0
-  m_Name: ChunkB_VariantB
+  m_Name: ChunkB_Variant4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
