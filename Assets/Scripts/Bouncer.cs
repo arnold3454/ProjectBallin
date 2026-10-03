@@ -57,6 +57,6 @@ public class Bouncer : MonoBehaviour
         float verticalVelocity = Mathf.Min(velocity.y, 0f);
 
         ballBody.linearVelocity = awayDirection * currentSpeed + Vector3.up * verticalVelocity;
-        ballBody.AddForce(awayDirection * accelerationForce, ForceMode.Impulse);
+        ballBody.AddForce(awayDirection * accelerationForce * BallTypeManager.SpeedMultiplier, ForceMode.Impulse);
     }
 }

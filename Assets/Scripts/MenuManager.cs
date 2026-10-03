@@ -46,6 +46,9 @@ public class MenuManager : MonoBehaviour
         // The game over popup owns the screen; don't let the pause menu fight it.
         if (GameTimer.Instance != null && GameTimer.Instance.IsGameOver) return;
 
+        // Same for the ball choice, which has to be answered first.
+        if (BallTypeManager.IsSelecting) return;
+
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             ToggleMenu();

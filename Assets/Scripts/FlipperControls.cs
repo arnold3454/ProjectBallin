@@ -58,7 +58,8 @@ flipAction.action.Disable();
 
 private void OnFlip(InputAction.CallbackContext ctx)
     {
-if (!tiltLocked)
+// The start screen has the screen; keep the flippers from reacting to its key presses.
+if (!tiltLocked && !BallTypeManager.IsSelecting)
     {
 SetDirection(motorSpeed);
 PlayFlipSFX();

@@ -106,6 +106,10 @@ public class BallLauncher : MonoBehaviour
             return;
         }
 
+        // The start screen has the screen; keep the plunger from reacting to its key presses.
+        if (BallTypeManager.IsSelecting)
+            return;
+
         HandleInput();
         HandleAutoLaunch();
         HandleReload();
@@ -232,6 +236,7 @@ public class BallLauncher : MonoBehaviour
         {
             GameObject newBall = Instantiate(ballPrefab, loadPosition, transform.rotation);
             newBall.transform.localScale = Vector3.one * size;
+            BallTypeManager.Apply(newBall);
 
             body = newBall.GetComponent<Rigidbody>();
             if (body == null)
@@ -269,7 +274,7 @@ public class BallLauncher : MonoBehaviour
         body.isKinematic = false;
         body.linearVelocity = Vector3.zero;
         body.angularVelocity = Vector3.zero;
-        body.AddForce(GetLaunchDirection() * Mathf.Lerp(minLaunchSpeed, maxLaunchSpeed, charge), ForceMode.VelocityChange);
+        body.AddForce(GetLaunchDirection() * Mathf.Lerp(minLaunchSpeed, maxLaunchSpeed, charge) * BallTypeManager.SpeedMultiplier, ForceMode.VelocityChange);
 
         PlayReleaseSFX();
 
