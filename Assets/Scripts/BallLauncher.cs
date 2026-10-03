@@ -106,6 +106,10 @@ public class BallLauncher : MonoBehaviour
             return;
         }
 
+        // The upgrade popup has the screen; keep the plunger from reacting to its key presses.
+        if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsChoosing)
+            return;
+
         HandleInput();
         HandleAutoLaunch();
         HandleReload();
@@ -243,7 +247,7 @@ public class BallLauncher : MonoBehaviour
             }
 
             if (BallSettingsManager.Instance != null)
-                body.mass = BallSettingsManager.Instance.CurrentWeight;
+                body.mass = BallSettingsManager.Instance.EffectiveWeight;
         }
 
         // Hold the ball still until the plunger fires it.
@@ -269,7 +273,8 @@ public class BallLauncher : MonoBehaviour
         body.isKinematic = false;
         body.linearVelocity = Vector3.zero;
         body.angularVelocity = Vector3.zero;
-        body.AddForce(GetLaunchDirection() * Mathf.Lerp(minLaunchSpeed, maxLaunchSpeed, charge), ForceMode.VelocityChange);
+        float speedMultiplier = UpgradeManager.Instance != null ? UpgradeManager.Instance.BallSpeedMultiplier : 1f;
+        body.AddForce(GetLaunchDirection() * Mathf.Lerp(minLaunchSpeed, maxLaunchSpeed, charge) * speedMultiplier, ForceMode.VelocityChange);
 
         PlayReleaseSFX();
 

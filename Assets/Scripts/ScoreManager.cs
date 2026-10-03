@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using TMPro;
 
@@ -11,6 +12,12 @@ public int CurrentScore {
 get; private set; 
     }
     [SerializeField] private TextMeshProUGUI scoreText;
+
+    /// <summary>Raised with the new total after every change to the score.</summary>
+    public event Action<int> ScoreChanged;
+
+    /// <summary>Raised with the points a critical hit just scored.</summary>
+    public event Action<int> CritScored;
 
     [Header("Audio")]
     [Tooltip("Played whenever score is added.")]
@@ -35,10 +42,17 @@ audioSource.spatialBlend = 0f;
 
 public void AddScore(int amount)
     {
+bool crit = false;
+if (UpgradeManager.Instance != null)
+amount = UpgradeManager.Instance.ModifyPoints(amount, out crit);
+
 CurrentScore += amount;
-Debug.Log($"Score: {CurrentScore}");
+Debug.Log(crit ? $"CRIT! +{amount} Score: {CurrentScore}" : $"Score: {CurrentScore}");
 UpdateScoreUI();
 PlayScoreSFX();
+ScoreChanged?.Invoke(CurrentScore);
+if (crit)
+CritScored?.Invoke(amount);
     }
 
 private void PlayScoreSFX()

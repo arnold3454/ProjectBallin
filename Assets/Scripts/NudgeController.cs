@@ -38,6 +38,9 @@ public class NudgeController : MonoBehaviour
         if (Keyboard.current == null)
             return;
 
+        if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsChoosing)
+            return;
+
         float nudgeDirection = 0f;
         if (Keyboard.current.leftShiftKey.wasPressedThisFrame)
             nudgeDirection = 1f;

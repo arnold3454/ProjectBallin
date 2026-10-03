@@ -24,6 +24,12 @@ public class BallSettingsManager : MonoBehaviour
     public float CurrentSize => currentSize;
     public float CurrentWeight => currentWeight;
 
+    /// <summary>The weight balls actually get: the player's setting scaled by any Heavy Ball upgrades.</summary>
+    public float EffectiveWeight => currentWeight * (UpgradeManager.Instance != null ? UpgradeManager.Instance.BallWeightMultiplier : 1f);
+
+    /// <summary>Re-applies the weight to balls already in play, e.g. after an upgrade.</summary>
+    public void RefreshWeight() => ApplyWeightToExistingBalls(currentWeight);
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -163,7 +169,7 @@ public class BallSettingsManager : MonoBehaviour
             Rigidbody rb = ball.GetComponent<Rigidbody>();
             if (rb != null)
             {
-                rb.mass = massValue;
+                rb.mass = massValue * (UpgradeManager.Instance != null ? UpgradeManager.Instance.BallWeightMultiplier : 1f);
             }
         }
     }
