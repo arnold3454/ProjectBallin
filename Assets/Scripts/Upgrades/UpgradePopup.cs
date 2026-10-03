@@ -120,6 +120,12 @@ public class UpgradePopup : MonoBehaviour
         Image background = root.gameObject.AddComponent<Image>();
         background.color = Color.white;
 
+        // Without this, a card with more text would claim a wider share of the row.
+        LayoutElement cardSize = root.gameObject.AddComponent<LayoutElement>();
+        cardSize.preferredWidth = 0f;
+        cardSize.flexibleWidth = 1f;
+        cardSize.flexibleHeight = 1f;
+
         card.Button = root.gameObject.AddComponent<Button>();
         card.Button.targetGraphic = background;
         card.Button.transition = Selectable.Transition.ColorTint;
