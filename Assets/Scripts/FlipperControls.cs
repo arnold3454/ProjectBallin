@@ -14,13 +14,15 @@ public class FlipperControls : MonoBehaviour
 private HingeJoint hinge;
 private Rigidbody body;
 private AudioSource audioSource;
-private float motorSpeed;
+private float motorScale = 1f;
 private float baseMotorSpeed; // Added to store the original speed
 private float baseMotorForce;
 private float heightOffset;
 private Vector3 baseWorldPosition;
 private Vector3 baseConnectedAnchor;
 private bool tiltLocked;
+
+private float MotorSpeed => baseMotorSpeed * motorScale * (UpgradeManager.Instance != null ? UpgradeManager.Instance.FlipperSpeedMultiplier : 1f);
 
 private void Awake()
     {
@@ -29,7 +31,6 @@ body = GetComponent<Rigidbody>();
 body.useGravity = false;
 baseMotorSpeed = hinge.motor.targetVelocity; 
 baseMotorForce = hinge.motor.force;
-motorSpeed = baseMotorSpeed;
 baseWorldPosition = transform.position;
 baseConnectedAnchor = hinge.connectedAnchor;
 
@@ -58,14 +59,25 @@ flipAction.action.Disable();
 
 private void OnFlip(InputAction.CallbackContext ctx)
     {
-if (!tiltLocked)
-    {
-SetDirection(motorSpeed);
-PlayFlipSFX();
-    }
+if (tiltLocked)
+return;
+
+if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsChoosing)
+return;
+
+Activate();
     }
 
-private void OnRelease(InputAction.CallbackContext ctx) => SetDirection(-motorSpeed);
+private void OnRelease(InputAction.CallbackContext ctx)
+    {
+SetDirection(-MotorSpeed);
+    }
+
+private void Activate()
+    {
+SetDirection(MotorSpeed);
+PlayFlipSFX();
+    }
 
 /// <summary>Enables or disables player control while preserving this flipper's settings.</summary>
 public void SetTiltLocked(bool isLocked)
@@ -73,7 +85,9 @@ public void SetTiltLocked(bool isLocked)
 tiltLocked = isLocked;
 
 if (tiltLocked)
-SetDirection(-motorSpeed);
+    {
+SetDirection(-MotorSpeed);
+    }
     }
 
 private void SetDirection(float targetVelocity)
@@ -94,7 +108,15 @@ audioSource.PlayOneShot(flipClip, flipVolume);
 // New method to scale the motor speed dynamically
 public void ScaleMotor(float multiplier)
     {
-motorSpeed = baseMotorSpeed * multiplier;
+motorScale = multiplier;
+    }
+
+/// <summary>Re-reads the upgrade stats. A flipper that is mid-swing keeps its direction at the new speed.</summary>
+public void RefreshUpgrades()
+    {
+float target = hinge.motor.targetVelocity;
+if (target != 0f)
+SetDirection(Mathf.Sign(target) * Mathf.Abs(MotorSpeed));
     }
 
 public void UpdateStrength(float strengthMultiplier)
