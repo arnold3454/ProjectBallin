@@ -11,12 +11,6 @@ public class FlipperControls : MonoBehaviour
     [SerializeField] private AudioClip flipClip;
     [SerializeField, Range(0f, 1f)] private float flipVolume = 1f;
 
-    [Header("Cooldown")]
-    [Tooltip("Seconds after each flip before the flipper can swing again. The Quick Recovery upgrade shortens it. A press during the cooldown fires as soon as it ends. Holding the flipper up past the cooldown costs nothing.")]
-    [SerializeField, Min(0f)] private float flipCooldown = 0.6f;
-    [Tooltip("The flipper is tinted this colour right after a flip and fades back as the cooldown runs out.")]
-    [SerializeField] private Color cooldownTint = new Color(0.9f, 0.2f, 0.15f, 1f);
-
 private HingeJoint hinge;
 private Rigidbody body;
 private AudioSource audioSource;
@@ -27,22 +21,8 @@ private float heightOffset;
 private Vector3 baseWorldPosition;
 private Vector3 baseConnectedAnchor;
 private bool tiltLocked;
-private float cooldownEndTime;
-private float cooldownDuration;
-private bool pendingFlip;
-private bool tinted;
-private Renderer[] renderers;
-private Color[] baseColors;
-private MaterialPropertyBlock tintBlock;
-
-private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
-private static readonly int ColorId = Shader.PropertyToID("_Color");
 
 private float MotorSpeed => baseMotorSpeed * motorScale * (UpgradeManager.Instance != null ? UpgradeManager.Instance.FlipperSpeedMultiplier : 1f);
-/// <summary>Cooldown before any upgrades, in seconds.</summary>
-public float BaseCooldown => flipCooldown;
-
-private float CooldownDuration => flipCooldown * (UpgradeManager.Instance != null ? UpgradeManager.Instance.FlipperCooldownMultiplier : 1f);
 
 private void Awake()
     {
@@ -53,7 +33,6 @@ baseMotorSpeed = hinge.motor.targetVelocity;
 baseMotorForce = hinge.motor.force;
 baseWorldPosition = transform.position;
 baseConnectedAnchor = hinge.connectedAnchor;
-CacheRenderers();
 
 audioSource = GetComponent<AudioSource>();
 if (audioSource == null)
@@ -78,39 +57,19 @@ flipAction.action.canceled -= OnRelease;
 flipAction.action.Disable();
     }
 
-private void Update()
-    {
-UpdateCooldownTint();
-
-// A press that landed during the cooldown goes off the moment it ends.
-if (pendingFlip && !tiltLocked && Time.time >= cooldownEndTime)
-    {
-pendingFlip = false;
-Activate();
-    }
-    }
-
 private void OnFlip(InputAction.CallbackContext ctx)
     {
 if (tiltLocked)
 return;
 
-// The upgrade popup has the screen; keep the flippers from reacting to its key presses.
 if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsChoosing)
 return;
-
-if (Time.time < cooldownEndTime)
-    {
-pendingFlip = true;
-return;
-    }
 
 Activate();
     }
 
 private void OnRelease(InputAction.CallbackContext ctx)
     {
-pendingFlip = false;
 SetDirection(-MotorSpeed);
     }
 
@@ -118,60 +77,6 @@ private void Activate()
     {
 SetDirection(MotorSpeed);
 PlayFlipSFX();
-
-// The cooldown runs from each flip, so quick taps are what it slows down.
-cooldownDuration = CooldownDuration;
-cooldownEndTime = Time.time + cooldownDuration;
-    }
-
-private void CacheRenderers()
-    {
-renderers = GetComponentsInChildren<Renderer>();
-baseColors = new Color[renderers.Length];
-for (int i = 0; i < renderers.Length; i++)
-    {
-Material material = renderers[i].sharedMaterial;
-if (material == null)
-continue;
-
-if (material.HasProperty(BaseColorId))
-baseColors[i] = material.GetColor(BaseColorId);
-else if (material.HasProperty(ColorId))
-baseColors[i] = material.GetColor(ColorId);
-else
-baseColors[i] = Color.white;
-    }
-    }
-
-private void UpdateCooldownTint()
-    {
-if (renderers == null || renderers.Length == 0)
-return;
-
-float remaining = cooldownEndTime - Time.time;
-if (remaining <= 0f || cooldownDuration <= 0f)
-    {
-if (tinted)
-        {
-// Back to the material's own colour.
-foreach (Renderer r in renderers)
-r.SetPropertyBlock(null);
-tinted = false;
-        }
-return;
-    }
-
-tintBlock ??= new MaterialPropertyBlock();
-float strength = Mathf.Clamp01(remaining / cooldownDuration);
-for (int i = 0; i < renderers.Length; i++)
-    {
-Color color = Color.Lerp(baseColors[i], cooldownTint, strength);
-renderers[i].GetPropertyBlock(tintBlock);
-tintBlock.SetColor(BaseColorId, color);
-tintBlock.SetColor(ColorId, color);
-renderers[i].SetPropertyBlock(tintBlock);
-    }
-tinted = true;
     }
 
 /// <summary>Enables or disables player control while preserving this flipper's settings.</summary>
@@ -181,7 +86,6 @@ tiltLocked = isLocked;
 
 if (tiltLocked)
     {
-pendingFlip = false;
 SetDirection(-MotorSpeed);
     }
     }

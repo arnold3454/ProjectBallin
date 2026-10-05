@@ -704,6 +704,7 @@ GameObject:
   - component: {fileID: 136284780}
   - component: {fileID: 136284781}
   - component: {fileID: 136284782}
+  - component: {fileID: 1748271938090000001}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -726,6 +727,22 @@ MonoBehaviour:
   scoreText: {fileID: 1391632141}
   scoreClip: {fileID: 0}
   scoreVolume: 1
+--- !u!114 &1748271938090000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 136284774}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 280598b3329f66443b0514f35b84090c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeManager
+  pointsPerUpgrade: 15
+  choicesPerOffer: 3
+  popupPrefab: {fileID: 1806743490525708669, guid: ce15a5128bafec646982787d0a7e5b74, type: 3}
+  critPopupPrefab: {fileID: 5830497837523062933, guid: 4161e61ef0979854eb6a0ffd1c67f93b, type: 3}
 --- !u!4 &136284776
 Transform:
   m_ObjectHideFlags: 0

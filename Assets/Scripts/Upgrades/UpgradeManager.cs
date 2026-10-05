@@ -2,13 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Hands the player a choice of upgrades every few points. Gameplay pauses while the
 /// choice is on screen. Also holds the resulting stat bonuses for the rest of the game
 /// to read (score, ball and flipper tuning).
-/// Creates itself in any scene that has a ScoreManager, so it needs no scene setup.
+/// Add it to the scene's GameManager and assign the upgrade popup prefab in the Inspector.
 /// </summary>
 public class UpgradeManager : MonoBehaviour
 {
@@ -20,7 +19,6 @@ public class UpgradeManager : MonoBehaviour
         BallSpeed,
         ScoreMultiplier,
         FlipperSpeed,
-        FlipperCooldown,
         FlatPoints,
         CritChance,
         FlatMultiplier,
@@ -31,7 +29,6 @@ public class UpgradeManager : MonoBehaviour
     private const float BallSpeedPerPick = 0.15f;
     private const float ScoreMultiplierPerPick = 0.20f;
     private const float FlipperSpeedPerPick = 0.20f;
-    private const float FlipperCooldownCutPerPick = 0.20f;
     private const int FlatPointsPerPick = 1;
     private const float CritChancePerPick = 0.05f;
     private const float FlatMultiplierPerPick = 0.10f;
@@ -40,6 +37,10 @@ public class UpgradeManager : MonoBehaviour
     [Header("Upgrade Offers")]
     [SerializeField, Min(1)] private int pointsPerUpgrade = 15;
     [SerializeField, Min(1)] private int choicesPerOffer = 3;
+
+    [Header("Upgrade UI")]
+    [SerializeField] private UpgradePopup popupPrefab;
+    [SerializeField] private CritPopup critPopupPrefab;
 
     private readonly int[] stacks = new int[System.Enum.GetValues(typeof(UpgradeId)).Length];
     private UpgradePopup popup;
@@ -57,29 +58,10 @@ public class UpgradeManager : MonoBehaviour
     public float BallWeightMultiplier => 1f + BallWeightPerPick * Stacks(UpgradeId.BallWeight);
     public float BallSpeedMultiplier => 1f + BallSpeedPerPick * Stacks(UpgradeId.BallSpeed);
     public float FlipperSpeedMultiplier => 1f + FlipperSpeedPerPick * Stacks(UpgradeId.FlipperSpeed);
-    public float FlipperCooldownMultiplier => Mathf.Max(0f, 1f - FlipperCooldownCutPerPick * Stacks(UpgradeId.FlipperCooldown));
     public float ScoreMultiplier => 1f + ScoreMultiplierPerPick * Stacks(UpgradeId.ScoreMultiplier);
     public float FlatMultiplier => Mathf.Pow(1f + FlatMultiplierPerPick, Stacks(UpgradeId.FlatMultiplier));
     public int FlatPointBonus => FlatPointsPerPick * Stacks(UpgradeId.FlatPoints);
     public float CritChance => Mathf.Min(1f, CritChancePerPick * Stacks(UpgradeId.CritChance));
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void Bootstrap()
-    {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-        SceneManager.sceneLoaded += OnSceneLoaded;
-        EnsureExists();
-    }
-
-    private static void OnSceneLoaded(Scene scene, LoadSceneMode mode) => EnsureExists();
-
-    private static void EnsureExists()
-    {
-        if (FindAnyObjectByType<UpgradeManager>() != null || FindAnyObjectByType<ScoreManager>() == null)
-            return;
-
-        new GameObject("UpgradeManager").AddComponent<UpgradeManager>();
-    }
 
     private void Awake()
     {
@@ -89,17 +71,23 @@ public class UpgradeManager : MonoBehaviour
             return;
         }
 
+        if (popupPrefab == null || critPopupPrefab == null)
+        {
+            Debug.LogError("Assign the upgrade and crit popup prefabs on UpgradeManager.", this);
+            enabled = false;
+            return;
+        }
+
         Instance = this;
         nextThreshold = pointsPerUpgrade;
         allUpgrades = BuildUpgradeList();
 
-        popup = new GameObject("UpgradePopup").AddComponent<UpgradePopup>();
-        popup.transform.SetParent(transform, false);
-        popup.Build();
+        popup = Instantiate(popupPrefab, transform);
+        popup.gameObject.name = "UpgradePopup";
+        popup.Hide();
 
-        critPopup = new GameObject("CritPopup").AddComponent<CritPopup>();
-        critPopup.transform.SetParent(transform, false);
-        critPopup.Build();
+        critPopup = Instantiate(critPopupPrefab, transform);
+        critPopup.gameObject.name = "CritPopup";
     }
 
     private void Start()
@@ -242,8 +230,7 @@ public class UpgradeManager : MonoBehaviour
 
     private IEnumerator FinishPick()
     {
-        // Resume a frame later so the click or key that picked the upgrade can't also
-        // be read by other scripts (the 1-3 keys use items) once time starts again.
+        // Defer a frame so the click or key that picked the upgrade can't also trigger gameplay input.
         yield return null;
 
         if (pendingOffers > 0 && (GameTimer.Instance == null || !GameTimer.Instance.IsGameOver))
@@ -302,10 +289,6 @@ public class UpgradeManager : MonoBehaviour
 
     private List<UpgradeDefinition> BuildUpgradeList()
     {
-        // Show the real cooldown on the card. It lives on the flippers, so ask one.
-        FlipperControls flipper = FindAnyObjectByType<FlipperControls>(FindObjectsInactive.Include);
-        float baseCooldown = flipper != null ? flipper.BaseCooldown : 0.6f;
-
         return new List<UpgradeDefinition>
         {
             Define(UpgradeId.BallWeight, "Heavy Ball",
@@ -323,11 +306,6 @@ public class UpgradeManager : MonoBehaviour
             Define(UpgradeId.FlipperSpeed, "Fast Flippers",
                 $"Flipper swing speed +{Percent(FlipperSpeedPerPick)}",
                 n => "+" + Percent(FlipperSpeedPerPick * n)),
-
-            Define(UpgradeId.FlipperCooldown, "Quick Recovery",
-                $"Flipper cooldown -{Percent(FlipperCooldownCutPerPick)} ({baseCooldown:0.00}s base, max 4 picks)",
-                n => $"-{Percent(FlipperCooldownCutPerPick * n)} ({baseCooldown * Mathf.Max(0f, 1f - FlipperCooldownCutPerPick * n):0.00}s)",
-                maxStacks: 4),
 
             Define(UpgradeId.FlatPoints, "Bonus Points",
                 $"+{FlatPointsPerPick} point on every score (added before multipliers)",
