@@ -43,6 +43,12 @@ public class MenuManager : MonoBehaviour
 
     private void Update()
     {
+        // The game over popup owns the screen; don't let the pause menu fight it.
+        if (GameTimer.Instance != null && GameTimer.Instance.IsGameOver) return;
+
+        // Same for the upgrade choice, which has to be answered first.
+        if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsChoosing) return;
+
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             ToggleMenu();

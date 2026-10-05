@@ -33,21 +33,31 @@ public class Bouncer : MonoBehaviour
         if (ballBody == null)
             return;
 
+        ScoreManager.Instance.AddScore(1);
+
         Collider bouncerCollider = GetComponent<Collider>();
         Vector3 bouncerCenter = bouncerCollider != null
             ? bouncerCollider.bounds.center
             : transform.position;
-        Vector3 awayDirection = ballCollider.bounds.center - bouncerCenter;
+        Vector3 awayDirection = Vector3.ProjectOnPlane(
+            ballCollider.bounds.center - bouncerCenter,
+            Vector3.up);
 
         if (awayDirection.sqrMagnitude < 0.0001f)
-            awayDirection = transform.up;
+        {
+            awayDirection = Vector3.ProjectOnPlane(transform.forward, Vector3.up);
+            if (awayDirection.sqrMagnitude < 0.0001f)
+                awayDirection = Vector3.right;
+        }
 
         awayDirection.Normalize();
         Vector3 velocity = ballBody.linearVelocity;
-        float currentSpeed = velocity.magnitude;
+        Vector3 horizontalVelocity = Vector3.ProjectOnPlane(velocity, Vector3.up);
+        float currentSpeed = horizontalVelocity.magnitude;
+        float verticalVelocity = Mathf.Min(velocity.y, 0f);
 
-        // Point the ball directly away from the side of the bouncer it touched.
-        ballBody.linearVelocity = awayDirection * currentSpeed;
-        ballBody.AddForce(awayDirection * accelerationForce, ForceMode.Impulse);
+        ballBody.linearVelocity = awayDirection * currentSpeed + Vector3.up * verticalVelocity;
+        float speedMultiplier = UpgradeManager.Instance != null ? UpgradeManager.Instance.BallSpeedMultiplier : 1f;
+        ballBody.AddForce(awayDirection * accelerationForce * speedMultiplier, ForceMode.Impulse);
     }
 }

@@ -6,6 +6,10 @@ TagManager:
   tags:
   - Ball
   - Killzone
+  - Bouncer
+  - Wall
+  - Board
+  - Item
   layers:
   - Default
   - TransparentFX
