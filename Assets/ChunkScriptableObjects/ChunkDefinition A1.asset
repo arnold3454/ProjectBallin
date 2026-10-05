@@ -15,7 +15,7 @@ MonoBehaviour:
   chunkId: ChunkA_Variant1
   prefab: {fileID: 8499146765385638904, guid: 15a8342e38d712a419c5070d1f265936, type: 3}
   socketType: CenterMiddle
-  weight: 2
+  weight: 4
   allowRepeat: 1
   allowRandomRotation: 0
   localPositionOffset: {x: 0, y: 0, z: 0}

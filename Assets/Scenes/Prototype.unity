@@ -2864,7 +2864,8 @@ PrefabInstance:
       value: MapRoot
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 4556782347325616824, guid: 9ffdfa315b4625246b426417f0193b16, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 8031063390326760670, guid: 9ffdfa315b4625246b426417f0193b16, type: 3}
@@ -2890,8 +2891,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BoardGenerator
   layout: {fileID: 11400000, guid: 941615f6e27ff1e49b96e7227ea40458, type: 2}
   generatedChunks: {fileID: 0}
-  seed: 0
-  randomizeSeedOnGenerate: 1
+  seed: 25815593
+  randomizeSeedOnGenerate: 0
   generateOnStart: 1
   warnOnOverlappingChunks: 0
   generatedChunkScale: 0.504

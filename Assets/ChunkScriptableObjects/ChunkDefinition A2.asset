@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 97e5eeb402b616a479d9690513ea5868, type: 3}
-  m_Name: ChunkDefinition 5
+  m_Name: ChunkDefinition A2
   m_EditorClassIdentifier: Assembly-CSharp::ChunkDefinition
-  chunkId: ChunkA_VariantB
-  prefab: {fileID: 6431588273880773819, guid: 718c0e0becbbd824fbd6f8dfeb2031f6, type: 3}
+  chunkId: ChunkA_Variant2
+  prefab: {fileID: 8499146765385638904, guid: c88b973bdac38d741b39e5e1de2e573a, type: 3}
   socketType: CenterMiddle
-  weight: 1
+  weight: 2
   allowRepeat: 1
   allowRandomRotation: 0
   localPositionOffset: {x: 0, y: 0, z: 0}

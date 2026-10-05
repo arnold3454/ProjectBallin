@@ -42,9 +42,9 @@ MonoBehaviour:
     localEulerAngles: {x: 0, y: 0, z: 0}
     allowedChunks:
     - {fileID: 11400000, guid: 644eb96a3310f464ea25e5bbd659105e, type: 2}
-    - {fileID: 11400000, guid: 3c02744080b1b0a4d81a5ea64a8f24d8, type: 2}
     - {fileID: 11400000, guid: 9adbeddadf10a5741bdcb42d37eed5f1, type: 2}
     - {fileID: 11400000, guid: 4a2d0a17a4c89ac42a3fd6d93638099e, type: 2}
+    - {fileID: 11400000, guid: bc39dc5f1b9df1342a0fb9b2f7ae4a1e, type: 2}
     useRandomRegion: 0
     randomRegionMin: {x: 0, y: 0}
     randomRegionMax: {x: 0, y: 0}
