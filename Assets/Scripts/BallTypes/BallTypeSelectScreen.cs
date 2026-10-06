@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -11,9 +10,9 @@ public class BallTypeSelectScreen : MonoBehaviour
 {
     [SerializeField] private BallTypeCardUI[] cards;
 
-    public bool Initialize(IReadOnlyList<BallTypeInfo> types, Action<BallType> onPick)
+    public bool Initialize(BallTypeInfo[] types, Action<BallType> onPick)
     {
-        if (types == null || onPick == null || cards == null || cards.Length != types.Count)
+        if (types == null || onPick == null || cards == null || cards.Length != types.Length)
         {
             Debug.LogError("BallTypeSelectScreen requires one serialized card for each ball type.", this);
             return false;

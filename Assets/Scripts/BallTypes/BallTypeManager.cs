@@ -22,10 +22,13 @@ public class BallTypeManager : MonoBehaviour
     [Header("UI Prefabs")]
     [SerializeField] private GameObject screenPrefab;
     [SerializeField] private GameObject splitHudPrefab;
+    [Tooltip("Assign one asset for each ball type. They are matched by their BallType value.")]
+    [SerializeField] private BallTypeInfo[] ballTypes;
 
     private BallTypeSelectScreen screen;
     private BallTypeSplitHud splitHud;
-    private BallTypeInfo current = BallTypeInfo.Get(BallType.Default);
+    private BallTypeInfo current;
+    private BallTypeInfo[] ballTypesByType;
     private Material ballMaterial;
     private PhysicsMaterial ballPhysicsMaterial;
     private float nextSplitTime;
@@ -34,9 +37,9 @@ public class BallTypeManager : MonoBehaviour
     public BallTypeInfo Current => current;
 
     // Static so callers needn't null-check the manager. Scenes without one play as the default ball.
-    public static float PointsMultiplier => Instance != null ? Instance.current.PointsMultiplier : 1f;
-    public static float WeightMultiplier => Instance != null ? Instance.current.WeightMultiplier : 1f;
-    public static float SpeedMultiplier => Instance != null ? Instance.current.SpeedMultiplier : 1f;
+    public static float PointsMultiplier => Instance != null && Instance.current != null ? Instance.current.PointsMultiplier : 1f;
+    public static float WeightMultiplier => Instance != null && Instance.current != null ? Instance.current.WeightMultiplier : 1f;
+    public static float SpeedMultiplier => Instance != null && Instance.current != null ? Instance.current.SpeedMultiplier : 1f;
 
     private void Awake()
     {
@@ -50,11 +53,18 @@ public class BallTypeManager : MonoBehaviour
 
         if (screenPrefab == null || splitHudPrefab == null)
         {
-            Debug.LogError("BallTypeManager requires both UI prefab references.", this);
+            Debug.LogError("BallTypeManager is missing its selection screen prefab or split HUD prefab reference.", this);
             enabled = false;
             return;
         }
 
+        if (!TryGetBallTypesByType(out ballTypesByType))
+        {
+            enabled = false;
+            return;
+        }
+
+        current = ballTypesByType[(int)BallType.Default];
         GameObject screenObject = Instantiate(screenPrefab, transform);
         screen = screenObject.GetComponent<BallTypeSelectScreen>();
         if (screen == null)
@@ -65,7 +75,7 @@ public class BallTypeManager : MonoBehaviour
             return;
         }
 
-        if (!screen.Initialize(BallTypeInfo.All, Select))
+        if (!screen.Initialize(ballTypesByType, Select))
         {
             Debug.LogError("BallTypeManager could not initialize its selection screen prefab.", this);
             enabled = false;
@@ -135,8 +145,15 @@ public class BallTypeManager : MonoBehaviour
         if (choiceMade)
             return;
 
+        BallTypeInfo selected = GetBallType(type);
+        if (selected == null)
+        {
+            Debug.LogError($"No ball type asset is configured for {type}.", this);
+            return;
+        }
+
         choiceMade = true;
-        current = BallTypeInfo.Get(type);
+        current = selected;
 
         // A ball may already be waiting on the plunger from before the choice was made.
         foreach (GameObject ball in GameObject.FindGameObjectsWithTag("Ball"))
@@ -165,7 +182,7 @@ public class BallTypeManager : MonoBehaviour
 
     private void ApplyTo(GameObject ball)
     {
-        if (current.Type == BallType.Default || ball == null)
+        if (current == null || current.Type == BallType.Default || ball == null)
             return;
 
         // Called once per ball. The weight slider applies the same multiplier when it is moved.
@@ -245,5 +262,61 @@ public class BallTypeManager : MonoBehaviour
         // Only start the cooldown if a ball was actually split.
         if (BallSplitter.TrySplit())
             nextSplitTime = Time.time + splitCooldown;
+    }
+
+    private bool TryGetBallTypesByType(out BallTypeInfo[] typesByType)
+    {
+        int typeCount = (int)BallType.Split + 1;
+        typesByType = new BallTypeInfo[typeCount];
+
+        if (ballTypes == null || ballTypes.Length != typeCount)
+        {
+            Debug.LogError($"BallTypeManager expects {typeCount} ball type assets, but has {(ballTypes == null ? 0 : ballTypes.Length)}.", this);
+            return false;
+        }
+
+        for (int i = 0; i < ballTypes.Length; i++)
+        {
+            BallTypeInfo info = ballTypes[i];
+            if (info == null)
+            {
+                Debug.LogError($"BallTypeManager ball type asset at array index {i} is unassigned.", this);
+                return false;
+            }
+
+            int typeIndex = (int)info.Type;
+            if (typeIndex < 0 || typeIndex >= typeCount)
+            {
+                Debug.LogError($"Ball type asset '{info.name}' has an unsupported BallType value: {info.Type}.", this);
+                return false;
+            }
+
+            if (typesByType[typeIndex] != null)
+            {
+                Debug.LogError($"BallTypeManager has more than one asset assigned for {info.Type}.", this);
+                return false;
+            }
+
+            typesByType[typeIndex] = info;
+        }
+
+        for (int i = 0; i < typesByType.Length; i++)
+        {
+            if (typesByType[i] != null)
+                continue;
+
+            Debug.LogError($"BallTypeManager has no asset assigned for {(BallType)i}.", this);
+            return false;
+        }
+
+        return true;
+    }
+
+    private BallTypeInfo GetBallType(BallType type)
+    {
+        int index = (int)type;
+        return index >= 0 && index < ballTypesByType.Length
+            ? ballTypesByType[index]
+            : null;
     }
 }

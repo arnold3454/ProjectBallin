@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ecd43ab3505e2a4eb13660b5842e2b7, type: 3}
+  m_Name: BouncyBallType
+  m_EditorClassIdentifier: Assembly-CSharp::BallTypeInfo
+  type: 1
+  displayName: Bouncy Ball
+  flavor: A ball specializing in speed. This red bouncy ball will allow the player
+    to ricochet it across the board. It has high speed, low weight, and increased
+    bounciness.
+  color: {r: 0.88, g: 0.1, b: 0.1, a: 1}
+  pointsMultiplier: 0.75
+  weightMultiplier: 0.6
+  speedMultiplier: 1.25
+  bounciness: 0.9

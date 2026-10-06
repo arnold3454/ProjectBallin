@@ -969,6 +969,10 @@ MonoBehaviour:
   maxBalls: 8
   screenPrefab: {fileID: 8878247809454548861, guid: c19cc46e929d2774fa19a899e4430a21, type: 3}
   splitHudPrefab: {fileID: 8834057467108829132, guid: 3926273fb86611242983e0946db32dff, type: 3}
+  ballTypes:
+  - {fileID: 11400000, guid: 51e288e12fd93464685f611bc7f00c34, type: 2}
+  - {fileID: 11400000, guid: c8790dffb403c0b4b8ca244585bae45b, type: 2}
+  - {fileID: 11400000, guid: 2520330c179d8974090afc2455738bca, type: 2}
 --- !u!1 &155672432
 GameObject:
   m_ObjectHideFlags: 0
