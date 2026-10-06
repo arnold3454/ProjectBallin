@@ -60,12 +60,16 @@ flipAction.action.Disable();
 private void OnFlip(InputAction.CallbackContext ctx)
     {
 if (tiltLocked)
-return;
+    return;
 
 if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsChoosing)
-return;
+    return;
 
-Activate();
+if (BallTypeManager.IsSelecting)
+    return;
+
+SetDirection(motorSpeed);
+PlayFlipSFX();
     }
 
 private void OnRelease(InputAction.CallbackContext ctx)

@@ -705,6 +705,7 @@ GameObject:
   - component: {fileID: 136284781}
   - component: {fileID: 136284782}
   - component: {fileID: 1748271938090000001}
+  - component: {fileID: 136284783}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -885,6 +886,26 @@ MonoBehaviour:
   audioTriggerTime: 30
   timeWarningClip: {fileID: 0}
   timeWarningVolume: 1
+--- !u!114 &136284783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 136284774}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64b3c707473bbc54ea2d2f6e2908de4e, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::BallTypeManager
+  splitCooldown: 5
+  maxBalls: 8
+  screenPrefab: {fileID: 8878247809454548861, guid: c19cc46e929d2774fa19a899e4430a21, type: 3}
+  splitHudPrefab: {fileID: 8834057467108829132, guid: 3926273fb86611242983e0946db32dff, type: 3}
+  ballTypes:
+  - {fileID: 11400000, guid: 51e288e12fd93464685f611bc7f00c34, type: 2}
+  - {fileID: 11400000, guid: c8790dffb403c0b4b8ca244585bae45b, type: 2}
+  - {fileID: 11400000, guid: 2520330c179d8974090afc2455738bca, type: 2}
 --- !u!1 &171704269
 GameObject:
   m_ObjectHideFlags: 0

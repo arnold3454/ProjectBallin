@@ -169,7 +169,7 @@ public class BallSettingsManager : MonoBehaviour
             Rigidbody rb = ball.GetComponent<Rigidbody>();
             if (rb != null)
             {
-                rb.mass = massValue * (UpgradeManager.Instance != null ? UpgradeManager.Instance.BallWeightMultiplier : 1f);
+                rb.mass = massValue * (UpgradeManager.Instance != null ? UpgradeManager.Instance.BallWeightMultiplier : 1f) * BallTypeManager.WeightMultiplier;
             }
         }
     }
