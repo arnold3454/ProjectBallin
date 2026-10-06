@@ -1,15 +1,11 @@
 using System.Collections;
-using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 /// <summary>
 /// Shows the start screen where the player picks a ball type, then holds that choice for
 /// the rest of the game: points multiplier, weight, speed, looks, and the Split ball's
 /// duplicate ability. The game is paused until a ball is chosen.
-/// Creates itself in any scene that has a ScoreManager, so it needs no scene setup.
 /// </summary>
 public class BallTypeManager : MonoBehaviour
 {
@@ -23,11 +19,15 @@ public class BallTypeManager : MonoBehaviour
     [Tooltip("The Split ball can't duplicate while this many balls are already on the table.")]
     [SerializeField, Min(2)] private int maxBalls = 8;
 
+    [Header("UI Prefabs")]
+    [SerializeField] private GameObject screenPrefab;
+    [SerializeField] private GameObject splitHudPrefab;
+
     private BallTypeSelectScreen screen;
+    private BallTypeSplitHud splitHud;
     private BallTypeInfo current = BallTypeInfo.Get(BallType.Default);
     private Material ballMaterial;
     private PhysicsMaterial ballPhysicsMaterial;
-    private TextMeshProUGUI splitLabel;
     private float nextSplitTime;
     private bool choiceMade;
 
@@ -37,24 +37,6 @@ public class BallTypeManager : MonoBehaviour
     public static float PointsMultiplier => Instance != null ? Instance.current.PointsMultiplier : 1f;
     public static float WeightMultiplier => Instance != null ? Instance.current.WeightMultiplier : 1f;
     public static float SpeedMultiplier => Instance != null ? Instance.current.SpeedMultiplier : 1f;
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void Bootstrap()
-    {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-        SceneManager.sceneLoaded += OnSceneLoaded;
-        EnsureExists();
-    }
-
-    private static void OnSceneLoaded(Scene scene, LoadSceneMode mode) => EnsureExists();
-
-    private static void EnsureExists()
-    {
-        if (FindAnyObjectByType<BallTypeManager>() != null || FindAnyObjectByType<ScoreManager>() == null)
-            return;
-
-        new GameObject("BallTypeManager").AddComponent<BallTypeManager>();
-    }
 
     private void Awake()
     {
@@ -66,11 +48,41 @@ public class BallTypeManager : MonoBehaviour
 
         Instance = this;
 
-        screen = new GameObject("BallTypeSelectScreen").AddComponent<BallTypeSelectScreen>();
-        screen.transform.SetParent(transform, false);
-        screen.Build(BallTypeInfo.All, Select);
+        if (screenPrefab == null || splitHudPrefab == null)
+        {
+            Debug.LogError("BallTypeManager requires both UI prefab references.", this);
+            enabled = false;
+            return;
+        }
 
-        BuildSplitLabel();
+        GameObject screenObject = Instantiate(screenPrefab, transform);
+        screen = screenObject.GetComponent<BallTypeSelectScreen>();
+        if (screen == null)
+        {
+            Debug.LogError("BallTypeManager selection screen prefab is missing BallTypeSelectScreen.", this);
+            enabled = false;
+            Destroy(screenObject);
+            return;
+        }
+
+        if (!screen.Initialize(BallTypeInfo.All, Select))
+        {
+            Debug.LogError("BallTypeManager could not initialize its selection screen prefab.", this);
+            enabled = false;
+            Destroy(screen.gameObject);
+            return;
+        }
+
+        GameObject splitHudObject = Instantiate(splitHudPrefab, transform);
+        splitHud = splitHudObject.GetComponent<BallTypeSplitHud>();
+        if (splitHud == null)
+        {
+            Debug.LogError("BallTypeManager split HUD prefab is missing BallTypeSplitHud.", this);
+            enabled = false;
+            Destroy(splitHudObject);
+            Destroy(screen.gameObject);
+            return;
+        }
 
         // Pause until a ball is picked. Other scripts set the time scale back to 1 in their
         // Start, so Update keeps it at 0 while the screen is up.
@@ -207,8 +219,8 @@ public class BallTypeManager : MonoBehaviour
     private void UpdateSplit()
     {
         bool active = current.Type == BallType.Split;
-        if (splitLabel != null)
-            splitLabel.gameObject.SetActive(active);
+        if (splitHud != null)
+            splitHud.SetVisible(active);
 
         if (!active)
             return;
@@ -218,13 +230,11 @@ public class BallTypeManager : MonoBehaviour
             return;
 
         float wait = nextSplitTime - Time.time;
-        if (splitLabel != null)
-        {
-            splitLabel.text = wait > 0f
+        splitHud.SetStatus(
+            wait > 0f
                 ? $"[{BallTypeInfo.SplitKey}] Split in {wait:0.0}s"
-                : $"[{BallTypeInfo.SplitKey}] Split ready";
-            splitLabel.color = wait > 0f ? new Color(0.7f, 0.72f, 0.8f) : new Color(0.55f, 0.7f, 1f);
-        }
+                : $"[{BallTypeInfo.SplitKey}] Split ready",
+            wait > 0f ? new Color(0.7f, 0.72f, 0.8f) : new Color(0.55f, 0.7f, 1f));
 
         if (wait > 0f || Keyboard.current == null || !Keyboard.current[BallTypeInfo.SplitKey].wasPressedThisFrame)
             return;
@@ -235,28 +245,5 @@ public class BallTypeManager : MonoBehaviour
         // Only start the cooldown if a ball was actually split.
         if (BallSplitter.TrySplit())
             nextSplitTime = Time.time + splitCooldown;
-    }
-
-    private void BuildSplitLabel()
-    {
-        GameObject canvasObject = new GameObject("SplitHudCanvas", typeof(RectTransform));
-        canvasObject.transform.SetParent(transform, false);
-
-        Canvas canvas = canvasObject.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 50;
-
-        CanvasScaler scaler = canvasObject.AddComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920f, 1080f);
-        scaler.matchWidthOrHeight = 0.5f;
-
-        splitLabel = BallTypeUI.CreateText("SplitLabel", canvasObject.transform, string.Empty, 36, Color.white, FontStyles.Bold);
-        RectTransform rect = splitLabel.rectTransform;
-        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
-        rect.pivot = new Vector2(0.5f, 0f);
-        rect.anchoredPosition = new Vector2(0f, 40f);
-        rect.sizeDelta = new Vector2(700f, 60f);
-        splitLabel.gameObject.SetActive(false);
     }
 }
