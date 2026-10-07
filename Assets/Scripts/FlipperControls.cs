@@ -68,7 +68,7 @@ if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsChoosing)
 if (BallTypeManager.IsSelecting)
     return;
 
-SetDirection(motorSpeed);
+SetDirection(MotorSpeed);
 PlayFlipSFX();
     }
 

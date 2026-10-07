@@ -228,8 +228,9 @@ public class BallTypeManager : MonoBehaviour
         material.name = "BouncyBall";
         material.bounciness = bounciness;
 
-        // Maximum wins over every other combine mode, so the table can't damp the bounce.
-        material.bounceCombine = PhysicsMaterialCombine.Maximum;
+        // Let the contacted surface contribute so a bouncy ball can't keep maximum
+        // rebound against every obstacle.
+        material.bounceCombine = PhysicsMaterialCombine.Average;
         return material;
     }
 

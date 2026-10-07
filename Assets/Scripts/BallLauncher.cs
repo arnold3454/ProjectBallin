@@ -115,9 +115,6 @@ public class BallLauncher : MonoBehaviour
             return;
 
         HandleInput();
-            return;
-
-        HandleInput();
         HandleAutoLaunch();
         HandleReload();
         HoldLoadedBall();
