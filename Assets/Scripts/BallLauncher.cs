@@ -173,7 +173,9 @@ public class BallLauncher : MonoBehaviour
             return;
         }
 
-        if (waitForDrain && GameObject.FindGameObjectsWithTag("Ball").Length > 0)
+        float size = CurrentBallSize;
+        bool ballReturnedToPlunger = FindBallAt(GetLoadPosition(size), 0.5f * size) != null;
+        if (waitForDrain && !ballReturnedToPlunger && GameObject.FindGameObjectsWithTag("Ball").Length > 0)
         {
             reloadTimer = 0f;
             return;
