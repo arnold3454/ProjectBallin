@@ -157,6 +157,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DeleteBall
   drainClip: {fileID: 8300000, guid: cece9100574214b359c99bb90bfda843, type: 3}
   drainVolume: 1
+  sfxGroup: {fileID: -4916057103960894158, guid: 69aab3bcd8e1f4e4abdabe196f4a6d76, type: 2}
 --- !u!114 &5271397974061694444
 MonoBehaviour:
   m_ObjectHideFlags: 0
