@@ -7893,7 +7893,7 @@ MonoBehaviour:
   betMessage: 'Bet: {0}  (roll over the wheel)'
   spinningMessage: Spinning...
   lostMessage: 'Lost on {0}!  Bet again'
-  wonMessage: '{0} wins!  BOSS FIGHT!'
+  wonMessage: '{0} wins!  The dealer stirs...'
   onBossFightTriggered:
     m_PersistentCalls:
       m_Calls: []
@@ -8048,6 +8048,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BossManager
   bossPrefab: {fileID: 689247322737324970, guid: bcdbf128d05740f5b4648be3dd28c959, type: 3}
   fallbackSpawnPoint: {x: -0.8, y: 1.75, z: 20}
+  spawnOffset: {x: 0, y: 0, z: 7}
   bossDuration: 45
   phaseInterval: 8
   warningThreshold: 10

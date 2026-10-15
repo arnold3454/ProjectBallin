@@ -22,7 +22,7 @@ public class RouletteManager : MonoBehaviour
     [SerializeField] private string betMessage = "Bet: {0}  (roll over the wheel)";
     [SerializeField] private string spinningMessage = "Spinning...";
     [SerializeField] private string lostMessage = "Lost on {0}!  Bet again";
-    [SerializeField] private string wonMessage = "{0} wins!  BOSS FIGHT!";
+    [SerializeField] private string wonMessage = "{0} wins!  The dealer stirs...";
 
     [Header("Events")]
     [Tooltip("Invoked once when a winning spin triggers the boss fight.")]

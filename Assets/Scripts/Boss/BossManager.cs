@@ -1,22 +1,32 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 
 /// <summary>
-/// Runs the boss fight. Starts when the roulette wheel is won: spawns the dealer over the
-/// wheel, runs the boss timer (shorter than the main game clock) and switches the boss to a
-/// random phase on a fixed interval. The fight ends when the boss dies or the timer runs out.
-/// Lives on the GameManager with the other managers.
+/// Runs the boss fight. It starts once both summoning conditions are met, in either order:
+/// every corner boss trigger on the table is lit, and the roulette wheel has been won. Then
+/// the dealer spawns over the wheel, the boss timer runs (shorter than the main game clock)
+/// and the boss switches to a random phase on a fixed interval. The fight ends when the boss
+/// dies or the timer runs out. Lives on the GameManager with the other managers.
 /// </summary>
 public class BossManager : MonoBehaviour
 {
     public static BossManager Instance { get; private set; }
 
+    [Header("Summoning")]
+    [Tooltip("Require every CornerBossTrigger in the scene to be lit before the fight can start.")]
+    [SerializeField] private bool requireCornerTriggers = true;
+    [Tooltip("Require the roulette wheel to have been won before the fight can start.")]
+    [SerializeField] private bool requireRouletteWin = true;
+
     [Header("Boss")]
     [SerializeField] private Boss bossPrefab;
     [Tooltip("Where the boss spawns if there is no roulette wheel in the scene.")]
     [SerializeField] private Vector3 fallbackSpawnPoint = new Vector3(-0.8f, 1.75f, 20f);
+    [Tooltip("Offset from the roulette wheel (or fallback point) to the boss. +Z is up the table, so the boss stands above the wheel on screen rather than on it.")]
+    [SerializeField] private Vector3 spawnOffset = new Vector3(0f, 0f, 7f);
 
     [Header("Timer")]
     [Tooltip("Seconds the player gets to beat the boss. Capped to the main timer's remaining time.")]
@@ -41,6 +51,8 @@ public class BossManager : MonoBehaviour
     [SerializeField] private string defeatedMessage = "DEALER DEFEATED!";
     [SerializeField] private string escapedMessage = "The dealer got away...";
     [SerializeField, Min(0f)] private float messageDuration = 3f;
+    [SerializeField] private string needCornersMessage = "Light both corner buttons to summon the dealer";
+    [SerializeField] private string needRouletteMessage = "Corners lit!  Win the roulette to summon the dealer";
 
     [Header("Debug")]
     [Tooltip("Start the fight as soon as the scene loads, without winning the roulette.")]
@@ -66,6 +78,12 @@ public class BossManager : MonoBehaviour
     public Vector2 BoardMax => boardMax;
     public float SurfaceHeight => surfaceHeight;
 
+    /// <summary>True once the roulette has been won this round.</summary>
+    public bool RouletteWon { get; private set; }
+    /// <summary>True while every registered corner trigger is lit (or none are required).</summary>
+    public bool CornersArmed => !requireCornerTriggers || cornerTriggers.TrueForAll(t => t == null || t.IsLit);
+
+    private readonly List<CornerBossTrigger> cornerTriggers = new List<CornerBossTrigger>();
     private float phaseTimer;
     private float messageTimer;
 
@@ -77,12 +95,65 @@ public class BossManager : MonoBehaviour
 
     private void OnEnable()
     {
-        RouletteManager.BossFightTriggered += StartFight;
+        RouletteManager.BossFightTriggered += OnRouletteWon;
     }
 
     private void OnDisable()
     {
-        RouletteManager.BossFightTriggered -= StartFight;
+        RouletteManager.BossFightTriggered -= OnRouletteWon;
+    }
+
+    public void RegisterCornerTrigger(CornerBossTrigger trigger)
+    {
+        if (trigger == null || cornerTriggers.Contains(trigger))
+            return;
+
+        cornerTriggers.Add(trigger);
+        trigger.LitChanged += OnCornerTriggerChanged;
+        TryStartFight();
+    }
+
+    public void UnregisterCornerTrigger(CornerBossTrigger trigger)
+    {
+        if (!cornerTriggers.Remove(trigger))
+            return;
+
+        trigger.LitChanged -= OnCornerTriggerChanged;
+    }
+
+    private void OnRouletteWon()
+    {
+        RouletteWon = true;
+        TryStartFight();
+    }
+
+    private void OnCornerTriggerChanged(CornerBossTrigger trigger)
+    {
+        TryStartFight();
+    }
+
+    /// <summary>Starts the fight if every summoning condition is met; otherwise shows what is still missing.</summary>
+    private void TryStartFight()
+    {
+        if (IsFightActive)
+            return;
+
+        bool rouletteReady = !requireRouletteWin || RouletteWon;
+        bool cornersReady = CornersArmed;
+
+        if (rouletteReady && cornersReady)
+        {
+            StartFight();
+            return;
+        }
+
+        if (rouletteReady && !cornersReady)
+            SetHud(needCornersMessage);
+        else if (cornersReady && !rouletteReady && requireCornerTriggers && cornerTriggers.Count > 0)
+            SetHud(needRouletteMessage);
+        else
+            SetHud(string.Empty);
+        messageTimer = 0f;
     }
 
     private void OnDestroy()
@@ -134,6 +205,7 @@ public class BossManager : MonoBehaviour
         UpdateHud();
     }
 
+    /// <summary>Starts the fight immediately, ignoring the summoning conditions. Used by the debug toggle.</summary>
     [ContextMenu("Start Boss Fight")]
     public void StartFight()
     {
@@ -150,6 +222,7 @@ public class BossManager : MonoBehaviour
         RouletteWheel wheel = RouletteManager.Instance != null ? RouletteManager.Instance.Wheel : null;
         if (wheel != null)
             spawnPoint = wheel.transform.position;
+        spawnPoint += spawnOffset;
 
         Duration = bossDuration;
         if (GameTimer.Instance != null && GameTimer.Instance.IsRunning)

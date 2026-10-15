@@ -42,6 +42,9 @@ public class CornerBossTrigger : MonoBehaviour
     /// <summary>Raised after every scoring hit. Lets future boss logic react to the triggers.</summary>
     public event Action<CornerBossTrigger> Hit;
 
+    /// <summary>Raised whenever the lit state flips.</summary>
+    public event Action<CornerBossTrigger> LitChanged;
+
     /// <summary>True while the button shows its lit colour. Flips on every hit.</summary>
     public bool IsLit { get; private set; }
 
@@ -84,12 +87,25 @@ public class CornerBossTrigger : MonoBehaviour
             hitbox = GetComponent<BallHitboxTrigger>();
 
         hitbox.BallHit += OnBallHit;
+
+        if (BossManager.Instance != null)
+            BossManager.Instance.RegisterCornerTrigger(this);
+    }
+
+    private void Start()
+    {
+        // The manager may not have existed yet in OnEnable.
+        if (BossManager.Instance != null)
+            BossManager.Instance.RegisterCornerTrigger(this);
     }
 
     private void OnDisable()
     {
         if (hitbox != null)
             hitbox.BallHit -= OnBallHit;
+
+        if (BossManager.Instance != null)
+            BossManager.Instance.UnregisterCornerTrigger(this);
 
         if (feedback != null)
         {
@@ -122,8 +138,11 @@ public class CornerBossTrigger : MonoBehaviour
     /// <summary>Switches the cap between its lit colour and the material's own colour.</summary>
     public void SetLit(bool lit)
     {
+        bool changed = IsLit != lit;
         IsLit = lit;
         ApplyColor(lit ? litColor : baseColor);
+        if (changed)
+            LitChanged?.Invoke(this);
     }
 
     private IEnumerator PlayFeedback()
