@@ -34,6 +34,9 @@ public class RouletteManager : MonoBehaviour
     public BetColor CurrentBet { get; private set; }
     public bool IsBossFightTriggered { get; private set; }
 
+    /// <summary>The wheel currently registered in the scene, if any. The boss spawns on it.</summary>
+    public RouletteWheel Wheel => wheel;
+
     private readonly List<BetTunnel> tunnels = new List<BetTunnel>();
     private RouletteWheel wheel;
 
