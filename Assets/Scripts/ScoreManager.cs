@@ -59,8 +59,6 @@ if (amount > 0)
 CurrentScore += amount;
 Debug.Log(crit ? $"CRIT! +{amount} Score: {CurrentScore}" : $"Score: {CurrentScore}");
 
-CurrentScore += amount;
-Debug.Log(crit ? $"CRIT! +{amount} Score: {CurrentScore}" : $"Score: {CurrentScore}");
 UpdateScoreUI();
 // Don't ding until a whole point lands.
 if (amount > 0)
