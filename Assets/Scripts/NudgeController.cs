@@ -35,7 +35,10 @@ public class NudgeController : MonoBehaviour
             UpdateTiltMeter();
         }
 
-        if (Keyboard.current == null)
+        if (Keyboard.current == null || BallTypeManager.IsSelecting)
+            return;
+
+        if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsChoosing)
             return;
 
         float nudgeDirection = 0f;
