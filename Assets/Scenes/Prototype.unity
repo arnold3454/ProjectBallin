@@ -926,7 +926,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71099e8daa9111b48a84e9b55b49d327, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameTimer
-  startingTime: 90
+  startingTime: 600
   startOnLoad: 1
   timerText: {fileID: 1929207982}
   gameOverPanel: {fileID: 1444108079}
