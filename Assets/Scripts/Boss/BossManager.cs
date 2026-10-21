@@ -33,7 +33,7 @@ public class BossManager : MonoBehaviour
     [Tooltip("The fight's own countdown, separate from the main game clock. Left empty, the BossTimer on this object is used, or one is added with its default settings.")]
     [SerializeField] private BossTimer bossTimer;
     [Tooltip("Seconds added to the main game clock when the fight starts, so the fight doesn't eat the round.")]
-    [SerializeField, Min(0f)] private float mainClockBonus = 60f;
+    [SerializeField, Min(0f)] private float mainClockBonus = 90f;
     [Tooltip("Seconds between random phase switches.")]
     [SerializeField, Min(1f)] private float phaseInterval = 8f;
 

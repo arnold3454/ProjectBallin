@@ -35,6 +35,7 @@ public class Enemy : MonoBehaviour
     private int direction = 1;
     private int health;
     private float flashTimer;
+    private float damageRemainder;
 
     /// <summary>Raised once when the enemy's health reaches zero, just before it is destroyed.</summary>
     public event Action<Enemy> Died;
@@ -92,7 +93,12 @@ public class Enemy : MonoBehaviour
         if (health <= 0 || !collision.collider.CompareTag("Ball"))
             return;
 
-        health--;
+        // Hits land harder with the score multiplier upgrades. Fractions carry over to the
+        // next hit so a x1.2 multiplier still shows up as an extra hit every fifth ball.
+        float value = UpgradeManager.CurrentDamageMultiplier + damageRemainder;
+        int damage = Mathf.Max(1, Mathf.FloorToInt(value));
+        damageRemainder = Mathf.Max(0f, value - damage);
+        health = Mathf.Max(0, health - damage);
         AddScore(hitPoints);
 
         if (health > 0)

@@ -51,6 +51,7 @@ public class Boss : MonoBehaviour
     private MaterialPropertyBlock colorBlock;
     private float flashTimer;
     private Color? tint;
+    private float damageRemainder;
 
     private void Awake()
     {
@@ -138,7 +139,11 @@ public class Boss : MonoBehaviour
         if (IsDead || hits <= 0)
             return;
 
-        int damage = Mathf.Max(1, Mathf.RoundToInt(hits * DamageMultiplier));
+        // Phase multiplier (Club opens a weak spot) times the score multiplier upgrades. Fractions
+        // carry over to the next hit so small multipliers still add up.
+        float value = hits * DamageMultiplier * UpgradeManager.CurrentDamageMultiplier + damageRemainder;
+        int damage = Mathf.Max(1, Mathf.FloorToInt(value));
+        damageRemainder = Mathf.Max(0f, value - damage);
         Health = Mathf.Max(0, Health - damage);
         AddScore(hitPoints);
         HealthChanged?.Invoke(Health, maxHealth);

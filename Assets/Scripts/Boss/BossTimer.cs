@@ -13,7 +13,7 @@ public class BossTimer : MonoBehaviour
 {
     [Header("Duration")]
     [Tooltip("Seconds the player gets to beat the boss, before the main clock cap is applied.")]
-    [SerializeField, Min(1f)] private float duration = 45f;
+    [SerializeField, Min(1f)] private float duration = 90f;
     [Tooltip("The boss timer never runs longer than this fraction of the main timer's remaining time, so it always ends before the round does.")]
     [SerializeField, Range(0.1f, 1f)] private float maxFractionOfMainClock = 0.75f;
 
