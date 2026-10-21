@@ -61,6 +61,8 @@ public class Boss : MonoBehaviour
         if (visualRenderer == null)
             visualRenderer = GetComponentInChildren<Renderer>();
 
+        // Tougher with every boss already beaten this run.
+        maxHealth = ProgressionManager.ScaleBossHealth(maxHealth);
         Health = maxHealth;
         ApplyHealthColor();
         ApplyLamp(Color.gray);

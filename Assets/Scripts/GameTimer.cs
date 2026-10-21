@@ -41,6 +41,8 @@ public bool IsGameOver
     {
 get; private set;
     }
+/// <summary>The panel shown when the clock runs out. The win screen is built from a copy of it.</summary>
+public GameObject GameOverPanel => gameOverPanel;
 
 private AudioSource audioSource;
 private bool hasPlayedTimeWarning;

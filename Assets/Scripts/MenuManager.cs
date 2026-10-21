@@ -52,6 +52,9 @@ public class MenuManager : MonoBehaviour
         // Same for the ball choice, which has to be answered first.
         if (BallTypeManager.IsSelecting) return;
 
+        // Same for the win screen between rounds.
+        if (ProgressionManager.Instance != null && ProgressionManager.Instance.IsShowingWin) return;
+
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             ToggleMenu();

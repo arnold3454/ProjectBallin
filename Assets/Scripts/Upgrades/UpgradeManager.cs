@@ -35,7 +35,10 @@ public class UpgradeManager : MonoBehaviour
     private const float CritMultiplier = 3f;
 
     [Header("Upgrade Offers")]
+    [Tooltip("Points needed for the first upgrade.")]
     [SerializeField, Min(1)] private int pointsPerUpgrade = 15;
+    [Tooltip("Each upgrade costs this many times more points than the one before. 1.12 turns 15 into 17, 19, 21, 24, 26, 30... so the tenth upgrade needs about 42 points on its own.")]
+    [SerializeField, Min(1f)] private float costGrowth = 1.12f;
     [SerializeField, Min(1)] private int choicesPerOffer = 3;
 
     [Header("Upgrade UI")]
@@ -48,12 +51,22 @@ public class UpgradeManager : MonoBehaviour
     private List<UpgradeDefinition> allUpgrades;
     private List<UpgradeDefinition> currentChoices;
     private int nextThreshold;
+    private int offersGranted;
     private int pendingOffers;
     private bool resolvingPick;
     private float scoreRemainder;
 
     /// <summary>True from when the choice appears until gameplay has resumed.</summary>
     public bool IsChoosing { get; private set; }
+
+    /// <summary>Upgrades the player has taken so far this run. Enemy scaling reads this.</summary>
+    public int TotalPicks { get; private set; }
+
+    /// <summary>Points the next upgrade unlocks at.</summary>
+    public int NextThreshold => nextThreshold;
+
+    /// <summary>Raised with the new total after every upgrade pick.</summary>
+    public event System.Action<int> UpgradePicked;
 
     public float BallWeightMultiplier => 1f + BallWeightPerPick * Stacks(UpgradeId.BallWeight);
     public float BallSpeedMultiplier => 1f + BallSpeedPerPick * Stacks(UpgradeId.BallSpeed);
@@ -153,7 +166,9 @@ public class UpgradeManager : MonoBehaviour
         while (score >= nextThreshold)
         {
             pendingOffers++;
-            nextThreshold += pointsPerUpgrade;
+            offersGranted++;
+            // Each upgrade costs a little more than the last, so picks keep coming but slow down.
+            nextThreshold += Mathf.Max(1, Mathf.RoundToInt(pointsPerUpgrade * Mathf.Pow(costGrowth, offersGranted)));
         }
     }
 
@@ -222,7 +237,9 @@ public class UpgradeManager : MonoBehaviour
 
         resolvingPick = true;
         currentChoices[index].Apply(this);
+        TotalPicks++;
         RefreshWorld();
+        UpgradePicked?.Invoke(TotalPicks);
         pendingOffers--;
         popup.Hide();
         StartCoroutine(FinishPick());

@@ -771,6 +771,7 @@ GameObject:
   - component: {fileID: 136284784}
   - component: {fileID: 8417637135343743433}
   - component: {fileID: 5690628428247626471}
+  - component: {fileID: 8912345678901234602}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -8357,3 +8358,25 @@ SceneRoots:
   - {fileID: 2478841596041446976}
   - {fileID: 744587631}
   - {fileID: 155672434}
+--- !u!114 &8912345678901234602
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 136284774}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 849d2b27eb444e68b4d7ec6064d36693, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ProgressionManager
+  enemyHealthPerUpgrade: 0.03
+  enemyHealthPerRound: 0.3
+  bossHealthPerRound: 0.25
+  winScreenDelay: 1.5
+  winPanel: {fileID: 0}
+  winTitleText: {fileID: 0}
+  winSummaryText: {fileID: 0}
+  continueButton: {fileID: 0}
+  winTitle: DEALER DEFEATED!
+  boardGenerator: {fileID: 0}

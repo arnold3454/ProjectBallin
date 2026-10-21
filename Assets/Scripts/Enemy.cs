@@ -48,6 +48,8 @@ public class Enemy : MonoBehaviour
         if (visualRenderer == null)
             visualRenderer = GetComponentInChildren<Renderer>();
 
+        // Tougher as the run goes on: more health per upgrade taken and per boss beaten.
+        maxHealth = ProgressionManager.ScaleEnemyHealth(maxHealth);
         health = maxHealth;
         leftPoint = rightPoint = transform.position;
         ApplyColor(healthyColor);

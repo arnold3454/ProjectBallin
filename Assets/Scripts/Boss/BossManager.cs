@@ -132,6 +132,26 @@ public class BossManager : MonoBehaviour
         TryStartFight();
     }
 
+    /// <summary>
+    /// Clears the summoning progress for a new round: any running fight is stopped, the roulette
+    /// win is forgotten and every corner trigger goes dark, so the dealer has to be summoned again.
+    /// </summary>
+    public void ResetSummoning()
+    {
+        if (IsFightActive)
+            EndFight(false);
+
+        RouletteWon = false;
+        foreach (CornerBossTrigger trigger in cornerTriggers)
+        {
+            if (trigger != null)
+                trigger.SetLit(false);
+        }
+
+        SetHud(string.Empty);
+        messageTimer = 0f;
+    }
+
     /// <summary>Starts the fight if every summoning condition is met; otherwise shows what is still missing.</summary>
     private void TryStartFight()
     {

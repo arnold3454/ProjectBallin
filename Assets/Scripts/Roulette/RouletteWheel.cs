@@ -135,6 +135,13 @@ public class RouletteWheel : MonoBehaviour
         ApplyLampColor(lockedColor);
     }
 
+    /// <summary>Lets the wheel spin again for a new round. The lamp goes back to the no-bet colour.</summary>
+    public void Unlock()
+    {
+        IsLocked = false;
+        ApplyLampColor(noBetColor);
+    }
+
     private void OnBallHit(Collider ball)
     {
         if (RouletteManager.Instance == null)
