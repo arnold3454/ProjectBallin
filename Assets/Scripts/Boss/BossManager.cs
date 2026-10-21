@@ -90,6 +90,8 @@ public class BossManager : MonoBehaviour
     private readonly List<CornerBossTrigger> cornerTriggers = new List<CornerBossTrigger>();
     private float phaseTimer;
     private float messageTimer;
+    /// <summary>Health the dealer had left when it last got away. 0 means it spawns at full health.</summary>
+    private int carriedHealth;
 
     private void Awake()
     {
@@ -144,6 +146,26 @@ public class BossManager : MonoBehaviour
     private void OnCornerTriggerChanged(CornerBossTrigger trigger)
     {
         TryStartFight();
+    }
+
+    /// <summary>
+    /// Clears the summoning progress for a new round: any running fight is stopped, the roulette
+    /// win is forgotten and every corner trigger goes dark, so the dealer has to be summoned again.
+    /// </summary>
+    public void ResetSummoning()
+    {
+        if (IsFightActive)
+            EndFight(false);
+
+        RouletteWon = false;
+        foreach (CornerBossTrigger trigger in cornerTriggers)
+        {
+            if (trigger != null)
+                trigger.SetLit(false);
+        }
+
+        SetHud(string.Empty);
+        messageTimer = 0f;
     }
 
     /// <summary>Starts the fight if every summoning condition is met; otherwise shows what is still missing.</summary>
@@ -237,6 +259,10 @@ public class BossManager : MonoBehaviour
         ActiveBoss.Died += OnBossDied;
         ActiveBoss.HealthChanged += OnBossHealthChanged;
 
+        // A dealer that got away comes back with the health it had left, so the damage sticks.
+        if (carriedHealth > 0)
+            ActiveBoss.SetHealth(carriedHealth);
+
         IsFightActive = true;
         messageTimer = 0f;
         phaseTimer = phaseInterval;
@@ -288,11 +314,22 @@ public class BossManager : MonoBehaviour
 
         if (ActiveBoss != null)
         {
+            // Remember how much was left so the next summon picks up where this one ended.
+            carriedHealth = defeated ? 0 : ActiveBoss.Health;
+
             ActiveBoss.Died -= OnBossDied;
             ActiveBoss.HealthChanged -= OnBossHealthChanged;
             ActiveBoss.EndPhases();
             Destroy(ActiveBoss.gameObject);
             ActiveBoss = null;
+        }
+
+        if (!defeated)
+        {
+            // The dealer got away: the corners and the roulette have to be done again to bring it back.
+            ResetSummoning();
+            if (RouletteManager.Instance != null)
+                RouletteManager.Instance.ResetRound();
         }
 
         SetHud(defeated ? defeatedMessage : escapedMessage);

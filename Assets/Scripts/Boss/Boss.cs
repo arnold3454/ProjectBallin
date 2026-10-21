@@ -120,6 +120,17 @@ public class Boss : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Sets the health directly, clamped to 1..MaxHealth. Used to bring the dealer back with the
+    /// health it had left when it got away. Doesn't score or kill.
+    /// </summary>
+    public void SetHealth(int health)
+    {
+        Health = Mathf.Clamp(health, 1, maxHealth);
+        ApplyHealthColor();
+        HealthChanged?.Invoke(Health, maxHealth);
+    }
+
     public void TakeDamage(int hits)
     {
         if (IsDead || hits <= 0)
