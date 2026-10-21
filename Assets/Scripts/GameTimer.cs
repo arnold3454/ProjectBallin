@@ -33,6 +33,8 @@ public float TimeRemaining
     {
 get; private set;
     }
+/// <summary>The label that shows the main countdown. The boss timer copies it for its own clock.</summary>
+public TextMeshProUGUI TimerText => timerText;
 public bool IsRunning
     {
 get; private set;
