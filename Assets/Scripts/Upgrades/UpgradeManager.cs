@@ -55,6 +55,15 @@ public class UpgradeManager : MonoBehaviour
     /// <summary>True from when the choice appears until gameplay has resumed.</summary>
     public bool IsChoosing { get; private set; }
 
+    /// <summary>Points earned toward the next upgrade. This is what the XP bar shows.</summary>
+    public int CurrentXp { get; private set; }
+
+    /// <summary>Points needed to fill the XP bar and earn an upgrade.</summary>
+    public int XpPerUpgrade => pointsPerUpgrade;
+
+    /// <summary>Raised with (current XP, XP per upgrade) whenever XP changes, including when the bar fills and resets.</summary>
+    public event System.Action<int, int> XpChanged;
+
     public float BallWeightMultiplier => 1f + BallWeightPerPick * Stacks(UpgradeId.BallWeight);
     public float BallSpeedMultiplier => 1f + BallSpeedPerPick * Stacks(UpgradeId.BallSpeed);
     public float FlipperSpeedMultiplier => 1f + FlipperSpeedPerPick * Stacks(UpgradeId.FlipperSpeed);
@@ -155,6 +164,10 @@ public class UpgradeManager : MonoBehaviour
             pendingOffers++;
             nextThreshold += pointsPerUpgrade;
         }
+
+        // Filling the bar is what earned the offer above; whatever spilled over starts the next bar.
+        CurrentXp = Mathf.Max(0, score - (nextThreshold - pointsPerUpgrade));
+        XpChanged?.Invoke(CurrentXp, pointsPerUpgrade);
     }
 
     /// <summary>
