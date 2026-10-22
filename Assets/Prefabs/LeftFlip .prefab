@@ -194,3 +194,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FlipperControls
   flipAction: {fileID: 5260062511927540678, guid: ffcd004953032864ea0e531a8838506c, type: 3}
+  flipClip: {fileID: 0}
+  flipVolume: 1

@@ -728,22 +728,6 @@ MonoBehaviour:
   scoreText: {fileID: 1391632141}
   scoreClip: {fileID: 0}
   scoreVolume: 1
---- !u!114 &1748271938090000001
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 136284774}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 280598b3329f66443b0514f35b84090c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UpgradeManager
-  pointsPerUpgrade: 15
-  choicesPerOffer: 3
-  popupPrefab: {fileID: 1806743490525708669, guid: ce15a5128bafec646982787d0a7e5b74, type: 3}
-  critPopupPrefab: {fileID: 5830497837523062933, guid: 4161e61ef0979854eb6a0ffd1c67f93b, type: 3}
 --- !u!4 &136284776
 Transform:
   m_ObjectHideFlags: 0
@@ -896,7 +880,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 64b3c707473bbc54ea2d2f6e2908de4e, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BallTypeManager
   splitCooldown: 5
   maxBalls: 8
@@ -996,6 +980,83 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!1001 &182315170
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 597002269}
+    m_Modifications:
+    - target: {fileID: 3554979147167661497, guid: 286e7361779621142b6507a2d1b915f3, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3554979147167661497, guid: 286e7361779621142b6507a2d1b915f3, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 2.44
+      objectReference: {fileID: 0}
+    - target: {fileID: 3554979147167661497, guid: 286e7361779621142b6507a2d1b915f3, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.9722688
+      objectReference: {fileID: 0}
+    - target: {fileID: 3554979147167661497, guid: 286e7361779621142b6507a2d1b915f3, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 2.28
+      objectReference: {fileID: 0}
+    - target: {fileID: 3554979147167661497, guid: 286e7361779621142b6507a2d1b915f3, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.67
+      objectReference: {fileID: 0}
+    - target: {fileID: 3554979147167661497, guid: 286e7361779621142b6507a2d1b915f3, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 2.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 3554979147167661497, guid: 286e7361779621142b6507a2d1b915f3, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3554979147167661497, guid: 286e7361779621142b6507a2d1b915f3, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3554979147167661497, guid: 286e7361779621142b6507a2d1b915f3, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3554979147167661497, guid: 286e7361779621142b6507a2d1b915f3, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3554979147167661497, guid: 286e7361779621142b6507a2d1b915f3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3554979147167661497, guid: 286e7361779621142b6507a2d1b915f3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3554979147167661497, guid: 286e7361779621142b6507a2d1b915f3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3554979147167661497, guid: 286e7361779621142b6507a2d1b915f3, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4187787038225409795, guid: 286e7361779621142b6507a2d1b915f3, type: 3}
+      propertyPath: m_Name
+      value: PinballFlippers
+      objectReference: {fileID: 0}
+    - target: {fileID: 4714419678123095458, guid: 286e7361779621142b6507a2d1b915f3, type: 3}
+      propertyPath: flipAction
+      value: 
+      objectReference: {fileID: 8625828265957788884, guid: ffcd004953032864ea0e531a8838506c, type: 3}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 286e7361779621142b6507a2d1b915f3, type: 3}
 --- !u!1 &200133515
 GameObject:
   m_ObjectHideFlags: 0
@@ -2240,6 +2301,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 576290934}
   m_CullTransparentMesh: 1
+--- !u!4 &597002269 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5007509377787215116, guid: 9ffdfa315b4625246b426417f0193b16, type: 3}
+  m_PrefabInstance: {fileID: 7641998057260601844}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &609187557
 GameObject:
   m_ObjectHideFlags: 0
@@ -6365,6 +6431,11 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!4 &1915892447 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3554979147167661497, guid: 286e7361779621142b6507a2d1b915f3, type: 3}
+  m_PrefabInstance: {fileID: 182315170}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1929207981
 GameObject:
   m_ObjectHideFlags: 0
@@ -6724,6 +6795,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2132364821}
   m_CullTransparentMesh: 1
+--- !u!114 &1748271938090000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 136284774}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 280598b3329f66443b0514f35b84090c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeManager
+  pointsPerUpgrade: 15
+  choicesPerOffer: 3
+  popupPrefab: {fileID: 1806743490525708669, guid: ce15a5128bafec646982787d0a7e5b74, type: 3}
+  critPopupPrefab: {fileID: 5830497837523062933, guid: 4161e61ef0979854eb6a0ffd1c67f93b, type: 3}
 --- !u!1001 &7641998057260601844
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6732,6 +6819,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4398268133703780912, guid: 9ffdfa315b4625246b426417f0193b16, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7043248178938046676, guid: 9ffdfa315b4625246b426417f0193b16, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.0436
@@ -6778,7 +6869,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 5007509377787215116, guid: 9ffdfa315b4625246b426417f0193b16, type: 3}
+      insertIndex: 9
+      addedObject: {fileID: 1915892447}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 8031063390326760670, guid: 9ffdfa315b4625246b426417f0193b16, type: 3}
       insertIndex: -1
