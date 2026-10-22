@@ -771,6 +771,8 @@ GameObject:
   - component: {fileID: 136284784}
   - component: {fileID: 8417637135343743433}
   - component: {fileID: 5690628428247626471}
+  - component: {fileID: 8912345678901234502}
+  - component: {fileID: 8912345678901234602}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -8051,11 +8053,10 @@ MonoBehaviour:
   bossPrefab: {fileID: 689247322737324970, guid: bcdbf128d05740f5b4648be3dd28c959, type: 3}
   fallbackSpawnPoint: {x: -0.8, y: 1.75, z: 20}
   spawnOffset: {x: 0, y: 0, z: 7}
-  bossDuration: 45
+  bossTimer: {fileID: 8912345678901234502}
+  mainClockBonus: 90
   phaseInterval: 8
-  warningThreshold: 10
   normalColor: {r: 1, g: 1, b: 1, a: 1}
-  warningColor: {r: 1, g: 0, b: 0, a: 1}
   boardMin: {x: -18.4, y: -8}
   boardMax: {x: 16.8, y: 38}
   surfaceHeight: 1.75
@@ -8396,7 +8397,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 711, y: 388}
+  m_AnchoredPosition: {x: 711, y: 350}
   m_SizeDelta: {x: 480, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1960000003
@@ -8789,3 +8790,47 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &8912345678901234502
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 136284774}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7339a3fea0114f96a21b42bafa87e5a4, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::BossTimer
+  duration: 90
+  maxFractionOfMainClock: 0.75
+  timerText: {fileID: 0}
+  offsetFromMainTimer: {x: 0, y: -80}
+  fontScale: 0.65
+  prefix:
+  hideWhenIdle: 1
+  warningThreshold: 10
+  normalColor: {r: 1, g: 0.85, b: 0.3, a: 1}
+  warningColor: {r: 1, g: 0, b: 0, a: 1}
+--- !u!114 &8912345678901234602
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 136284774}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 849d2b27eb444e68b4d7ec6064d36693, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ProgressionManager
+  enemyHealthPerUpgrade: 0.03
+  enemyHealthPerRound: 0.3
+  bossHealthPerRound: 0.25
+  winScreenDelay: 1.5
+  winPanel: {fileID: 0}
+  winTitleText: {fileID: 0}
+  winSummaryText: {fileID: 0}
+  continueButton: {fileID: 0}
+  winTitle: DEALER DEFEATED!
+  boardGenerator: {fileID: 0}

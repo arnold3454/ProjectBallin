@@ -25,6 +25,14 @@ public class BoardGenerator : MonoBehaviour
             Generate();
     }
 
+    /// <summary>Builds a fresh board from a new random seed, whatever the randomize setting says. Used between rounds.</summary>
+    [ContextMenu("Generate Board (New Seed)")]
+    public void GenerateRandom()
+    {
+        seed = Environment.TickCount;
+        Generate();
+    }
+
     [ContextMenu("Generate Board")]
     public void Generate()
     {

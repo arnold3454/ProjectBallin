@@ -35,6 +35,7 @@ public class UpgradeManager : MonoBehaviour
     private const float CritMultiplier = 3f;
 
     [Header("Upgrade Offers")]
+    [Tooltip("Points needed for the first upgrade.")]
     [SerializeField, Min(1)] private int pointsPerUpgrade = 15;
     [Tooltip("Each filled bar multiplies the XP needed for the next one by this. 1 = every level costs the same.")]
     [SerializeField, Min(1f)] private float xpGrowthPerLevel = 1.25f;
@@ -71,6 +72,15 @@ public class UpgradeManager : MonoBehaviour
     /// <summary>Raised with (current XP, XP per upgrade) whenever XP changes, including when the bar fills and resets.</summary>
     public event System.Action<int, int> XpChanged;
 
+    /// <summary>Upgrades the player has taken so far this run. Enemy scaling reads this.</summary>
+    public int TotalPicks { get; private set; }
+
+    /// <summary>Points the next upgrade unlocks at.</summary>
+    public int NextThreshold => nextThreshold;
+
+    /// <summary>Raised with the new total after every upgrade pick.</summary>
+    public event System.Action<int> UpgradePicked;
+
     public float BallWeightMultiplier => 1f + BallWeightPerPick * Stacks(UpgradeId.BallWeight);
     public float BallSpeedMultiplier => 1f + BallSpeedPerPick * Stacks(UpgradeId.BallSpeed);
     public float FlipperSpeedMultiplier => 1f + FlipperSpeedPerPick * Stacks(UpgradeId.FlipperSpeed);
@@ -78,6 +88,15 @@ public class UpgradeManager : MonoBehaviour
     public float FlatMultiplier => Mathf.Pow(1f + FlatMultiplierPerPick, Stacks(UpgradeId.FlatMultiplier));
     public int FlatPointBonus => FlatPointsPerPick * Stacks(UpgradeId.FlatPoints);
     public float CritChance => Mathf.Min(1f, CritChancePerPick * Stacks(UpgradeId.CritChance));
+
+    /// <summary>
+    /// Damage a ball hit deals to enemies and the boss, as a multiple of the base. Follows the
+    /// score multipliers only: the flat bonus point and crits don't make hits harder.
+    /// </summary>
+    public float DamageMultiplier => ScoreMultiplier * FlatMultiplier;
+
+    /// <summary>Static so hit code needn't null-check the manager. 1 without one in the scene.</summary>
+    public static float CurrentDamageMultiplier => Instance != null ? Instance.DamageMultiplier : 1f;
 
     private void Awake()
     {
@@ -251,7 +270,9 @@ public class UpgradeManager : MonoBehaviour
 
         resolvingPick = true;
         currentChoices[index].Apply(this);
+        TotalPicks++;
         RefreshWorld();
+        UpgradePicked?.Invoke(TotalPicks);
         pendingOffers--;
         popup.Hide();
         StartCoroutine(FinishPick());

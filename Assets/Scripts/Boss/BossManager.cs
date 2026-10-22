@@ -7,9 +7,10 @@ using UnityEngine.Events;
 /// <summary>
 /// Runs the boss fight. It starts once both summoning conditions are met, in either order:
 /// every corner boss trigger on the table is lit, and the roulette wheel has been won. Then
-/// the dealer spawns over the wheel, the boss timer runs (shorter than the main game clock)
-/// and the boss switches to a random phase on a fixed interval. The fight ends when the boss
-/// dies or the timer runs out. Lives on the GameManager with the other managers.
+/// the dealer spawns over the wheel, the <see cref="BossTimer"/> runs its own countdown
+/// (always shorter than the main game clock) and the boss switches to a random phase on a
+/// fixed interval. The fight ends when the boss dies or the boss timer runs out. Lives on the
+/// GameManager with the other managers.
 /// </summary>
 public class BossManager : MonoBehaviour
 {
@@ -29,13 +30,12 @@ public class BossManager : MonoBehaviour
     [SerializeField] private Vector3 spawnOffset = new Vector3(0f, 0f, 7f);
 
     [Header("Timer")]
-    [Tooltip("Seconds the player gets to beat the boss. Capped to the main timer's remaining time.")]
-    [SerializeField, Min(1f)] private float bossDuration = 45f;
+    [Tooltip("The fight's own countdown, separate from the main game clock. Left empty, the BossTimer on this object is used, or one is added with its default settings.")]
+    [SerializeField] private BossTimer bossTimer;
+    [Tooltip("Seconds added to the main game clock when the fight starts, so the fight doesn't eat the round.")]
+    [SerializeField, Min(0f)] private float mainClockBonus = 90f;
     [Tooltip("Seconds between random phase switches.")]
     [SerializeField, Min(1f)] private float phaseInterval = 8f;
-    [SerializeField] private float warningThreshold = 10f;
-    [SerializeField] private Color normalColor = Color.white;
-    [SerializeField] private Color warningColor = Color.red;
 
     [Header("Board")]
     [Tooltip("World X/Z of the bottom-left of the area phases may use.")]
@@ -47,6 +47,7 @@ public class BossManager : MonoBehaviour
 
     [Header("HUD")]
     [SerializeField] private TextMeshProUGUI bossText;
+    [SerializeField] private Color normalColor = Color.white;
     [SerializeField] private string bossName = "DEALER";
     [SerializeField] private string defeatedMessage = "DEALER DEFEATED!";
     [SerializeField] private string escapedMessage = "The dealer got away...";
@@ -68,11 +69,14 @@ public class BossManager : MonoBehaviour
 
     public bool IsFightActive { get; private set; }
     public Boss ActiveBoss { get; private set; }
-    public float TimeRemaining { get; private set; }
-    public float Duration { get; private set; }
+
+    /// <summary>The fight's countdown. Always shorter than the main game clock.</summary>
+    public BossTimer Timer => bossTimer;
+    public float TimeRemaining => bossTimer != null ? bossTimer.TimeRemaining : 0f;
+    public float Duration => bossTimer != null ? bossTimer.Duration : 0f;
 
     /// <summary>0 at the start of the fight, 1 when the boss timer runs out.</summary>
-    public float Urgency => IsFightActive && Duration > 0f ? 1f - Mathf.Clamp01(TimeRemaining / Duration) : 0f;
+    public float Urgency => IsFightActive && bossTimer != null ? bossTimer.Urgency : 0f;
 
     public Vector2 BoardMin => boardMin;
     public Vector2 BoardMax => boardMax;
@@ -86,21 +90,33 @@ public class BossManager : MonoBehaviour
     private readonly List<CornerBossTrigger> cornerTriggers = new List<CornerBossTrigger>();
     private float phaseTimer;
     private float messageTimer;
+    /// <summary>Health the dealer had left when it last got away. 0 means it spawns at full health.</summary>
+    private int carriedHealth;
 
     private void Awake()
     {
         Instance = this;
+
+        if (bossTimer == null)
+            bossTimer = GetComponent<BossTimer>();
+        if (bossTimer == null)
+            bossTimer = gameObject.AddComponent<BossTimer>();
+
         SetHud(string.Empty);
     }
 
     private void OnEnable()
     {
         RouletteManager.BossFightTriggered += OnRouletteWon;
+        if (bossTimer != null)
+            bossTimer.TimedOut += OnBossTimedOut;
     }
 
     private void OnDisable()
     {
         RouletteManager.BossFightTriggered -= OnRouletteWon;
+        if (bossTimer != null)
+            bossTimer.TimedOut -= OnBossTimedOut;
     }
 
     public void RegisterCornerTrigger(CornerBossTrigger trigger)
@@ -130,6 +146,26 @@ public class BossManager : MonoBehaviour
     private void OnCornerTriggerChanged(CornerBossTrigger trigger)
     {
         TryStartFight();
+    }
+
+    /// <summary>
+    /// Clears the summoning progress for a new round: any running fight is stopped, the roulette
+    /// win is forgotten and every corner trigger goes dark, so the dealer has to be summoned again.
+    /// </summary>
+    public void ResetSummoning()
+    {
+        if (IsFightActive)
+            EndFight(false);
+
+        RouletteWon = false;
+        foreach (CornerBossTrigger trigger in cornerTriggers)
+        {
+            if (trigger != null)
+                trigger.SetLit(false);
+        }
+
+        SetHud(string.Empty);
+        messageTimer = 0f;
     }
 
     /// <summary>Starts the fight if every summoning condition is met; otherwise shows what is still missing.</summary>
@@ -187,22 +223,13 @@ public class BossManager : MonoBehaviour
             return;
         }
 
-        TimeRemaining -= Time.deltaTime;
-        if (TimeRemaining <= 0f)
-        {
-            TimeRemaining = 0f;
-            EndFight(false);
-            return;
-        }
-
         phaseTimer -= Time.deltaTime;
         if (phaseTimer <= 0f)
         {
             phaseTimer = phaseInterval;
             ActiveBoss.SwitchToRandomPhase(this);
+            UpdateHud();
         }
-
-        UpdateHud();
     }
 
     /// <summary>Starts the fight immediately, ignoring the summoning conditions. Used by the debug toggle.</summary>
@@ -224,18 +251,22 @@ public class BossManager : MonoBehaviour
             spawnPoint = wheel.transform.position;
         spawnPoint += spawnOffset;
 
-        Duration = bossDuration;
-        if (GameTimer.Instance != null && GameTimer.Instance.IsRunning)
-            Duration = Mathf.Min(Duration, GameTimer.Instance.TimeRemaining);
-        TimeRemaining = Duration;
+        // Extend the round first so the boss timer's main clock cap sees the longer clock.
+        if (GameTimer.Instance != null && mainClockBonus > 0f)
+            GameTimer.Instance.AddTime(mainClockBonus);
 
         ActiveBoss = Instantiate(bossPrefab, spawnPoint, Quaternion.identity);
         ActiveBoss.Died += OnBossDied;
         ActiveBoss.HealthChanged += OnBossHealthChanged;
 
+        // A dealer that got away comes back with the health it had left, so the damage sticks.
+        if (carriedHealth > 0)
+            ActiveBoss.SetHealth(carriedHealth);
+
         IsFightActive = true;
         messageTimer = 0f;
         phaseTimer = phaseInterval;
+        bossTimer.Begin();
         ActiveBoss.SwitchToRandomPhase(this);
         UpdateHud();
 
@@ -263,6 +294,11 @@ public class BossManager : MonoBehaviour
         EndFight(true);
     }
 
+    private void OnBossTimedOut()
+    {
+        EndFight(false);
+    }
+
     private void OnBossHealthChanged(int health, int max)
     {
         UpdateHud();
@@ -274,9 +310,13 @@ public class BossManager : MonoBehaviour
             return;
 
         IsFightActive = false;
+        bossTimer.Stop();
 
         if (ActiveBoss != null)
         {
+            // Remember how much was left so the next summon picks up where this one ended.
+            carriedHealth = defeated ? 0 : ActiveBoss.Health;
+
             ActiveBoss.Died -= OnBossDied;
             ActiveBoss.HealthChanged -= OnBossHealthChanged;
             ActiveBoss.EndPhases();
@@ -284,7 +324,15 @@ public class BossManager : MonoBehaviour
             ActiveBoss = null;
         }
 
-        SetHud(defeated ? defeatedMessage : escapedMessage, normalColor);
+        if (!defeated)
+        {
+            // The dealer got away: the corners and the roulette have to be done again to bring it back.
+            ResetSummoning();
+            if (RouletteManager.Instance != null)
+                RouletteManager.Instance.ResetRound();
+        }
+
+        SetHud(defeated ? defeatedMessage : escapedMessage);
         messageTimer = messageDuration;
 
         if (defeated)
@@ -300,24 +348,16 @@ public class BossManager : MonoBehaviour
         if (ActiveBoss == null)
             return;
 
-        int minutes = Mathf.FloorToInt(TimeRemaining / 60f);
-        int seconds = Mathf.FloorToInt(TimeRemaining % 60f);
         string phase = ActiveBoss.CurrentPhase != null ? ActiveBoss.CurrentPhase.PhaseName : "-";
-        SetHud($"{bossName}  HP {ActiveBoss.Health}/{ActiveBoss.MaxHealth}   {phase}   {minutes:00}:{seconds:00}",
-            TimeRemaining <= warningThreshold ? warningColor : normalColor);
+        SetHud($"{bossName}  HP {ActiveBoss.Health}/{ActiveBoss.MaxHealth}   {phase}");
     }
 
     private void SetHud(string message)
-    {
-        SetHud(message, normalColor);
-    }
-
-    private void SetHud(string message, Color color)
     {
         if (bossText == null)
             return;
 
         bossText.text = message;
-        bossText.color = color;
+        bossText.color = normalColor;
     }
 }
