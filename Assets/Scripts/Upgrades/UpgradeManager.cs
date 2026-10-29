@@ -63,6 +63,15 @@ public class UpgradeManager : MonoBehaviour
     public int FlatPointBonus => FlatPointsPerPick * Stacks(UpgradeId.FlatPoints);
     public float CritChance => Mathf.Min(1f, CritChancePerPick * Stacks(UpgradeId.CritChance));
 
+    /// <summary>
+    /// Damage a ball hit deals to enemies and the boss, as a multiple of the base. Follows the
+    /// score multipliers only: the flat bonus point and crits don't make hits harder.
+    /// </summary>
+    public float DamageMultiplier => ScoreMultiplier * FlatMultiplier;
+
+    /// <summary>Static so hit code needn't null-check the manager. 1 without one in the scene.</summary>
+    public static float CurrentDamageMultiplier => Instance != null ? Instance.DamageMultiplier : 1f;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)

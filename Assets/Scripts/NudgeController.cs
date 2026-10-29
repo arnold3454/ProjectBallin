@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class NudgeController : MonoBehaviour
 {
+    public static NudgeController Instance { get; private set; }
+
     [Header("Nudge Settings")]
     [SerializeField] private float shakeDuration = 0.2f;
     [SerializeField] private float shakeInterval = 0.04f;
@@ -41,26 +43,48 @@ public class NudgeController : MonoBehaviour
         if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsChoosing)
             return;
 
-        float nudgeDirection = 0f;
         if (Keyboard.current.leftShiftKey.wasPressedThisFrame)
-            nudgeDirection = 1f;
+            Nudge(1f);
         else if (Keyboard.current.rightShiftKey.wasPressedThisFrame)
-            nudgeDirection = -1f;
+            Nudge(-1f);
+    }
 
-        if (!isTilted && nudgeDirection != 0f)
-        {
-            currentTilt += tiltPerNudge;
-            UpdateTiltMeter();
-            StartCoroutine(ShakeBalls(nudgeDirection));
-            StartCameraShake();
+    /// <summary>
+    /// Nudges the table exactly as a shift key press does: +1 is left shift (balls pushed right),
+    /// -1 is right shift. Builds tilt like a real nudge and locks the flippers past the threshold.
+    /// Used by the Bouncer enemy to force a nudge on contact.
+    /// </summary>
+    public void Nudge(float direction)
+    {
+        if (isTilted || direction == 0f)
+            return;
 
-            if (currentTilt >= tiltThreshold)
-                StartCoroutine(TiltFlippers());
-        }
+        direction = Mathf.Sign(direction);
+        currentTilt += tiltPerNudge;
+        UpdateTiltMeter();
+        StartCoroutine(ShakeBalls(direction));
+        StartCameraShake();
+
+        if (currentTilt >= tiltThreshold)
+            StartCoroutine(TiltFlippers());
+    }
+
+    /// <summary>Nudges left or right at random, as if the player had hit one of the shift keys.</summary>
+    public void NudgeRandom()
+    {
+        Nudge(Random.value < 0.5f ? 1f : -1f);
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
     }
 
     private void Awake()
     {
+        Instance = this;
+
         if (cameraToShake == null && Camera.main != null)
             cameraToShake = Camera.main.transform;
 
