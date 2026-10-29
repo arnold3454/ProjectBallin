@@ -3,11 +3,11 @@ using UnityEngine;
 
 /// <summary>
 /// Club phase: chip rain. The dealer keeps dropping large chips onto the table. They are solid,
-/// so the ball bounces off them, and they slide down toward the gutter by the bumpers, piling
-/// up against walls, bumpers and each other and blocking lanes. Every ball hit on a chip scores
-/// and a few hits break it. <see cref="intensity"/> sets how heavy the rain is: how fast chips
-/// arrive, how many can be out at once and how big they are. Chips that are on the table when
-/// the phase ends stay until they break or the fight ends.
+/// so the ball bounces off them, and they keep sliding down the table, slipping around walls,
+/// bumpers and each other, until they reach the line just above the flippers and vanish. Every
+/// ball hit on a chip scores and a few hits break it early. <see cref="intensity"/> sets how
+/// heavy the rain is: how fast chips arrive, how many can be out at once and how big they are.
+/// Chips still falling when the phase ends finish their fall.
 /// </summary>
 public class ClubPhase : BossPhase
 {
@@ -30,8 +30,8 @@ public class ClubPhase : BossPhase
     [SerializeField, Min(0f)] private float dropHeight = 0.175f;
     [Tooltip("How fast chips slide down the table, in units per second.")]
     [SerializeField, Min(0.1f)] private float driftSpeed = 2.5f;
-    [Tooltip("Chips stop this far above the bottom of the usable board, around the bumpers and flipper lane.")]
-    [SerializeField] private float restDepthFromBottom = 12f;
+    [Tooltip("Chips disappear once they reach this far above the bottom of the usable board: the line just above the flippers.")]
+    [SerializeField] private float despawnDepthFromBottom = 12f;
     [Tooltip("Chips drop in this far below the top of the usable board.")]
     [SerializeField] private float spawnDepthFromTop = 4f;
     [Tooltip("Keep chips this far from the side walls when they drop in.")]
@@ -129,12 +129,12 @@ public class ClubPhase : BossPhase
         warnedNoDropPoint = false;
         PokerChip chip = Instantiate(chipPrefab, point, Quaternion.identity);
 
-        float restZ = Manager.BoardMin.y + restDepthFromBottom;
+        float despawnZ = Manager.BoardMin.y + despawnDepthFromBottom;
         Color color = chipColors != null && chipColors.Length > 0
             ? chipColors[Random.Range(0, chipColors.Length)]
             : Color.red;
 
-        chip.Initialize(radius, driftSpeed, restZ, hitsToBreak, hitPoints, color);
+        chip.Initialize(radius, driftSpeed, despawnZ, hitsToBreak, hitPoints, color);
         chip.Broke += OnChipBroke;
         chips.Add(chip);
     }
