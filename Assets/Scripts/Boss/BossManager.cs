@@ -310,10 +310,6 @@ public class BossManager : MonoBehaviour
         if (carriedHealth > 0)
             ActiveBoss.SetHealth(carriedHealth);
 
-        // A dealer that got away comes back with the health it had left, so the damage sticks.
-        if (carriedHealth > 0)
-            ActiveBoss.SetHealth(carriedHealth);
-
         IsFightActive = true;
         messageTimer = 0f;
         phaseTimer = phaseInterval;
