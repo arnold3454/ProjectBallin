@@ -37,6 +37,10 @@ public class BossManager : MonoBehaviour
     [Tooltip("Seconds between random phase switches.")]
     [SerializeField, Min(1f)] private float phaseInterval = 8f;
 
+    [Header("Fights")]
+    [Tooltip("Bosses the player has to beat to win. The first fight uses two of the phases picked at random, the second the other two, and from the third on all of them.")]
+    [SerializeField, Min(1)] private int fightsToWin = 3;
+
     [Header("Board")]
     [Tooltip("World X/Z of the bottom-left of the area phases may use.")]
     [SerializeField] private Vector2 boardMin = new Vector2(-18.4f, -8f);
@@ -62,13 +66,23 @@ public class BossManager : MonoBehaviour
     [Header("Events")]
     [SerializeField] private UnityEvent onBossDefeated;
     [SerializeField] private UnityEvent onBossEscaped;
+    [Tooltip("Invoked once when the last boss is beaten and the game is won.")]
+    [SerializeField] private UnityEvent onGameWon;
 
     public static event Action BossFightStarted;
     /// <summary>Raised with true when the boss was defeated, false when it escaped.</summary>
     public static event Action<bool> BossFightEnded;
+    /// <summary>Raised once when the last boss is beaten.</summary>
+    public static event Action GameWon;
 
     public bool IsFightActive { get; private set; }
     public Boss ActiveBoss { get; private set; }
+    /// <summary>Bosses beaten so far. An escape doesn't count; the same fight is resumed.</summary>
+    public int BossesDefeated { get; private set; }
+    /// <summary>1-based number of the current or next fight.</summary>
+    public int FightNumber => Mathf.Min(BossesDefeated + 1, fightsToWin);
+    public int FightsToWin => fightsToWin;
+    public bool IsGameWon { get; private set; }
 
     /// <summary>The fight's countdown. Always shorter than the main game clock.</summary>
     public BossTimer Timer => bossTimer;
@@ -92,6 +106,8 @@ public class BossManager : MonoBehaviour
     private float messageTimer;
     /// <summary>Health the dealer had left when it last got away. 0 means it spawns at full health.</summary>
     private int carriedHealth;
+    /// <summary>The prefab's phase indices in a random order: the first half for fight one, the rest for fight two.</summary>
+    private List<int> phaseOrder;
 
     private void Awake()
     {
@@ -166,6 +182,36 @@ public class BossManager : MonoBehaviour
 
         SetHud(string.Empty);
         messageTimer = 0f;
+    }
+
+    /// <summary>
+    /// Gives the boss this fight's phases. The prefab's phases are shuffled once per game: the
+    /// first fight rotates between the first half, the second fight between the other half, and
+    /// every fight after that uses them all. An escape resumes the same fight, so the set holds.
+    /// </summary>
+    private void ApplyFightPhases(Boss boss)
+    {
+        int count = boss.PhaseCount;
+        if (phaseOrder == null || phaseOrder.Count != count)
+        {
+            phaseOrder = new List<int>(count);
+            for (int i = 0; i < count; i++)
+                phaseOrder.Add(i);
+            for (int i = phaseOrder.Count - 1; i > 0; i--)
+            {
+                int j = UnityEngine.Random.Range(0, i + 1);
+                (phaseOrder[i], phaseOrder[j]) = (phaseOrder[j], phaseOrder[i]);
+            }
+        }
+
+        int half = count / 2;
+        List<int> allowed = null;
+        if (BossesDefeated == 0)
+            allowed = phaseOrder.GetRange(0, half);
+        else if (BossesDefeated == 1)
+            allowed = phaseOrder.GetRange(half, count - half);
+
+        boss.SetAllowedPhases(allowed);
     }
 
     /// <summary>Starts the fight if every summoning condition is met; otherwise shows what is still missing.</summary>
@@ -258,6 +304,11 @@ public class BossManager : MonoBehaviour
         ActiveBoss = Instantiate(bossPrefab, spawnPoint, Quaternion.identity);
         ActiveBoss.Died += OnBossDied;
         ActiveBoss.HealthChanged += OnBossHealthChanged;
+        ApplyFightPhases(ActiveBoss);
+
+        // A dealer that got away comes back with the health it had left, so the damage sticks.
+        if (carriedHealth > 0)
+            ActiveBoss.SetHealth(carriedHealth);
 
         // A dealer that got away comes back with the health it had left, so the damage sticks.
         if (carriedHealth > 0)
@@ -324,13 +375,13 @@ public class BossManager : MonoBehaviour
             ActiveBoss = null;
         }
 
-        if (!defeated)
-        {
-            // The dealer got away: the corners and the roulette have to be done again to bring it back.
-            ResetSummoning();
-            if (RouletteManager.Instance != null)
-                RouletteManager.Instance.ResetRound();
-        }
+        if (defeated)
+            BossesDefeated++;
+
+        // Either way the corners and the roulette have to be done again for the next fight.
+        ResetSummoning();
+        if (RouletteManager.Instance != null)
+            RouletteManager.Instance.ResetRound();
 
         SetHud(defeated ? defeatedMessage : escapedMessage);
         messageTimer = messageDuration;
@@ -340,7 +391,22 @@ public class BossManager : MonoBehaviour
         else
             onBossEscaped?.Invoke();
 
+        // Decide the win before telling listeners, so the round flow can tell a final win from a round win.
+        if (defeated && BossesDefeated >= fightsToWin && !IsGameWon)
+            WinGame();
+
         BossFightEnded?.Invoke(defeated);
+    }
+
+    /// <summary>The last boss is down: show the win screen and freeze the table.</summary>
+    private void WinGame()
+    {
+        IsGameWon = true;
+        onGameWon?.Invoke();
+        GameWon?.Invoke();
+
+        if (GameTimer.Instance != null)
+            GameTimer.Instance.TriggerWin();
     }
 
     private void UpdateHud()
@@ -349,7 +415,7 @@ public class BossManager : MonoBehaviour
             return;
 
         string phase = ActiveBoss.CurrentPhase != null ? ActiveBoss.CurrentPhase.PhaseName : "-";
-        SetHud($"{bossName}  HP {ActiveBoss.Health}/{ActiveBoss.MaxHealth}   {phase}");
+        SetHud($"{bossName}  FIGHT {FightNumber}/{fightsToWin}  HP {ActiveBoss.Health}/{ActiveBoss.MaxHealth}   {phase}");
     }
 
     private void SetHud(string message)

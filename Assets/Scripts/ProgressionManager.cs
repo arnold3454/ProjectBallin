@@ -106,6 +106,10 @@ public class ProgressionManager : MonoBehaviour
         if (!defeated || IsShowingWin)
             return;
 
+        // The last boss ends the game with its own screen; there is no next round to offer.
+        if (BossManager.Instance != null && BossManager.Instance.IsGameWon)
+            return;
+
         StartCoroutine(ShowWinScreen());
     }
 
