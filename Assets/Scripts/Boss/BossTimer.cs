@@ -5,9 +5,9 @@ using UnityEngine;
 /// <summary>
 /// The boss fight's own countdown, separate from the main <see cref="GameTimer"/>. It is always
 /// shorter than the main clock: the duration is capped to a fraction of whatever the main timer
-/// has left, so the fight never outlives the round. It draws on its own label, which by default
-/// is a copy of the main timer's label placed directly below it. Lives on the GameManager next
-/// to <see cref="BossManager"/>, which starts and stops it.
+/// has left, so the fight never outlives the round. It draws on its own label, the BossTimer text
+/// under the Canvas, assigned in the Inspector. Lives on the GameManager next to
+/// <see cref="BossManager"/>, which starts and stops it.
 /// </summary>
 public class BossTimer : MonoBehaviour
 {
@@ -18,12 +18,8 @@ public class BossTimer : MonoBehaviour
     [SerializeField, Range(0.1f, 1f)] private float maxFractionOfMainClock = 0.75f;
 
     [Header("UI")]
-    [Tooltip("Label that shows the countdown. Leave empty to copy the main timer's label at runtime and place it below it.")]
+    [Tooltip("Label that shows the countdown: the BossTimer text under the Canvas.")]
     [SerializeField] private TextMeshProUGUI timerText;
-    [Tooltip("Offset from the main timer's label when the boss label is created at runtime.")]
-    [SerializeField] private Vector2 offsetFromMainTimer = new Vector2(0f, -80f);
-    [Tooltip("Font size relative to the main timer's label when the boss label is created at runtime.")]
-    [SerializeField, Range(0.1f, 2f)] private float fontScale = 0.65f;
     [Tooltip("Text shown in front of the time, e.g. \"BOSS \".")]
     [SerializeField] private string prefix = "";
     [Tooltip("Hide the label while no boss fight is running.")]
@@ -104,46 +100,27 @@ public class BossTimer : MonoBehaviour
 
     private void UpdateUI()
     {
-        TextMeshProUGUI text = GetOrCreateLabel();
-        if (text == null)
+        if (timerText == null)
+        {
+            if (!warnedNoLabel)
+            {
+                Debug.LogWarning("BossTimer has no label assigned. Assign the BossTimer text under the Canvas.", this);
+                warnedNoLabel = true;
+            }
             return;
+        }
 
-        if (hideWhenIdle && text.gameObject.activeSelf != IsRunning)
-            text.gameObject.SetActive(IsRunning);
+        if (hideWhenIdle && timerText.gameObject.activeSelf != IsRunning)
+            timerText.gameObject.SetActive(IsRunning);
 
         if (!IsRunning && hideWhenIdle)
             return;
 
         int minutes = Mathf.FloorToInt(TimeRemaining / 60f);
         int seconds = Mathf.FloorToInt(TimeRemaining % 60f);
-        text.text = $"{prefix}{minutes:00}:{seconds:00}";
-        text.color = TimeRemaining <= warningThreshold ? warningColor : normalColor;
+        timerText.text = $"{prefix}{minutes:00}:{seconds:00}";
+        timerText.color = TimeRemaining <= warningThreshold ? warningColor : normalColor;
     }
 
-    /// <summary>
-    /// Returns the assigned label, or builds one by copying the main timer's label so the boss
-    /// clock matches its font and sits just below it.
-    /// </summary>
-    private TextMeshProUGUI GetOrCreateLabel()
-    {
-        if (timerText != null)
-            return timerText;
-
-        GameTimer main = GameTimer.Instance;
-        TextMeshProUGUI source = main != null ? main.TimerText : null;
-        if (source == null)
-            return null;
-
-        timerText = Instantiate(source, source.transform.parent);
-        timerText.name = "BossTimer";
-        timerText.fontSize = source.fontSize * fontScale;
-        timerText.text = string.Empty;
-
-        RectTransform rect = timerText.rectTransform;
-        RectTransform sourceRect = source.rectTransform;
-        rect.anchoredPosition = sourceRect.anchoredPosition + offsetFromMainTimer;
-        rect.SetSiblingIndex(sourceRect.GetSiblingIndex() + 1);
-
-        return timerText;
-    }
+    private bool warnedNoLabel;
 }

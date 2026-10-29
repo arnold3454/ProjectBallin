@@ -116,7 +116,7 @@ public class BossManager : MonoBehaviour
         if (bossTimer == null)
             bossTimer = GetComponent<BossTimer>();
         if (bossTimer == null)
-            bossTimer = gameObject.AddComponent<BossTimer>();
+            Debug.LogError("BossManager needs a BossTimer component on the same object. Add one in the Inspector.", this);
 
         SetHud(string.Empty);
     }

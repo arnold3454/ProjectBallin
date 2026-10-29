@@ -37,8 +37,6 @@ public float TimeRemaining
     {
 get; private set;
     }
-/// <summary>The label that shows the main countdown. The boss timer copies it for its own clock.</summary>
-public TextMeshProUGUI TimerText => timerText;
 public bool IsRunning
     {
 get; private set;
@@ -47,8 +45,6 @@ public bool IsGameOver
     {
 get; private set;
     }
-/// <summary>The panel shown when the clock runs out. The win screen is built from a copy of it.</summary>
-public GameObject GameOverPanel => gameOverPanel;
 
 private AudioSource audioSource;
 private bool hasPlayedTimeWarning;

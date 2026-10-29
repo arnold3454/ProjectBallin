@@ -26,11 +26,11 @@ public class ProgressionManager : MonoBehaviour
     [Header("Win Screen")]
     [Tooltip("Seconds after the boss dies before the win screen appears, so the kill can be seen.")]
     [SerializeField, Min(0f)] private float winScreenDelay = 1.5f;
-    [Tooltip("Panel shown when the boss is beaten. Left empty, a copy of the game over panel is made at runtime with its Restart button turned into Continue.")]
+    [Tooltip("Panel shown when the boss is beaten: the WinPanel under the Canvas.")]
     [SerializeField] private GameObject winPanel;
     [SerializeField] private TextMeshProUGUI winTitleText;
     [SerializeField] private TextMeshProUGUI winSummaryText;
-    [Tooltip("Starts the next round when clicked. Filled in automatically when the panel is copied from the game over panel.")]
+    [Tooltip("The panel's Continue button. Its On Click calls StartNextRound, wired in the Inspector.")]
     [SerializeField] private Button continueButton;
     [SerializeField] private string winTitle = "DEALER DEFEATED!";
 
@@ -63,8 +63,7 @@ public class ProgressionManager : MonoBehaviour
     {
         Instance = this;
 
-        if (continueButton != null)
-            continueButton.onClick.AddListener(StartNextRound);
+        // The Continue button's On Click is wired to StartNextRound in the Inspector.
         if (winPanel != null)
             winPanel.SetActive(false);
     }
@@ -135,9 +134,9 @@ public class ProgressionManager : MonoBehaviour
             yield break;
         }
 
-        if (!EnsurePanel())
+        if (winPanel == null)
         {
-            Debug.LogWarning("ProgressionManager has no win panel and no game over panel to copy, so the next round starts straight away.", this);
+            Debug.LogWarning("ProgressionManager has no win panel assigned (the WinPanel under the Canvas), so the next round starts straight away.", this);
             StartNextRound();
             yield break;
         }
@@ -220,52 +219,6 @@ public class ProgressionManager : MonoBehaviour
         // Enemies respawn from their spawners with the new round's health.
         foreach (Enemy enemy in FindObjectsByType<Enemy>())
             Destroy(enemy.gameObject);
-    }
-
-    /// <summary>
-    /// Makes sure a win panel exists. Without one assigned, the game over panel is copied: its
-    /// title and score texts become the win texts and its Restart button becomes Continue.
-    /// </summary>
-    private bool EnsurePanel()
-    {
-        if (winPanel != null)
-            return true;
-
-        GameObject template = GameTimer.Instance != null ? GameTimer.Instance.GameOverPanel : null;
-        if (template == null)
-            return false;
-
-        winPanel = Instantiate(template, template.transform.parent);
-        winPanel.name = "WinPanel";
-        winPanel.SetActive(false);
-
-        foreach (TextMeshProUGUI text in winPanel.GetComponentsInChildren<TextMeshProUGUI>(true))
-        {
-            if (text.name == "GameOverText")
-                winTitleText = text;
-            else if (text.name == "FinalScoreText")
-                winSummaryText = text;
-        }
-
-        foreach (Button button in winPanel.GetComponentsInChildren<Button>(true))
-        {
-            if (button.name != "RestartButton")
-                continue;
-
-            continueButton = button;
-            // Drop the Restart wiring that came with the copy.
-            button.onClick = new Button.ButtonClickedEvent();
-            button.onClick.AddListener(StartNextRound);
-
-            TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>(true);
-            if (label != null)
-                label.text = "Continue";
-        }
-
-        if (continueButton == null)
-            Debug.LogWarning("The copied game over panel has no RestartButton, so the win screen has no Continue button. Assign one on ProgressionManager.", this);
-
-        return true;
     }
 
     private static string Percent(float fraction) => (fraction * 100f).ToString("0") + "%";
