@@ -59,6 +59,7 @@ public class ClubPhase : BossPhase
 
     private readonly List<PokerChip> chips = new List<PokerChip>();
     private float spawnTimer;
+    private bool warnedNoDropPoint;
 
     private float SpawnInterval => Mathf.Lerp(spawnIntervalLight, spawnIntervalHeavy, intensity);
     private int MaxChips => Mathf.RoundToInt(Mathf.Lerp(maxChipsLight, maxChipsHeavy, intensity));
@@ -116,8 +117,16 @@ public class ClubPhase : BossPhase
 
         float radius = ChipRadius;
         if (!TryFindDropPoint(radius, out Vector3 point))
+        {
+            if (!warnedNoDropPoint)
+            {
+                Debug.LogWarning($"Club phase found no clear spot on the drop line (z {Manager.BoardMax.y - spawnDepthFromTop:0.0}) after {placementAttempts} attempts. Lower Spawn Depth From Top or Side Margin if this keeps up.", this);
+                warnedNoDropPoint = true;
+            }
             return;
+        }
 
+        warnedNoDropPoint = false;
         PokerChip chip = Instantiate(chipPrefab, point, Quaternion.identity);
 
         float restZ = Manager.BoardMin.y + restDepthFromBottom;
