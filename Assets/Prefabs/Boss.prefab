@@ -202,9 +202,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ClubPhase
   phaseName: Club
   lampColor: {r: 0.2, g: 0.9, b: 0.3, a: 1}
-  damageMultiplier: 2
-  pulseColor: {r: 0.2, g: 0.9, b: 0.3, a: 1}
-  pulseSpeed: 4
+  chipPrefab: {fileID: 7421933120044851201, guid: 3d28c850341148e985f18624a305fe41, type: 3}
+  intensity: 0.5
 --- !u!1 &1882910550380330495
 GameObject:
   m_ObjectHideFlags: 0
