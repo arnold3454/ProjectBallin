@@ -19,7 +19,7 @@ public class BouncerEnemy : Enemy
 
         NudgeController nudge = NudgeController.Instance;
         if (nudge == null)
-            nudge = FindFirstObjectByType<NudgeController>();
+            nudge = FindAnyObjectByType<NudgeController>();
         if (nudge == null)
         {
             Debug.LogWarning("Bouncer enemy found no NudgeController in the scene, so it can't nudge the table.", this);
