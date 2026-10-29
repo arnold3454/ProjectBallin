@@ -182,7 +182,7 @@ public class ProgressionManager : MonoBehaviour
         ClearTable();
 
         if (boardGenerator == null)
-            boardGenerator = FindFirstObjectByType<BoardGenerator>();
+            boardGenerator = FindAnyObjectByType<BoardGenerator>();
         if (boardGenerator != null)
             boardGenerator.GenerateRandom();
         else
@@ -214,11 +214,11 @@ public class ProgressionManager : MonoBehaviour
         foreach (GameObject ball in GameObject.FindGameObjectsWithTag("Ball"))
             Destroy(ball);
 
-        foreach (ItemPickup pickup in FindObjectsByType<ItemPickup>(FindObjectsSortMode.None))
+        foreach (ItemPickup pickup in FindObjectsByType<ItemPickup>())
             Destroy(pickup.gameObject);
 
         // Enemies respawn from their spawners with the new round's health.
-        foreach (Enemy enemy in FindObjectsByType<Enemy>(FindObjectsSortMode.None))
+        foreach (Enemy enemy in FindObjectsByType<Enemy>())
             Destroy(enemy.gameObject);
     }
 
