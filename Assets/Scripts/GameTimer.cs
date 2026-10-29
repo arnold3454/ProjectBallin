@@ -17,6 +17,10 @@ get; private set;
     [SerializeField] private TextMeshProUGUI timerText;
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private TextMeshProUGUI finalScoreText;
+    [Tooltip("Title on the game over panel. Says the game over title when the clock runs out and the win title when the last boss is beaten.")]
+    [SerializeField] private TextMeshProUGUI gameOverTitleText;
+    [SerializeField] private string gameOverTitle = "GAME OVER!";
+    [SerializeField] private string winTitle = "YOU WIN!";
 
     [Header("Low Time Warning")]
     [SerializeField] private float warningThreshold = 10f;
@@ -170,12 +174,30 @@ timerText.text = $"{minutes:00}:{seconds:00}";
 timerText.color = TimeRemaining <= warningThreshold ? warningColor : normalColor;
     }
 
+/// <summary>The last boss is beaten: the same end panel comes up, titled as a win.</summary>
+public void TriggerWin()
+    {
+if (IsGameOver) return;
+
+ShowEndScreen(winTitle);
+    }
+
 public void TriggerGameOver()
     {
 if (IsGameOver) return;
 
+ShowEndScreen(gameOverTitle);
+    }
+
+private void ShowEndScreen(string title)
+    {
 IsGameOver = true;
 IsRunning = false;
+
+if (gameOverTitleText != null)
+        {
+gameOverTitleText.text = title;
+        }
 
 if (finalScoreText != null && ScoreManager.Instance != null)
         {

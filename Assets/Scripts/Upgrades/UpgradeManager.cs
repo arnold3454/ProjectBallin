@@ -35,7 +35,10 @@ public class UpgradeManager : MonoBehaviour
     private const float CritMultiplier = 3f;
 
     [Header("Upgrade Offers")]
+    [Tooltip("Points needed for the first upgrade.")]
     [SerializeField, Min(1)] private int pointsPerUpgrade = 15;
+    [Tooltip("Each filled bar multiplies the XP needed for the next one by this. 1 = every level costs the same.")]
+    [SerializeField, Min(1f)] private float xpGrowthPerLevel = 1.25f;
     [SerializeField, Min(1)] private int choicesPerOffer = 3;
 
     [Header("Upgrade UI")]
@@ -48,12 +51,35 @@ public class UpgradeManager : MonoBehaviour
     private List<UpgradeDefinition> allUpgrades;
     private List<UpgradeDefinition> currentChoices;
     private int nextThreshold;
+    private int upgradeLevel;
+    private int xpForCurrentBar;
     private int pendingOffers;
     private bool resolvingPick;
     private float scoreRemainder;
 
     /// <summary>True from when the choice appears until gameplay has resumed.</summary>
     public bool IsChoosing { get; private set; }
+
+    /// <summary>Points earned toward the next upgrade. This is what the XP bar shows.</summary>
+    public int CurrentXp { get; private set; }
+
+    /// <summary>Points needed to fill the current XP bar and earn an upgrade. Grows each level.</summary>
+    public int XpPerUpgrade => xpForCurrentBar;
+
+    /// <summary>How many bars have been filled so far.</summary>
+    public int UpgradeLevel => upgradeLevel;
+
+    /// <summary>Raised with (current XP, XP per upgrade) whenever XP changes, including when the bar fills and resets.</summary>
+    public event System.Action<int, int> XpChanged;
+
+    /// <summary>Upgrades the player has taken so far this run. Enemy scaling reads this.</summary>
+    public int TotalPicks { get; private set; }
+
+    /// <summary>Points the next upgrade unlocks at.</summary>
+    public int NextThreshold => nextThreshold;
+
+    /// <summary>Raised with the new total after every upgrade pick.</summary>
+    public event System.Action<int> UpgradePicked;
 
     public float BallWeightMultiplier => 1f + BallWeightPerPick * Stacks(UpgradeId.BallWeight);
     public float BallSpeedMultiplier => 1f + BallSpeedPerPick * Stacks(UpgradeId.BallSpeed);
@@ -88,7 +114,8 @@ public class UpgradeManager : MonoBehaviour
         }
 
         Instance = this;
-        nextThreshold = pointsPerUpgrade;
+        xpForCurrentBar = XpRequiredFor(0);
+        nextThreshold = xpForCurrentBar;
         allUpgrades = BuildUpgradeList();
 
         popup = Instantiate(popupPrefab, transform);
@@ -162,8 +189,20 @@ public class UpgradeManager : MonoBehaviour
         while (score >= nextThreshold)
         {
             pendingOffers++;
-            nextThreshold += pointsPerUpgrade;
+            upgradeLevel++;
+            xpForCurrentBar = XpRequiredFor(upgradeLevel);
+            nextThreshold += xpForCurrentBar;
         }
+
+        // Filling the bar is what earned the offer above; whatever spilled over starts the next bar.
+        CurrentXp = Mathf.Max(0, score - (nextThreshold - xpForCurrentBar));
+        XpChanged?.Invoke(CurrentXp, xpForCurrentBar);
+    }
+
+    /// <summary>XP needed to fill the bar at the given level: pointsPerUpgrade * growth^level.</summary>
+    private int XpRequiredFor(int level)
+    {
+        return Mathf.Max(1, Mathf.RoundToInt(pointsPerUpgrade * Mathf.Pow(xpGrowthPerLevel, level)));
     }
 
     /// <summary>
@@ -231,7 +270,9 @@ public class UpgradeManager : MonoBehaviour
 
         resolvingPick = true;
         currentChoices[index].Apply(this);
+        TotalPicks++;
         RefreshWorld();
+        UpgradePicked?.Invoke(TotalPicks);
         pendingOffers--;
         popup.Hide();
         StartCoroutine(FinishPick());

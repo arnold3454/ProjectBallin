@@ -88,6 +88,19 @@ public class RouletteManager : MonoBehaviour
         wheel = null;
     }
 
+    /// <summary>Forgets the win and the bet and unlocks the wheel, so a new round can spin for the boss again.</summary>
+    public void ResetRound()
+    {
+        IsBossFightTriggered = false;
+        CurrentBet = BetColor.None;
+
+        if (wheel != null)
+            wheel.Unlock();
+
+        RefreshBetVisuals();
+        UpdateHud();
+    }
+
     /// <summary>Called by a bet tunnel when the ball runs through it.</summary>
     public void PlaceBet(BetColor color)
     {
