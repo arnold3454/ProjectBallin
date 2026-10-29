@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -43,6 +44,10 @@ public class Boss : MonoBehaviour
     public int MaxHealth => maxHealth;
     public BossPhase CurrentPhase { get; private set; }
     public bool IsDead => Health <= 0;
+    /// <summary>Number of phases on the prefab. The manager picks which of them a fight may use.</summary>
+    public int PhaseCount => phases != null ? phases.Length : 0;
+
+    private BossPhase[] allowedPhases;
 
     /// <summary>Hits per ball collision. Phases such as Club raise this to open a vulnerability window.</summary>
     public float DamageMultiplier { get; set; } = 1f;
@@ -76,17 +81,39 @@ public class Boss : MonoBehaviour
             ApplyHealthColor();
     }
 
-    /// <summary>Ends the current phase and starts a random different one.</summary>
-    public void SwitchToRandomPhase(BossManager manager)
+    /// <summary>
+    /// Limits phase switches to the phases at these indices of the prefab's phase list. Null or
+    /// an empty list allows every phase. Used to give each fight its own set of phases.
+    /// </summary>
+    public void SetAllowedPhases(IReadOnlyList<int> indices)
     {
-        if (phases == null || phases.Length == 0 || IsDead)
+        allowedPhases = null;
+        if (indices == null || indices.Count == 0 || phases == null)
             return;
 
-        BossPhase next = phases[UnityEngine.Random.Range(0, phases.Length)];
-        if (phases.Length > 1 && next == CurrentPhase)
+        List<BossPhase> allowed = new List<BossPhase>();
+        foreach (int index in indices)
         {
-            int index = Array.IndexOf(phases, next);
-            next = phases[(index + 1 + UnityEngine.Random.Range(0, phases.Length - 1)) % phases.Length];
+            if (index >= 0 && index < phases.Length && phases[index] != null && !allowed.Contains(phases[index]))
+                allowed.Add(phases[index]);
+        }
+
+        if (allowed.Count > 0)
+            allowedPhases = allowed.ToArray();
+    }
+
+    /// <summary>Ends the current phase and starts a random different one from the allowed set.</summary>
+    public void SwitchToRandomPhase(BossManager manager)
+    {
+        BossPhase[] pool = allowedPhases ?? phases;
+        if (pool == null || pool.Length == 0 || IsDead)
+            return;
+
+        BossPhase next = pool[UnityEngine.Random.Range(0, pool.Length)];
+        if (pool.Length > 1 && next == CurrentPhase)
+        {
+            int index = Array.IndexOf(pool, next);
+            next = pool[(index + 1 + UnityEngine.Random.Range(0, pool.Length - 1)) % pool.Length];
         }
 
         if (CurrentPhase != null)
@@ -118,6 +145,17 @@ public class Boss : MonoBehaviour
             if (phase != null)
                 phase.Cleanup();
         }
+    }
+
+    /// <summary>
+    /// Sets the health directly, clamped to 1..MaxHealth. Used to bring the dealer back with the
+    /// health it had left when it got away. Doesn't score or kill.
+    /// </summary>
+    public void SetHealth(int health)
+    {
+        Health = Mathf.Clamp(health, 1, maxHealth);
+        ApplyHealthColor();
+        HealthChanged?.Invoke(Health, maxHealth);
     }
 
     public void TakeDamage(int hits)

@@ -929,6 +929,7 @@ MonoBehaviour:
   timerText: {fileID: 1929207982}
   gameOverPanel: {fileID: 1444108079}
   finalScoreText: {fileID: 769817778}
+  gameOverTitleText: {fileID: 1531923601}
   warningThreshold: 30
   normalColor: {r: 1, g: 1, b: 1, a: 1}
   warningColor: {r: 1, g: 0, b: 0, a: 1}
