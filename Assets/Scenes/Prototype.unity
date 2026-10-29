@@ -924,12 +924,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71099e8daa9111b48a84e9b55b49d327, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameTimer
-  startingTime: 90
+  startingTime: 1200
   startOnLoad: 1
   timerText: {fileID: 1929207982}
   gameOverPanel: {fileID: 1444108079}
   finalScoreText: {fileID: 769817778}
   gameOverTitleText: {fileID: 1531923601}
+  gameOverTitle: GAME OVER!
+  winTitle: YOU WIN!
   warningThreshold: 30
   normalColor: {r: 1, g: 1, b: 1, a: 1}
   warningColor: {r: 1, g: 0, b: 0, a: 1}
@@ -7609,6 +7611,7 @@ MonoBehaviour:
   warningThreshold: 10
   normalColor: {r: 1, g: 1, b: 1, a: 1}
   warningColor: {r: 1, g: 0, b: 0, a: 1}
+  fightsToWin: 3
   boardMin: {x: -18.4, y: -8}
   boardMax: {x: 16.8, y: 38}
   surfaceHeight: 1.75
@@ -7624,6 +7627,9 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   onBossEscaped:
+    m_PersistentCalls:
+      m_Calls: []
+  onGameWon:
     m_PersistentCalls:
       m_Calls: []
 --- !u!114 &1748271938090000001

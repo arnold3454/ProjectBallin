@@ -3,9 +3,9 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// A large button tucked into a top corner of the table. Every ball hit scores points,
-/// toggles the cap between its unlit and lit colours, and gives momentary feedback:
-/// the cap is pushed in and a light pops on.
+/// A large button tucked into a top corner of the table. Every ball hit scores points and
+/// gives momentary feedback: the cap is pushed in and a light pops on. The first hit also
+/// lights the cap for good; it stays lit until something calls <see cref="SetLit"/> to reset it.
 /// </summary>
 [RequireComponent(typeof(BallHitboxTrigger))]
 public class CornerBossTrigger : MonoBehaviour
@@ -25,7 +25,7 @@ public class CornerBossTrigger : MonoBehaviour
     [Header("Toggle Colour")]
     [Tooltip("Renderer whose colour toggles on hit. Defaults to the button cap's renderer.")]
     [SerializeField] private Renderer capRenderer;
-    [Tooltip("Colour shown once the button has been hit. Hitting it again switches back to the material's own colour.")]
+    [Tooltip("Colour shown once the button has been hit. It stays lit for the rest of the round.")]
     [SerializeField] private Color litColor = new Color(1f, 0.9f, 0.25f);
     [Tooltip("Start the round already lit.")]
     [SerializeField] private bool startLit;
@@ -45,7 +45,7 @@ public class CornerBossTrigger : MonoBehaviour
     /// <summary>Raised whenever the lit state flips.</summary>
     public event Action<CornerBossTrigger> LitChanged;
 
-    /// <summary>True while the button shows its lit colour. Flips on every hit.</summary>
+    /// <summary>True once the button has been hit. Stays true until reset with <see cref="SetLit"/>.</summary>
     public bool IsLit { get; private set; }
 
     private BallHitboxTrigger hitbox;
@@ -126,7 +126,7 @@ public class CornerBossTrigger : MonoBehaviour
         if (ScoreManager.Instance != null)
             ScoreManager.Instance.AddScore(pointValue);
 
-        SetLit(!IsLit);
+        SetLit(true);
 
         if (feedback != null)
             StopCoroutine(feedback);
@@ -135,7 +135,7 @@ public class CornerBossTrigger : MonoBehaviour
         Hit?.Invoke(this);
     }
 
-    /// <summary>Switches the cap between its lit colour and the material's own colour.</summary>
+    /// <summary>Sets the lit state directly. Hits only ever light the button; pass false to reset it.</summary>
     public void SetLit(bool lit)
     {
         bool changed = IsLit != lit;
