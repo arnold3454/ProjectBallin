@@ -926,12 +926,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71099e8daa9111b48a84e9b55b49d327, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameTimer
-  startingTime: 600
+  startingTime: 1200
   startOnLoad: 1
   timerText: {fileID: 1929207982}
   gameOverPanel: {fileID: 1444108079}
   finalScoreText: {fileID: 769817778}
   gameOverTitleText: {fileID: 1531923601}
+  gameOverTitle: GAME OVER!
+  winTitle: YOU WIN!
   warningThreshold: 30
   normalColor: {r: 1, g: 1, b: 1, a: 1}
   warningColor: {r: 1, g: 0, b: 0, a: 1}
@@ -8040,11 +8042,12 @@ MonoBehaviour:
   bossTimer: {fileID: 8912345678901234501}
   mainClockBonus: 90
   phaseInterval: 8
-  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  fightsToWin: 3
   boardMin: {x: -18.4, y: -8}
   boardMax: {x: 16.8, y: 38}
   surfaceHeight: 1.75
   bossText: {fileID: 4489608995914877300}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
   bossName: DEALER
   defeatedMessage: DEALER DEFEATED!
   escapedMessage: The dealer got away...
@@ -8056,6 +8059,9 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   onBossEscaped:
+    m_PersistentCalls:
+      m_Calls: []
+  onGameWon:
     m_PersistentCalls:
       m_Calls: []
 --- !u!114 &1748271938090000001
@@ -8608,6 +8614,50 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 440}
   m_SizeDelta: {x: 1200, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &8912345678901234501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 136284774}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7339a3fea0114f96a21b42bafa87e5a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossTimer
+  duration: 90
+  maxFractionOfMainClock: 0.75
+  timerText: {fileID: 0}
+  offsetFromMainTimer: {x: 0, y: -80}
+  fontScale: 0.65
+  prefix: 
+  hideWhenIdle: 1
+  warningThreshold: 10
+  normalColor: {r: 1, g: 0.85, b: 0.3, a: 1}
+  warningColor: {r: 1, g: 0, b: 0, a: 1}
+--- !u!114 &8912345678901234601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 136284774}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 849d2b27eb444e68b4d7ec6064d36693, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ProgressionManager
+  enemyHealthPerUpgrade: 0.03
+  enemyHealthPerRound: 0.3
+  bossHealthPerRound: 0.25
+  winScreenDelay: 1.5
+  winPanel: {fileID: 0}
+  winTitleText: {fileID: 0}
+  winSummaryText: {fileID: 0}
+  continueButton: {fileID: 0}
+  winTitle: DEALER DEFEATED!
+  boardGenerator: {fileID: 0}
 --- !u!1001 &9202137379378595358
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8694,47 +8744,3 @@ SceneRoots:
   - {fileID: 155672434}
   - {fileID: 1900000003}
   - {fileID: 565704286}
---- !u!114 &8912345678901234501
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 136284774}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7339a3fea0114f96a21b42bafa87e5a4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossTimer
-  duration: 90
-  maxFractionOfMainClock: 0.75
-  timerText: {fileID: 0}
-  offsetFromMainTimer: {x: 0, y: -80}
-  fontScale: 0.65
-  prefix: 
-  hideWhenIdle: 1
-  warningThreshold: 10
-  normalColor: {r: 1, g: 0.85, b: 0.3, a: 1}
-  warningColor: {r: 1, g: 0, b: 0, a: 1}
---- !u!114 &8912345678901234601
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 136284774}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 849d2b27eb444e68b4d7ec6064d36693, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ProgressionManager
-  enemyHealthPerUpgrade: 0.03
-  enemyHealthPerRound: 0.3
-  bossHealthPerRound: 0.25
-  winScreenDelay: 1.5
-  winPanel: {fileID: 0}
-  winTitleText: {fileID: 0}
-  winSummaryText: {fileID: 0}
-  continueButton: {fileID: 0}
-  winTitle: DEALER DEFEATED!
-  boardGenerator: {fileID: 0}
