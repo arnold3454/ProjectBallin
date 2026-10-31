@@ -19,9 +19,9 @@ public class ClubPhase : BossPhase
 
     [Header("Intensity range (0 -> 1)")]
     [Tooltip("Seconds between chips at intensity 0.")]
-    [SerializeField, Min(0.1f)] private float spawnIntervalLight = 4f;
+    [SerializeField, Min(0.1f)] private float spawnIntervalLight = 1.3f;
     [Tooltip("Seconds between chips at intensity 1.")]
-    [SerializeField, Min(0.1f)] private float spawnIntervalHeavy = 0.7f;
+    [SerializeField, Min(0.1f)] private float spawnIntervalHeavy = 0.25f;
     [Tooltip("Most chips on the table at once at intensity 0.")]
     [SerializeField, Min(1)] private int maxChipsLight = 5;
     [Tooltip("Most chips on the table at once at intensity 1.")]
@@ -35,7 +35,7 @@ public class ClubPhase : BossPhase
     [Tooltip("How far above the table surface the chips float. Keep it above the top of the ball (about 1 unit) so chips pass over the ball and hide it instead of sitting on the table.")]
     [SerializeField, Min(0f)] private float hoverHeight = 2f;
     [Tooltip("How fast chips slide down the table, in units per second.")]
-    [SerializeField, Min(0.1f)] private float driftSpeed = 2.5f;
+    [SerializeField, Min(0.1f)] private float driftSpeed = 7.5f;
     [Tooltip("Chips disappear once they reach this far above the bottom of the usable board: the line just above the flippers.")]
     [SerializeField] private float despawnDepthFromBottom = 12f;
     [Tooltip("Chips drop in this far below the top of the usable board.")]
