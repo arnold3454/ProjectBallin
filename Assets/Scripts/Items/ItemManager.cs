@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -42,6 +43,9 @@ public class ItemManager : MonoBehaviour
     public event Action<int, ItemDefinition> ItemUseFailed;
 
     public int SlotCount => slotCount;
+
+    /// <summary>Every item that can turn up in a pickup or the shop.</summary>
+    public IReadOnlyList<ItemDefinition> ItemPool => itemPool ?? System.Array.Empty<ItemDefinition>();
     public bool IsFull => FindEmptySlot() < 0;
 
     private void Awake()

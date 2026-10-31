@@ -10,6 +10,10 @@ public class MultiballLaunchItem : ItemDefinition
 {
     [SerializeField, Min(1)] private int ballsToLaunch = 1;
 
+    public override string Description => ballsToLaunch == 1
+        ? "The launcher fires an extra ball into play."
+        : $"The launcher fires {ballsToLaunch} extra balls into play.";
+
     public override bool Use()
     {
         BallLauncher launcher = FindAnyObjectByType<BallLauncher>();

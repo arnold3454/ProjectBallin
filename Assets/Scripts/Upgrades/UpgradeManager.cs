@@ -78,6 +78,9 @@ public class UpgradeManager : MonoBehaviour
     /// <summary>Points the next upgrade unlocks at.</summary>
     public int NextThreshold => nextThreshold;
 
+    /// <summary>How much the XP needed per level grows each level. The shop scales its prices with this too.</summary>
+    public float XpGrowthPerLevel => xpGrowthPerLevel;
+
     /// <summary>Raised with the new total after every upgrade pick.</summary>
     public event System.Action<int> UpgradePicked;
 
@@ -186,6 +189,10 @@ public class UpgradeManager : MonoBehaviour
 
     private void OnScoreChanged(int score)
     {
+        // Level off everything ever earned, so spending score in the shop doesn't drain the XP bar.
+        if (ScoreManager.Instance != null)
+            score = ScoreManager.Instance.TotalEarned;
+
         while (score >= nextThreshold)
         {
             pendingOffers++;
@@ -203,6 +210,47 @@ public class UpgradeManager : MonoBehaviour
     private int XpRequiredFor(int level)
     {
         return Mathf.Max(1, Mathf.RoundToInt(pointsPerUpgrade * Mathf.Pow(xpGrowthPerLevel, level)));
+    }
+
+    /// <summary>
+    /// Grows an amount the same way the XP bar does: amount * growth^level, at the player's
+    /// current level. Shop prices use this so they keep pace with levelling.
+    /// </summary>
+    public int ScaleWithLevel(int amount)
+    {
+        return Mathf.RoundToInt(amount * Mathf.Pow(xpGrowthPerLevel, upgradeLevel));
+    }
+
+    /// <summary>Every upgrade that can still be picked, i.e. isn't maxed out.</summary>
+    public List<UpgradeDefinition> GetAvailableUpgrades()
+    {
+        List<UpgradeDefinition> available = new List<UpgradeDefinition>();
+        if (allUpgrades == null)
+            return available;
+
+        foreach (UpgradeDefinition upgrade in allUpgrades)
+        {
+            if (!upgrade.IsMaxed(StacksOf(upgrade)))
+                available.Add(upgrade);
+        }
+
+        return available;
+    }
+
+    /// <summary>
+    /// Takes the upgrade outside of a level-up offer, e.g. bought in the shop. Returns false
+    /// if it is maxed out or not one of this manager's upgrades.
+    /// </summary>
+    public bool ApplyUpgrade(UpgradeDefinition upgrade)
+    {
+        if (upgrade == null || !idByUpgrade.ContainsKey(upgrade) || upgrade.IsMaxed(StacksOf(upgrade)))
+            return false;
+
+        upgrade.Apply(this);
+        TotalPicks++;
+        RefreshWorld();
+        UpgradePicked?.Invoke(TotalPicks);
+        return true;
     }
 
     /// <summary>
@@ -269,10 +317,7 @@ public class UpgradeManager : MonoBehaviour
             return;
 
         resolvingPick = true;
-        currentChoices[index].Apply(this);
-        TotalPicks++;
-        RefreshWorld();
-        UpgradePicked?.Invoke(TotalPicks);
+        ApplyUpgrade(currentChoices[index]);
         pendingOffers--;
         popup.Hide();
         StartCoroutine(FinishPick());
@@ -326,7 +371,8 @@ public class UpgradeManager : MonoBehaviour
 
     private int Stacks(UpgradeId id) => stacks[(int)id];
 
-    private int StacksOf(UpgradeDefinition upgrade) => stacks[(int)idByUpgrade[upgrade]];
+    /// <summary>How many times the upgrade has been taken so far.</summary>
+    public int StacksOf(UpgradeDefinition upgrade) => idByUpgrade.TryGetValue(upgrade, out UpgradeId id) ? stacks[(int)id] : 0;
 
     private readonly Dictionary<UpgradeDefinition, UpgradeId> idByUpgrade = new Dictionary<UpgradeDefinition, UpgradeId>();
 

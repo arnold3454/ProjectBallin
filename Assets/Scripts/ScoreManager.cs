@@ -13,6 +13,9 @@ get; private set;
     }
     [SerializeField] private TextMeshProUGUI scoreText;
 
+/// <summary>Every point ever scored this run. Unlike CurrentScore it never goes down when score is spent in the shop.</summary>
+public int TotalEarned { get; private set; }
+
     /// <summary>Raised with the new total after every change to the score.</summary>
     public event Action<int> ScoreChanged;
 
@@ -57,6 +60,8 @@ if (amount > 0)
 }
 
 CurrentScore += amount;
+if (amount > 0)
+TotalEarned += amount;
 Debug.Log(crit ? $"CRIT! +{amount} Score: {CurrentScore}" : $"Score: {CurrentScore}");
 
 UpdateScoreUI();
@@ -66,6 +71,22 @@ PlayScoreSFX();
 ScoreChanged?.Invoke(CurrentScore);
 if (crit)
 CritScored?.Invoke(amount);
+    }
+
+/// <summary>
+/// Takes points off the score, e.g. for a shop purchase. Returns false and changes nothing
+/// if the player can't cover it. Levelling reads TotalEarned, so spending doesn't cost XP.
+/// </summary>
+public bool TrySpendScore(int amount)
+    {
+if (amount < 0 || amount > CurrentScore)
+return false;
+
+CurrentScore -= amount;
+Debug.Log($"Spent {amount}. Score: {CurrentScore}");
+UpdateScoreUI();
+ScoreChanged?.Invoke(CurrentScore);
+return true;
     }
 
 private void PlayScoreSFX()
