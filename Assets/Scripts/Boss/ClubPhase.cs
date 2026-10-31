@@ -2,32 +2,38 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Club phase: chip rain. The dealer keeps dropping large chips onto the table. They are solid,
-/// so the ball bounces off them, and they keep sliding down the table, slipping around walls,
-/// bumpers and each other, until they reach the line just above the flippers and vanish. Every
-/// ball hit on a chip scores and a few hits break it early. <see cref="intensity"/> sets how
-/// heavy the rain is: how fast chips arrive, how many can be out at once and how big they are.
-/// Chips still falling when the phase ends finish their fall.
+/// Club phase: chip rain. The dealer keeps dropping big chips over the table. They are purely
+/// visual: they float above the playfield, hide the ball and everything else beneath them while
+/// they slide down, and never collide with anything. Each chip vanishes once it reaches the line
+/// just above the flippers. <see cref="intensity"/> sets how heavy the rain is: how fast chips
+/// arrive, how many can be out at once and how big they are. Chips still falling when the phase
+/// ends finish their fall.
 /// </summary>
 public class ClubPhase : BossPhase
 {
     [Header("Chip Rain")]
     [Tooltip("Chip to drop (Prefabs/PokerChip). It should be one unit across at scale 1; the phase scales it to size.")]
     [SerializeField] private PokerChip chipPrefab;
-    [Tooltip("How heavy the rain is, 0 to 1. 0 is a light sprinkle for an early mini phase; 1 covers roughly 40% of the playfield.")]
+    [Tooltip("How heavy the rain is, 0 to 1. 0 is a light sprinkle for an early mini phase; 1 blankets most of the playfield.")]
     [SerializeField, Range(0f, 1f)] private float intensity = 0.5f;
 
     [Header("Intensity range (0 -> 1)")]
+    [Tooltip("Seconds between chips at intensity 0.")]
     [SerializeField, Min(0.1f)] private float spawnIntervalLight = 4f;
+    [Tooltip("Seconds between chips at intensity 1.")]
     [SerializeField, Min(0.1f)] private float spawnIntervalHeavy = 0.7f;
+    [Tooltip("Most chips on the table at once at intensity 0.")]
     [SerializeField, Min(1)] private int maxChipsLight = 5;
+    [Tooltip("Most chips on the table at once at intensity 1.")]
     [SerializeField, Min(1)] private int maxChipsHeavy = 30;
-    [SerializeField, Min(0.2f)] private float chipRadiusLight = 1.4f;
-    [SerializeField, Min(0.2f)] private float chipRadiusHeavy = 2.4f;
+    [Tooltip("Chip radius in world units at intensity 0. The usable board is about 35 units wide.")]
+    [SerializeField, Min(0.2f)] private float chipRadiusLight = 2.5f;
+    [Tooltip("Chip radius in world units at intensity 1. The usable board is about 35 units wide.")]
+    [SerializeField, Min(0.2f)] private float chipRadiusHeavy = 4.5f;
 
     [Header("Chips")]
-    [Tooltip("How far above the table surface a chip's centre sits when it drops in. Half the prefab's thickness.")]
-    [SerializeField, Min(0f)] private float dropHeight = 0.175f;
+    [Tooltip("How far above the table surface the chips float. Keep it above the top of the ball (about 1 unit) so chips pass over the ball and hide it instead of sitting on the table.")]
+    [SerializeField, Min(0f)] private float hoverHeight = 2f;
     [Tooltip("How fast chips slide down the table, in units per second.")]
     [SerializeField, Min(0.1f)] private float driftSpeed = 2.5f;
     [Tooltip("Chips disappear once they reach this far above the bottom of the usable board: the line just above the flippers.")]
@@ -36,10 +42,7 @@ public class ClubPhase : BossPhase
     [SerializeField] private float spawnDepthFromTop = 4f;
     [Tooltip("Keep chips this far from the side walls when they drop in.")]
     [SerializeField] private float sideMargin = 2.5f;
-    [Tooltip("Ball hits needed to break a chip.")]
-    [SerializeField, Min(1)] private int hitsToBreak = 3;
-    [Tooltip("Points for every ball hit on a chip.")]
-    [SerializeField] private int hitPoints = 2;
+    [Tooltip("How many random spots along the drop line to try before giving up on a chip that would land on top of another one.")]
     [SerializeField, Min(1)] private int placementAttempts = 8;
     [SerializeField] private Color[] chipColors =
     {
@@ -59,7 +62,6 @@ public class ClubPhase : BossPhase
 
     private readonly List<PokerChip> chips = new List<PokerChip>();
     private float spawnTimer;
-    private bool warnedNoDropPoint;
 
     private float SpawnInterval => Mathf.Lerp(spawnIntervalLight, spawnIntervalHeavy, intensity);
     private int MaxChips => Mathf.RoundToInt(Mathf.Lerp(maxChipsLight, maxChipsHeavy, intensity));
@@ -73,7 +75,7 @@ public class ClubPhase : BossPhase
 
     protected override void OnEnd()
     {
-        // Chips already on the table stay put until they break or the fight ends.
+        // Chips already on the table finish their fall.
     }
 
     public override void Cleanup()
@@ -81,10 +83,7 @@ public class ClubPhase : BossPhase
         foreach (PokerChip chip in chips)
         {
             if (chip != null)
-            {
-                chip.Broke -= OnChipBroke;
                 Destroy(chip.gameObject);
-            }
         }
         chips.Clear();
     }
@@ -117,16 +116,8 @@ public class ClubPhase : BossPhase
 
         float radius = ChipRadius;
         if (!TryFindDropPoint(radius, out Vector3 point))
-        {
-            if (!warnedNoDropPoint)
-            {
-                Debug.LogWarning($"Club phase found no clear spot on the drop line (z {Manager.BoardMax.y - spawnDepthFromTop:0.0}) after {placementAttempts} attempts. Lower Spawn Depth From Top or Side Margin if this keeps up.", this);
-                warnedNoDropPoint = true;
-            }
             return;
-        }
 
-        warnedNoDropPoint = false;
         PokerChip chip = Instantiate(chipPrefab, point, Quaternion.identity);
 
         float despawnZ = Manager.BoardMin.y + despawnDepthFromBottom;
@@ -134,37 +125,27 @@ public class ClubPhase : BossPhase
             ? chipColors[Random.Range(0, chipColors.Length)]
             : Color.red;
 
-        chip.Initialize(radius, driftSpeed, despawnZ, hitsToBreak, hitPoints, color);
-        chip.Broke += OnChipBroke;
+        chip.Initialize(radius, driftSpeed, despawnZ, color);
         chips.Add(chip);
     }
 
-    /// <summary>Picks a clear spot along the drop line near the top of the board.</summary>
+    /// <summary>
+    /// Picks a spot along the drop line near the top of the board that doesn't overlap a chip
+    /// still hanging around the line. Chips ignore walls and bumpers, so only other chips matter.
+    /// </summary>
     private bool TryFindDropPoint(float radius, out Vector3 point)
     {
         Vector2 min = Manager.BoardMin;
         Vector2 max = Manager.BoardMax;
         float z = max.y - spawnDepthFromTop;
-        float y = Manager.SurfaceHeight + dropHeight;
+        float y = Manager.SurfaceHeight + hoverHeight;
         float left = min.x + sideMargin + radius;
         float right = max.x - sideMargin - radius;
-        Vector3 halfExtents = new Vector3(radius, 0.25f, radius);
 
         for (int i = 0; i < placementAttempts; i++)
         {
             point = new Vector3(Random.Range(left, right), y, z);
-
-            bool blocked = false;
-            foreach (Collider overlap in Physics.OverlapBox(point, halfExtents, Quaternion.identity, ~0, QueryTriggerInteraction.Ignore))
-            {
-                if (overlap.CompareTag("Board"))
-                    continue;
-
-                blocked = true;
-                break;
-            }
-
-            if (!blocked)
+            if (!OverlapsChip(point, radius))
                 return true;
         }
 
@@ -172,9 +153,20 @@ public class ClubPhase : BossPhase
         return false;
     }
 
-    private void OnChipBroke(PokerChip chip)
+    private bool OverlapsChip(Vector3 point, float radius)
     {
-        chip.Broke -= OnChipBroke;
-        chips.Remove(chip);
+        foreach (PokerChip other in chips)
+        {
+            if (other == null)
+                continue;
+
+            Vector3 delta = other.transform.position - point;
+            delta.y = 0f;
+            float minDistance = radius + other.Radius;
+            if (delta.sqrMagnitude < minDistance * minDistance)
+                return true;
+        }
+
+        return false;
     }
 }
