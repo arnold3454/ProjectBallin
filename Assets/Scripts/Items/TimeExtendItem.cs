@@ -6,6 +6,8 @@ public class TimeExtendItem : ItemDefinition
 {
     [SerializeField] private float secondsToAdd = 15f;
 
+    public override string Description => $"Adds {secondsToAdd:0} seconds to the round clock.";
+
     public override bool Use()
     {
         if (GameTimer.Instance == null)

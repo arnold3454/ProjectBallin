@@ -6,8 +6,9 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Tracks the run across rounds and scales the game to keep up with the player. Beating the
-/// boss brings up the win screen; Continue rebuilds the board, resets the boss summoning and
-/// the clock, and starts the next round. Score, upgrades and items carry over. Enemy health
+/// boss brings up the win screen; Continue opens the dealer's shop (when there is one), and
+/// leaving the shop rebuilds the board, resets the boss summoning and the clock, and starts
+/// the next round. Score, upgrades and items carry over. Enemy health
 /// grows with every upgrade taken and every boss beaten, and boss health with every boss
 /// beaten. Lives on the GameManager with the other managers.
 /// </summary>
@@ -30,7 +31,7 @@ public class ProgressionManager : MonoBehaviour
     [SerializeField] private GameObject winPanel;
     [SerializeField] private TextMeshProUGUI winTitleText;
     [SerializeField] private TextMeshProUGUI winSummaryText;
-    [Tooltip("The panel's Continue button. Its On Click calls StartNextRound, wired in the Inspector.")]
+    [Tooltip("The panel's Continue button. Its On Click calls ContinueFromWin, wired in the Inspector.")]
     [SerializeField] private Button continueButton;
     [SerializeField] private string winTitle = "DEALER DEFEATED!";
 
@@ -44,7 +45,7 @@ public class ProgressionManager : MonoBehaviour
     /// <summary>Bosses beaten this run. The first round is 0.</summary>
     public int RoundsWon { get; private set; }
 
-    /// <summary>True from the boss's death until the player presses Continue.</summary>
+    /// <summary>True from the boss's death until the next round starts, shop included.</summary>
     public bool IsShowingWin { get; private set; }
 
     /// <summary>Multiplier for regular enemy health. 1 when there is no manager in the scene.</summary>
@@ -63,7 +64,7 @@ public class ProgressionManager : MonoBehaviour
     {
         Instance = this;
 
-        // The Continue button's On Click is wired to StartNextRound in the Inspector.
+        // The Continue button's On Click is wired to ContinueFromWin in the Inspector.
         if (winPanel != null)
             winPanel.SetActive(false);
     }
@@ -136,8 +137,8 @@ public class ProgressionManager : MonoBehaviour
 
         if (winPanel == null)
         {
-            Debug.LogWarning("ProgressionManager has no win panel assigned (the WinPanel under the Canvas), so the next round starts straight away.", this);
-            StartNextRound();
+            Debug.LogWarning("ProgressionManager has no win panel assigned (the WinPanel under the Canvas), so the win screen is skipped.", this);
+            ContinueFromWin();
             yield break;
         }
 
@@ -157,6 +158,21 @@ public class ProgressionManager : MonoBehaviour
         return $"Round {RoundsWon + 1} cleared!   Score: {score}\n" +
                "Your upgrades and items carry over.\n" +
                $"Round {RoundsWon + 2}: a fresh table, enemies with {Percent(nextEnemyHealth - 1f)} more health.";
+    }
+
+    /// <summary>
+    /// The win screen's Continue: hides it and opens the dealer's shop, which starts the next
+    /// round when the player leaves. With no shop in the scene the next round starts at once.
+    /// </summary>
+    public void ContinueFromWin()
+    {
+        if (winPanel != null)
+            winPanel.SetActive(false);
+
+        if (ShopManager.Instance != null && ShopManager.Instance.TryOpen(StartNextRound))
+            return;
+
+        StartNextRound();
     }
 
     /// <summary>

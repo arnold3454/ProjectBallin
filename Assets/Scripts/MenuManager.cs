@@ -55,6 +55,9 @@ public class MenuManager : MonoBehaviour
         // Same for the win screen between rounds.
         if (ProgressionManager.Instance != null && ProgressionManager.Instance.IsShowingWin) return;
 
+        // Same for the dealer's shop.
+        if (ShopManager.Instance != null && ShopManager.Instance.IsOpen) return;
+
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             ToggleMenu();

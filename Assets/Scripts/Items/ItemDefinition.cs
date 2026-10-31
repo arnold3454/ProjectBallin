@@ -20,6 +20,9 @@ public abstract class ItemDefinition : ScriptableObject
     public Sprite Icon => icon;
     public Color Color => color;
 
+    /// <summary>A sentence on what the item does, shown in the shop. Defaults to the short label.</summary>
+    public virtual string Description => shortLabel;
+
     /// <summary>
     /// Applies the item's effect. Returns false if the item can't be used right
     /// now, in which case the player keeps it.

@@ -10,5 +10,7 @@ public class MultiballSplitItem : ItemDefinition
     [Tooltip("Space left between the two balls when the new one spawns, as a fraction of the ball's radius.")]
     [SerializeField] private float spawnGap = 0.1f;
 
+    public override string Description => "Splits the ball in play into two.";
+
     public override bool Use() => BallSplitter.TrySplit(spawnGap);
 }
