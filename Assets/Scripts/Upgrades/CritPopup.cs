@@ -6,7 +6,15 @@ using UnityEngine;
 /// Floating "CRIT! +N" text that pops up, drifts upward and fades using serialized UI references.
 /// </summary>
 public class CritPopup : MonoBehaviour
-{
+{   
+    [Header("Audio")]
+    [Tooltip("Played when the crit text pops up.")]
+    [SerializeField] private AudioClip critSound;
+    [SerializeField, Range(0f, 1f)] private float critVolume = 1f;
+    [Tooltip("Random pitch variation so rapid crits don't sound identical. 0 = always the same pitch.")]
+    private AudioSource audioSource;
+    [SerializeField, Range(0f, 0.5f)] private float pitchVariation = 0.1f;
+
     [SerializeField] private RectTransform canvasRect;
     [SerializeField] private TextMeshProUGUI textPrefab;
     [SerializeField, Min(0.01f)] private float duration = 0.9f;
@@ -19,6 +27,13 @@ public class CritPopup : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float fadeStart = 0.55f;
 
     /// <summary>Pops a crit message showing the points that crit scored.</summary>
+   
+        private void Awake()
+    {
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f; // 2D sound
+    }
     public void Spawn(int points)
     {
         if (canvasRect == null || textPrefab == null)
@@ -31,6 +46,20 @@ public class CritPopup : MonoBehaviour
         label.gameObject.SetActive(true);
 
         StartCoroutine(Animate(rect, label, label.color));
+
+        if (canvasRect == null || textPrefab == null)
+        return;
+
+        PlayCritSound();
+    }
+
+    private void PlayCritSound()
+    {
+        if (critSound == null || audioSource == null)
+            return;
+
+        audioSource.pitch = 1f + Random.Range(-pitchVariation, pitchVariation);
+        audioSource.PlayOneShot(critSound, critVolume);
     }
 
     private IEnumerator Animate(RectTransform rect, TextMeshProUGUI label, Color initialColor)

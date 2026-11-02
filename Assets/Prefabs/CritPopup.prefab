@@ -45,6 +45,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 318cb89c70d60f5409b718b93c45db85, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CritPopup
+  critSound: {fileID: 8300000, guid: 068a81f30ff914eb2bbd17c70d87d997, type: 3}
+  critVolume: 0.5
+  pitchVariation: 0.1
   canvasRect: {fileID: 4354875173262219909}
   textPrefab: {fileID: 1060924264936931114}
   duration: 0.9

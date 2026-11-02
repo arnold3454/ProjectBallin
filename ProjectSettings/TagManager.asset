@@ -10,6 +10,7 @@ TagManager:
   - Wall
   - Board
   - Item
+  - BossTrigger
   layers:
   - Default
   - TransparentFX

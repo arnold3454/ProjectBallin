@@ -24,10 +24,18 @@ public class NudgeController : MonoBehaviour
     [SerializeField] private float flipperLockDuration = 3f;
     [SerializeField] private Slider tiltMeter;
 
+    [Header("Audio")]
+    [Tooltip("Played each time the table is nudged.")]
+    [SerializeField] private AudioClip nudgeSound;
+    [SerializeField, Range(0f, 1f)] private float nudgeVolume = 1f;
+    [Tooltip("Random pitch variation so rapid nudges don't sound identical. 0 = always the same pitch.")]
+    [SerializeField, Range(0f, 0.5f)] private float pitchVariation = 0.05f;
+
     private float currentTilt;
     private bool isTilted;
     private Vector3 cameraRestLocalPosition;
     private Coroutine cameraShakeRoutine;
+    private AudioSource audioSource;
 
     void Update()
     {
@@ -62,6 +70,7 @@ public class NudgeController : MonoBehaviour
         direction = Mathf.Sign(direction);
         currentTilt += tiltPerNudge;
         UpdateTiltMeter();
+        PlayNudgeSound();
         StartCoroutine(ShakeBalls(direction));
         StartCameraShake();
 
@@ -75,6 +84,15 @@ public class NudgeController : MonoBehaviour
         Nudge(Random.value < 0.5f ? 1f : -1f);
     }
 
+    private void PlayNudgeSound()
+    {
+        if (nudgeSound == null || audioSource == null)
+            return;
+
+        audioSource.pitch = 1f + Random.Range(-pitchVariation, pitchVariation);
+        audioSource.PlayOneShot(nudgeSound, nudgeVolume);
+    }
+
     private void OnDestroy()
     {
         if (Instance == this)
@@ -84,6 +102,10 @@ public class NudgeController : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f; // 2D sound
 
         if (cameraToShake == null && Camera.main != null)
             cameraToShake = Camera.main.transform;

@@ -42,6 +42,17 @@ public class ShopManager : MonoBehaviour
     [Tooltip("Keys that buy each card, in card order: the three items then the upgrade.")]
     [SerializeField] private Key[] buyKeys = { Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4 };
 
+    [Header("Audio")]
+    [Tooltip("Played when the shop opens.")]
+    [SerializeField] private AudioClip enterSound;
+    [SerializeField, Range(0f, 1f)] private float enterVolume = 1f;
+    [Tooltip("Played when the player leaves the shop (Next Round).")]
+    [SerializeField] private AudioClip leaveSound;
+    [SerializeField, Range(0f, 1f)] private float leaveVolume = 1f;
+    [Tooltip("Played when the player successfully buys an item or upgrade.")]
+    [SerializeField] private AudioClip buySound;
+    [SerializeField, Range(0f, 1f)] private float buyVolume = 1f;
+
     private const string ItemHeader = "ITEM";
     private const string UpgradeHeader = "UPGRADE";
 
@@ -58,6 +69,7 @@ public class ShopManager : MonoBehaviour
     private readonly List<Offer> offers = new List<Offer>();
     private readonly List<ShopCardUI> cards = new List<ShopCardUI>();
     private Action onClosed;
+    private AudioSource audioSource;
 
     /// <summary>True while the shop is on screen.</summary>
     public bool IsOpen { get; private set; }
@@ -80,6 +92,10 @@ public class ShopManager : MonoBehaviour
         }
 
         Instance = this;
+
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f; // 2D sound
 
         // The Next Round button's On Click is wired to Leave in the Inspector.
         if (shopPanel != null)
@@ -125,6 +141,8 @@ public class ShopManager : MonoBehaviour
         shopPanel.SetActive(true);
         Refresh();
 
+        PlaySound(enterSound, enterVolume);
+
         if (EventSystem.current != null)
             EventSystem.current.SetSelectedGameObject(null);
 
@@ -140,6 +158,8 @@ public class ShopManager : MonoBehaviour
         IsOpen = false;
         if (shopPanel != null)
             shopPanel.SetActive(false);
+
+        PlaySound(leaveSound, leaveVolume);
 
         Action closed = onClosed;
         onClosed = null;
@@ -246,6 +266,7 @@ public class ShopManager : MonoBehaviour
 
         ScoreManager.Instance.TrySpendScore(offer.Cost);
         offer.Sold = true;
+        PlaySound(buySound, buyVolume);
         SetMessage($"Bought {offer.Name}!");
         Purchased?.Invoke(offer.Name);
         Refresh();
@@ -310,6 +331,14 @@ public class ShopManager : MonoBehaviour
     {
         if (messageText != null)
             messageText.text = text;
+    }
+
+    private void PlaySound(AudioClip clip, float volume)
+    {
+        if (clip == null || audioSource == null)
+            return;
+
+        audioSource.PlayOneShot(clip, volume);
     }
 
     private static void Shuffle<T>(List<T> list)

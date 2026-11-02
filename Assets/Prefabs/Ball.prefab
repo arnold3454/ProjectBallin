@@ -156,7 +156,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DeleteBall
   drainClip: {fileID: 8300000, guid: cece9100574214b359c99bb90bfda843, type: 3}
-  drainVolume: 1
+  drainVolume: 0.8
 --- !u!114 &5271397974061694444
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -170,7 +170,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   rollClip: {fileID: 8300000, guid: 5be4f62cedc9e44e588deb1b5d1b5289, type: 3}
-  maxVolume: 0.2
+  maxVolume: 0.9
   boardTag: Board
   minRollSpeed: 0.5
   maxRollSpeed: 10
@@ -287,7 +287,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 1.05
+  m_Radius: 1
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!82 &889947662456054129
 AudioSource:
@@ -407,13 +407,19 @@ MonoBehaviour:
     lastPlayedTime: 0
   - tag: Wall
     clip: {fileID: 8300000, guid: 9552c4762f15f4a38b61334d54cf743a, type: 3}
-    volume: 0.1
+    volume: 0.3
     minCollisionForce: 0
     cooldown: 0.5
     lastPlayedTime: 0
   - tag: Item
     clip: {fileID: 8300000, guid: 2f11f921228604590ae14c3aca0f4f52, type: 3}
     volume: 0.5
+    minCollisionForce: 0
+    cooldown: 0.5
+    lastPlayedTime: 0
+  - tag: BossTrigger
+    clip: {fileID: 8300000, guid: af96ce3c8a4c04392ad8d1b6aed8ce3d, type: 3}
+    volume: 0.4
     minCollisionForce: 0
     cooldown: 0.5
     lastPlayedTime: 0

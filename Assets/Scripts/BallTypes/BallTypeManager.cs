@@ -19,6 +19,11 @@ public class BallTypeManager : MonoBehaviour
     [Tooltip("The Split ball can't duplicate while this many balls are already on the table.")]
     [SerializeField, Min(2)] private int maxBalls = 8;
 
+    [Header("Audio")]
+    [Tooltip("Played when the player activates the Split ball's ability and a ball actually splits.")]
+    [SerializeField] private AudioClip splitSound;
+    [SerializeField, Range(0f, 1f)] private float splitVolume = 1f;
+
     [Header("UI Prefabs")]
     [SerializeField] private GameObject screenPrefab;
     [SerializeField] private GameObject splitHudPrefab;
@@ -31,6 +36,7 @@ public class BallTypeManager : MonoBehaviour
     private BallTypeInfo[] ballTypesByType;
     private Material ballMaterial;
     private PhysicsMaterial ballPhysicsMaterial;
+    private AudioSource audioSource;
     private float nextSplitTime;
     private bool choiceMade;
 
@@ -50,6 +56,10 @@ public class BallTypeManager : MonoBehaviour
         }
 
         Instance = this;
+
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f; // 2D sound
 
         if (screenPrefab == null || splitHudPrefab == null)
         {
@@ -260,9 +270,20 @@ public class BallTypeManager : MonoBehaviour
         if (GameObject.FindGameObjectsWithTag("Ball").Length >= maxBalls)
             return;
 
-        // Only start the cooldown if a ball was actually split.
+        // Only start the cooldown (and play the sound) if a ball was actually split.
         if (BallSplitter.TrySplit())
+        {
             nextSplitTime = Time.time + splitCooldown;
+            PlaySplitSound();
+        }
+    }
+
+    private void PlaySplitSound()
+    {
+        if (splitSound == null || audioSource == null)
+            return;
+
+        audioSource.PlayOneShot(splitSound, splitVolume);
     }
 
     private bool TryGetBallTypesByType(out BallTypeInfo[] typesByType)

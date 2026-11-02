@@ -12,6 +12,7 @@ using UnityEngine.UI;
 /// grows with every upgrade taken and every boss beaten, and boss health with every boss
 /// beaten. Lives on the GameManager with the other managers.
 /// </summary>
+
 public class ProgressionManager : MonoBehaviour
 {
     public static ProgressionManager Instance { get; private set; }
@@ -39,6 +40,11 @@ public class ProgressionManager : MonoBehaviour
     [Tooltip("Rebuilds the table between rounds. Found in the scene if left empty.")]
     [SerializeField] private BoardGenerator boardGenerator;
 
+    [Header("Audio")]
+    [Tooltip("Played when the boss is defeated.")]
+    [SerializeField] private AudioClip bossDefeatedSound;
+    [SerializeField, Range(0f, 1f)] private float bossDefeatedVolume = 1f;
+
     /// <summary>Raised with the number of bosses beaten once the next round has begun.</summary>
     public static event Action<int> RoundStarted;
 
@@ -60,9 +66,15 @@ public class ProgressionManager : MonoBehaviour
     /// <summary>Scales a base health value by <see cref="BossHealthMultiplier"/>, never below 1.</summary>
     public static int ScaleBossHealth(int baseHealth) => Mathf.Max(1, Mathf.RoundToInt(baseHealth * BossHealthMultiplier));
 
+    private AudioSource audioSource;
+
     private void Awake()
     {
         Instance = this;
+
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f; // 2D sound
 
         // The Continue button's On Click is wired to ContinueFromWin in the Inspector.
         if (winPanel != null)
@@ -106,11 +118,21 @@ public class ProgressionManager : MonoBehaviour
         if (!defeated || IsShowingWin)
             return;
 
+        PlayBossDefeatedSound();
+
         // The last boss ends the game with its own screen; there is no next round to offer.
         if (BossManager.Instance != null && BossManager.Instance.IsGameWon)
             return;
 
         StartCoroutine(ShowWinScreen());
+    }
+
+    private void PlayBossDefeatedSound()
+    {
+        if (bossDefeatedSound == null || audioSource == null)
+            return;
+
+        audioSource.PlayOneShot(bossDefeatedSound, bossDefeatedVolume);
     }
 
     private IEnumerator ShowWinScreen()

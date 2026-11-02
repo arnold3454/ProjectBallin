@@ -7,9 +7,10 @@ using UnityEngine;
 /// </summary>
 public static class BallSplitter
 {
+    
     /// <summary>Splits the fastest ball in play. Returns false if there is no ball to split or no room for the twin.</summary>
     /// <param name="spawnGap">Space left between the two balls, as a fraction of the ball's radius.</param>
-    public static bool TrySplit(float spawnGap = 0.1f)
+    public static bool TrySplit(float spawnGap = 0.1f, AudioClip splitSound = null, float splitVolume = 1f)
     {
         Rigidbody source = FindBallToSplit();
         if (source == null)
@@ -22,6 +23,10 @@ public static class BallSplitter
         Rigidbody twin = Object.Instantiate(source, position, source.rotation);
         twin.linearVelocity = -velocity;
         twin.angularVelocity = -source.angularVelocity;
+
+        if (splitSound != null)
+            AudioSource.PlayClipAtPoint(splitSound, position, splitVolume);
+
         return true;
     }
 

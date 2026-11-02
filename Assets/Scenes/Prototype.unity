@@ -1172,6 +1172,9 @@ MonoBehaviour:
   tiltDecayPerSecond: 0.47
   flipperLockDuration: 3
   tiltMeter: {fileID: 440665783}
+  nudgeSound: {fileID: 8300000, guid: ce052f466aadf4d5d9562275171ccac5, type: 3}
+  nudgeVolume: 1
+  pitchVariation: 0.05
 --- !u!114 &136284781
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1250,6 +1253,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BallTypeManager
   splitCooldown: 5
   maxBalls: 8
+  splitSound: {fileID: 8300000, guid: de64ecc692fd6454196f27a7f8291d54, type: 3}
+  splitVolume: 1
   screenPrefab: {fileID: 8878247809454548861, guid: c19cc46e929d2774fa19a899e4430a21, type: 3}
   splitHudPrefab: {fileID: 8834057467108829132, guid: 3926273fb86611242983e0946db32dff, type: 3}
   ballTypes:
@@ -3042,95 +3047,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!1001 &349225993
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 193409797319088656, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: sfxProfiles.Array.size
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 193409797319088656, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: sfxProfiles.Array.data[2].tag
-      value: Item
-      objectReference: {fileID: 0}
-    - target: {fileID: 193409797319088656, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: sfxProfiles.Array.data[2].clip
-      value: 
-      objectReference: {fileID: 8300000, guid: 2f11f921228604590ae14c3aca0f4f52, type: 3}
-    - target: {fileID: 193409797319088656, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: sfxProfiles.Array.data[0].volume
-      value: 0.2
-      objectReference: {fileID: 0}
-    - target: {fileID: 193409797319088656, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: sfxProfiles.Array.data[2].volume
-      value: 0.4
-      objectReference: {fileID: 0}
-    - target: {fileID: 193409797319088656, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: sfxProfiles.Array.data[2].cooldown
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 2290456617342231735, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0.2523271
-      objectReference: {fileID: 0}
-    - target: {fileID: 2290456617342231735, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1.2503699
-      objectReference: {fileID: 0}
-    - target: {fileID: 2290456617342231735, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 22.853106
-      objectReference: {fileID: 0}
-    - target: {fileID: 2290456617342231735, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2290456617342231735, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2290456617342231735, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2290456617342231735, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2290456617342231735, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2290456617342231735, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2290456617342231735, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5271397974061694444, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: maxVolume
-      value: 0.25
-      objectReference: {fileID: 0}
-    - target: {fileID: 5271397974061694444, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: minRollSpeed
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 6184623619345070126, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
-      propertyPath: m_Name
-      value: Ball
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 33e3b107cd611ae4ebf27c8d9fa57e03, type: 3}
 --- !u!1 &356056889
 GameObject:
   m_ObjectHideFlags: 0
@@ -5506,6 +5422,22 @@ PrefabInstance:
     - target: {fileID: 7072842908829972680, guid: 9ffdfa315b4625246b426417f0193b16, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0.606
+      objectReference: {fileID: 0}
+    - target: {fileID: 7485960570301249611, guid: 9ffdfa315b4625246b426417f0193b16, type: 3}
+      propertyPath: releaseClip
+      value: 
+      objectReference: {fileID: 8300000, guid: d77eb10aa11414c98a9d7ad2b3ce7635, type: 3}
+    - target: {fileID: 7485960570301249611, guid: 9ffdfa315b4625246b426417f0193b16, type: 3}
+      propertyPath: pullBackClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 00bb7dc6506654159977c86c157ccebd, type: 3}
+    - target: {fileID: 7485960570301249611, guid: 9ffdfa315b4625246b426417f0193b16, type: 3}
+      propertyPath: releaseVolume
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 7485960570301249611, guid: 9ffdfa315b4625246b426417f0193b16, type: 3}
+      propertyPath: pullBackVolume
+      value: 0.7
       objectReference: {fileID: 0}
     - target: {fileID: 8031063390326760670, guid: 9ffdfa315b4625246b426417f0193b16, type: 3}
       propertyPath: m_Name
@@ -13730,6 +13662,8 @@ MonoBehaviour:
   choicesPerOffer: 3
   popupPrefab: {fileID: 1806743490525708669, guid: ce15a5128bafec646982787d0a7e5b74, type: 3}
   critPopupPrefab: {fileID: 5830497837523062933, guid: 4161e61ef0979854eb6a0ffd1c67f93b, type: 3}
+  levelUpSound: {fileID: 8300000, guid: 87c3a12da231c497dad615c586c77599, type: 3}
+  levelUpVolume: 1
 --- !u!1001 &1922207272825687114
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13806,6 +13740,10 @@ PrefabInstance:
     - target: {fileID: 6258081228795220875, guid: 81a1265ec42646949a6cc3c72875189f, type: 3}
       propertyPath: m_Name
       value: CornerBossTrigger Right
+      objectReference: {fileID: 0}
+    - target: {fileID: 6258081228795220875, guid: 81a1265ec42646949a6cc3c72875189f, type: 3}
+      propertyPath: m_TagString
+      value: BossTrigger
       objectReference: {fileID: 0}
     - target: {fileID: 8681520343882116278, guid: 81a1265ec42646949a6cc3c72875189f, type: 3}
       propertyPath: m_LocalPosition.x
@@ -14107,6 +14045,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: CornerBossTrigger Left
       objectReference: {fileID: 0}
+    - target: {fileID: 6258081228795220875, guid: 81a1265ec42646949a6cc3c72875189f, type: 3}
+      propertyPath: m_TagString
+      value: BossTrigger
+      objectReference: {fileID: 0}
     - target: {fileID: 8681520343882116278, guid: 81a1265ec42646949a6cc3c72875189f, type: 3}
       propertyPath: m_LocalPosition.x
       value: -16.9
@@ -14305,6 +14247,8 @@ MonoBehaviour:
   continueButton: {fileID: 1549186042}
   winTitle: DEALER DEFEATED!
   boardGenerator: {fileID: 0}
+  bossDefeatedSound: {fileID: 8300000, guid: fde1415ba051140bb9eabd053cac24cd, type: 3}
+  bossDefeatedVolume: 1
 --- !u!114 &8912345678901234602
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14329,6 +14273,12 @@ MonoBehaviour:
   upgradeCard: {fileID: 1176718513}
   leaveButton: {fileID: 1894009934}
   buyKeys: 290000002a0000002b0000002c000000
+  enterSound: {fileID: 8300000, guid: baa167f425c43416da5522f2faa06a86, type: 3}
+  enterVolume: 0.8
+  leaveSound: {fileID: 8300000, guid: baa167f425c43416da5522f2faa06a86, type: 3}
+  leaveVolume: 0.8
+  buySound: {fileID: 8300000, guid: 44a7c13dbac2a47ce819063434fe04e4, type: 3}
+  buyVolume: 0.8
 --- !u!1 &8914000000000000101
 GameObject:
   m_ObjectHideFlags: 0
@@ -14504,7 +14454,6 @@ SceneRoots:
   - {fileID: 1688288073}
   - {fileID: 609187561}
   - {fileID: 790595625}
-  - {fileID: 349225993}
   - {fileID: 9202137379378595358}
   - {fileID: 6372669536167366176}
   - {fileID: 2284623692815124652}
