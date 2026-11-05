@@ -15,7 +15,8 @@ public class BallTypeManager : MonoBehaviour
     public static bool IsSelecting { get; private set; }
 
     [Header("Split Ball")]
-    [SerializeField, Min(0f)] private float splitCooldown = 5f;
+    [Tooltip("Seconds between splits. The Split ball gets a limited number of splits per ball (see UpgradeManager's Split Amount upgrade); a fresh set once the table is empty.")]
+    [SerializeField, Min(0f)] private float splitCooldown = 3f;
     [Tooltip("The Split ball can't duplicate while this many balls are already on the table.")]
     [SerializeField, Min(2)] private int maxBalls = 8;
 
@@ -32,6 +33,7 @@ public class BallTypeManager : MonoBehaviour
     private Material ballMaterial;
     private PhysicsMaterial ballPhysicsMaterial;
     private float nextSplitTime;
+    private int splitsUsed;
     private bool choiceMade;
 
     public BallTypeInfo Current => current;
@@ -247,22 +249,47 @@ public class BallTypeManager : MonoBehaviour
         if (Time.timeScale <= 0f)
             return;
 
-        float wait = nextSplitTime - Time.time;
-        splitHud.SetStatus(
-            wait > 0f
-                ? $"[{BallTypeInfo.SplitKey}] Split in {wait:0.0}s"
-                : $"[{BallTypeInfo.SplitKey}] Split ready",
-            wait > 0f ? new Color(0.7f, 0.72f, 0.8f) : new Color(0.55f, 0.7f, 1f));
+        // Splits are per ball: once nothing is in play, the next ball launched gets a fresh set.
+        if (CountBallsInPlay() == 0)
+            splitsUsed = 0;
 
-        if (wait > 0f || Keyboard.current == null || !Keyboard.current[BallTypeInfo.SplitKey].wasPressedThisFrame)
+        int splitsPerBall = UpgradeManager.Instance != null ? UpgradeManager.Instance.SplitsPerBall : UpgradeManager.BaseSplitsPerBall;
+        int splitsLeft = Mathf.Max(0, splitsPerBall - splitsUsed);
+        float wait = nextSplitTime - Time.time;
+        string key = $"[{BallTypeInfo.SplitKey}]";
+
+        if (splitsLeft <= 0)
+            splitHud.SetStatus($"{key} No splits left this ball", new Color(0.6f, 0.6f, 0.65f));
+        else if (wait > 0f)
+            splitHud.SetStatus($"{key} Split in {wait:0.0}s  ({splitsLeft} left)", new Color(0.7f, 0.72f, 0.8f));
+        else
+            splitHud.SetStatus($"{key} Split ready  ({splitsLeft} left)", new Color(0.55f, 0.7f, 1f));
+
+        if (splitsLeft <= 0 || wait > 0f || Keyboard.current == null || !Keyboard.current[BallTypeInfo.SplitKey].wasPressedThisFrame)
             return;
 
         if (GameObject.FindGameObjectsWithTag("Ball").Length >= maxBalls)
             return;
 
-        // Only start the cooldown if a ball was actually split.
+        // Only spend a split and start the cooldown if a ball was actually split.
         if (BallSplitter.TrySplit())
+        {
             nextSplitTime = Time.time + splitCooldown;
+            splitsUsed++;
+        }
+    }
+
+    /// <summary>Balls rolling on the table. A ball waiting on the plunger is kinematic and doesn't count.</summary>
+    private static int CountBallsInPlay()
+    {
+        int count = 0;
+        foreach (GameObject ball in GameObject.FindGameObjectsWithTag("Ball"))
+        {
+            if (ball.TryGetComponent(out Rigidbody body) && !body.isKinematic)
+                count++;
+        }
+
+        return count;
     }
 
     private bool TryGetBallTypesByType(out BallTypeInfo[] typesByType)
