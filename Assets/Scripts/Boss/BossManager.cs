@@ -24,10 +24,8 @@ public class BossManager : MonoBehaviour
 
     [Header("Boss")]
     [SerializeField] private Boss bossPrefab;
-    [Tooltip("Where the boss spawns if there is no roulette wheel in the scene.")]
-    [SerializeField] private Vector3 fallbackSpawnPoint = new Vector3(-0.8f, 1.75f, 20f);
-    [Tooltip("Offset from the roulette wheel (or fallback point) to the boss. +Z is up the table, so the boss stands above the wheel on screen rather than on it.")]
-    [SerializeField] private Vector3 spawnOffset = new Vector3(0f, 0f, 7f);
+    [Tooltip("World position where the boss spawns, independent of the roulette wheel.")]
+    [SerializeField] private Vector3 bossSpawnPosition = new Vector3(-0.8f, 1.75f, 27f);
 
     [Header("Timer")]
     [Tooltip("The fight's own countdown, separate from the main game clock. Left empty, the BossTimer on this object is used, or one is added with its default settings.")]
@@ -291,17 +289,11 @@ public class BossManager : MonoBehaviour
             return;
         }
 
-        Vector3 spawnPoint = fallbackSpawnPoint;
-        RouletteWheel wheel = RouletteManager.Instance != null ? RouletteManager.Instance.Wheel : null;
-        if (wheel != null)
-            spawnPoint = wheel.transform.position;
-        spawnPoint += spawnOffset;
-
         // Extend the round first so the boss timer's main clock cap sees the longer clock.
         if (GameTimer.Instance != null && mainClockBonus > 0f)
             GameTimer.Instance.AddTime(mainClockBonus);
 
-        ActiveBoss = Instantiate(bossPrefab, spawnPoint, Quaternion.identity);
+        ActiveBoss = Instantiate(bossPrefab, bossSpawnPosition, Quaternion.identity);
         ActiveBoss.Died += OnBossDied;
         ActiveBoss.HealthChanged += OnBossHealthChanged;
         ApplyFightPhases(ActiveBoss);

@@ -18,4 +18,4 @@ MonoBehaviour:
   weight: 2
   allowRepeat: 1
   allowRandomRotation: 0
-  localPositionOffset: {x: -5.98, y: -1.950785, z: 0}
+  localPositionOffset: {x: 0, y: -1.950785, z: 0}

@@ -241,7 +241,7 @@ public class BallLauncher : MonoBehaviour
         else
         {
             GameObject newBall = Instantiate(ballPrefab, loadPosition, transform.rotation);
-            newBall.transform.localScale = Vector3.one * size;
+            // newBall.transform.localScale = Vector3.one * size;
             BallTypeManager.Apply(newBall);
 
             body = newBall.GetComponent<Rigidbody>();
