@@ -10,7 +10,8 @@ using UnityEngine.InputSystem;
 /// UpgradeReadyPanel under the Canvas stays up until the player presses the choose key or clicks
 /// it, and only then does gameplay pause for the choice. Also holds the resulting stat bonuses for
 /// the rest of the game to read (score, ball, flipper and nudge tuning).
-/// Lives on the scene's GameManager. Assign the popup prefabs and the UpgradeReadyPanel in the Inspector.
+/// Lives on the scene's GameManager. The UpgradePopup, CritPopup and UpgradeReadyPanel it drives are
+/// objects under the Canvas, assigned in the Inspector.
 /// </summary>
 public class UpgradeManager : MonoBehaviour
 {
@@ -67,8 +68,10 @@ public class UpgradeManager : MonoBehaviour
     [SerializeField, Min(1)] private int choicesPerOffer = 3;
 
     [Header("Upgrade UI")]
-    [SerializeField] private UpgradePopup popupPrefab;
-    [SerializeField] private CritPopup critPopupPrefab;
+    [Tooltip("The UpgradePopup under the Canvas: the full-screen level-up choice.")]
+    [SerializeField] private UpgradePopup popup;
+    [Tooltip("The CritPopup under the Canvas: the floating CRIT! labels.")]
+    [SerializeField] private CritPopup critPopup;
 
     [Header("Upgrade Ready Notification")]
     [Tooltip("The UpgradeReadyPanel under the Canvas. Shown from when the bar fills until the player opens the choice.")]
@@ -78,8 +81,6 @@ public class UpgradeManager : MonoBehaviour
     [SerializeField] private Key chooseKey = Key.U;
 
     private readonly int[] stacks = new int[System.Enum.GetValues(typeof(UpgradeId)).Length];
-    private UpgradePopup popup;
-    private CritPopup critPopup;
     private List<UpgradeDefinition> allUpgrades;
     private List<UpgradeDefinition> currentChoices;
     private int nextThreshold;
@@ -161,12 +162,15 @@ public class UpgradeManager : MonoBehaviour
             return;
         }
 
-        if (popupPrefab == null || critPopupPrefab == null)
+        if (popup == null)
         {
-            Debug.LogError("Assign the upgrade and crit popup prefabs on UpgradeManager.", this);
+            Debug.LogError("Assign the UpgradePopup under the Canvas on UpgradeManager.", this);
             enabled = false;
             return;
         }
+
+        if (critPopup == null)
+            Debug.LogWarning("UpgradeManager has no CritPopup assigned (under the Canvas), so crits won't show their floating text.", this);
 
         if (readyPanel == null)
             Debug.LogWarning("UpgradeManager has no UpgradeReadyPanel assigned (under the Canvas), so earned upgrades can only be opened with the choose key.", this);
@@ -177,13 +181,7 @@ public class UpgradeManager : MonoBehaviour
         xpForCurrentBar = XpRequiredFor(0);
         nextThreshold = xpForCurrentBar;
         allUpgrades = BuildUpgradeList();
-
-        popup = Instantiate(popupPrefab, transform);
-        popup.gameObject.name = "UpgradePopup";
         popup.Hide();
-
-        critPopup = Instantiate(critPopupPrefab, transform);
-        critPopup.gameObject.name = "CritPopup";
     }
 
     private void Start()
@@ -191,7 +189,8 @@ public class UpgradeManager : MonoBehaviour
         if (Instance == this && ScoreManager.Instance != null)
         {
             ScoreManager.Instance.ScoreChanged += OnScoreChanged;
-            ScoreManager.Instance.CritScored += critPopup.Spawn;
+            if (critPopup != null)
+                ScoreManager.Instance.CritScored += critPopup.Spawn;
             OnScoreChanged(ScoreManager.Instance.CurrentScore);
         }
     }

@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 /// <summary>
-/// Full-screen "pick an upgrade" overlay, backed by a prefab with serialized UI references.
-/// It only draws and reports the click. UpgradeManager owns pausing and applying the pick.
+/// Full-screen "pick an upgrade" overlay: the UpgradePopup object under the Canvas, with its cards
+/// assigned in the Inspector. It only draws and reports the click. UpgradeManager owns pausing
+/// and applying the pick.
 /// </summary>
 public class UpgradePopup : MonoBehaviour
 {
@@ -26,12 +26,6 @@ public class UpgradePopup : MonoBehaviour
 
     [SerializeField] private GameObject popupRoot;
     [SerializeField] private Card[] cards = new Card[CardCount];
-
-    private void Awake()
-    {
-        EnsureEventSystem();
-        Hide();
-    }
 
     /// <summary>Shows the choices. <paramref name="owned"/> is how many times each has already been picked.</summary>
     public void Show(IReadOnlyList<UpgradeDefinition> choices, int[] owned, Action<int> onPick)
@@ -58,19 +52,13 @@ public class UpgradePopup : MonoBehaviour
 
         if (EventSystem.current != null)
             EventSystem.current.SetSelectedGameObject(null);
+        else
+            Debug.LogWarning("No EventSystem in the scene, so the upgrade cards can't be clicked. The 1/2/3 keys still work.", this);
     }
 
     public void Hide()
     {
         if (popupRoot != null)
             popupRoot.SetActive(false);
-    }
-
-    private static void EnsureEventSystem()
-    {
-        if (FindAnyObjectByType<EventSystem>() != null)
-            return;
-
-        new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
     }
 }
