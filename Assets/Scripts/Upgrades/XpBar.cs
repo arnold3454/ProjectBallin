@@ -5,8 +5,8 @@ using UnityEngine.UI;
 /// <summary>
 /// HUD bar that fills as points are earned toward the next upgrade. A full bar is what hands
 /// the player an upgrade choice (see UpgradeManager); the bar then empties and starts over.
-/// Build the bar in the scene hierarchy (a non-interactable Slider with a Fill, plus an optional
-/// label) and assign the references in the Inspector.
+/// Built in the scene hierarchy as the XpBar along the bottom of the screen (a non-interactable
+/// Slider with a Fill, plus a label); the references are assigned in the Inspector.
 /// </summary>
 public class XpBar : MonoBehaviour
 {
@@ -15,7 +15,7 @@ public class XpBar : MonoBehaviour
     [SerializeField] private TextMeshProUGUI label;
 
     [Header("Display")]
-    [Tooltip("{0} = points earned toward the next upgrade, {1} = points needed.")]
+    [Tooltip("{0} = points earned toward the next upgrade, {1} = points needed, {2} = the player's level.")]
     [SerializeField] private string labelFormat = "XP {0} / {1}";
     [Tooltip("How fast the bar animates toward its target. 0 snaps instantly.")]
     [SerializeField, Min(0f)] private float fillSpeed = 6f;
@@ -110,6 +110,9 @@ public class XpBar : MonoBehaviour
         target = newTarget;
 
         if (label != null)
-            label.text = string.Format(labelFormat, xp, xpPerUpgrade);
+        {
+            int level = UpgradeManager.Instance != null ? UpgradeManager.Instance.UpgradeLevel + 1 : 1;
+            label.text = string.Format(labelFormat, xp, xpPerUpgrade, level);
+        }
     }
 }
