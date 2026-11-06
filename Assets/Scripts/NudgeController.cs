@@ -30,9 +30,15 @@ public class NudgeController : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float nudgeVolume = 1f;
     [Tooltip("Random pitch variation so rapid nudges don't sound identical. 0 = always the same pitch.")]
     [SerializeField, Range(0f, 0.5f)] private float pitchVariation = 0.05f;
+    [Tooltip("Played when the tilt meter fills, and again whenever the player tries to nudge while the table is locked.")]
+    [SerializeField] private AudioClip tiltSound;
+    [SerializeField, Range(0f, 1f)] private float tiltVolume = 1f;
+    [Tooltip("Minimum time between tilt sounds so mashing shift doesn't stack them.")]
+    [SerializeField] private float tiltSoundCooldown = 0.25f;
 
     private float currentTilt;
     private bool isTilted;
+    private float lastTiltSoundTime = -999f;
     private Vector3 cameraRestLocalPosition;
     private Coroutine cameraShakeRoutine;
     private AudioSource audioSource;
@@ -60,22 +66,33 @@ public class NudgeController : MonoBehaviour
     /// <summary>
     /// Nudges the table exactly as a shift key press does: +1 is left shift (balls pushed right),
     /// -1 is right shift. Builds tilt like a real nudge and locks the flippers past the threshold.
+    /// While the table is tilted, the nudge is blocked and the tilt sound plays instead.
     /// Used by the Bouncer enemy to force a nudge on contact.
     /// </summary>
     public void Nudge(float direction)
     {
-        if (isTilted || direction == 0f)
+        if (direction == 0f)
             return;
+
+        // Meter is full and the table is locked: play the "denied" sound and do nothing else
+        if (isTilted)
+        {
+            PlayTiltSound();
+            return;
+        }
 
         direction = Mathf.Sign(direction);
         currentTilt += tiltPerNudge;
         UpdateTiltMeter();
-        PlayNudgeSound();
-        StartCoroutine(ShakeBalls(direction));
-        StartCameraShake();
 
+        // The final nudge plays the tilt sound (from TiltFlippers) instead of the normal nudge sound
         if (currentTilt >= tiltThreshold)
             StartCoroutine(TiltFlippers());
+        else
+            PlayNudgeSound();
+
+        StartCoroutine(ShakeBalls(direction));
+        StartCameraShake();
     }
 
     /// <summary>Nudges left or right at random, as if the player had hit one of the shift keys.</summary>
@@ -91,6 +108,19 @@ public class NudgeController : MonoBehaviour
 
         audioSource.pitch = 1f + Random.Range(-pitchVariation, pitchVariation);
         audioSource.PlayOneShot(nudgeSound, nudgeVolume);
+    }
+
+    private void PlayTiltSound()
+    {
+        if (tiltSound == null || audioSource == null)
+            return;
+
+        if (Time.time - lastTiltSoundTime < tiltSoundCooldown)
+            return;
+        lastTiltSoundTime = Time.time;
+
+        audioSource.pitch = 1f;
+        audioSource.PlayOneShot(tiltSound, tiltVolume);
     }
 
     private void OnDestroy()
@@ -131,8 +161,6 @@ public class NudgeController : MonoBehaviour
             foreach (GameObject ball in GameObject.FindGameObjectsWithTag("Ball"))
             {
                 Rigidbody ballBody = ball.GetComponent<Rigidbody>();
-                // Shake force taken from shake force manager
-                // This will also help us adjust value when we implment items
                 if (ballBody != null)
                 {
                     float shakeForce = ShakeSettingsManager.Instance != null
@@ -185,6 +213,7 @@ public class NudgeController : MonoBehaviour
         isTilted = true;
         currentTilt = tiltThreshold;
         UpdateTiltMeter();
+        PlayTiltSound();
 
         foreach (FlipperControls flipper in FindObjectsByType<FlipperControls>(FindObjectsInactive.Include))
             flipper.SetTiltLocked(true);

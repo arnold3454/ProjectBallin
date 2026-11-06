@@ -287,7 +287,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 1
+  m_Radius: 0.51
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!82 &889947662456054129
 AudioSource:
@@ -420,6 +420,18 @@ MonoBehaviour:
   - tag: BossTrigger
     clip: {fileID: 8300000, guid: af96ce3c8a4c04392ad8d1b6aed8ce3d, type: 3}
     volume: 0.4
+    minCollisionForce: 0
+    cooldown: 0.5
+    lastPlayedTime: 0
+  - tag: DropGate
+    clip: {fileID: 8300000, guid: 1069e6c070ba344838ed5d1bbbfce64f, type: 3}
+    volume: 0.8
+    minCollisionForce: 0
+    cooldown: 0.5
+    lastPlayedTime: 0
+  - tag: Enemy1
+    clip: {fileID: 8300000, guid: 1e05aec98dccd434ca0a36103d0b6d24, type: 3}
+    volume: 0.8
     minCollisionForce: 0
     cooldown: 0.5
     lastPlayedTime: 0
