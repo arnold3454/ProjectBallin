@@ -32,8 +32,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -3.04, y: 1.78, z: 19}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 2.15, y: 2.15, z: 2.15}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2860821385499184523}
   m_Father: {fileID: 0}
@@ -124,7 +124,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6184623619345070126}
   serializedVersion: 5
-  m_Mass: 2
+  m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -170,7 +170,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   rollClip: {fileID: 8300000, guid: 5be4f62cedc9e44e588deb1b5d1b5289, type: 3}
-  maxVolume: 0.2
+  maxVolume: 0.25
   boardTag: Board
   minRollSpeed: 0.5
   maxRollSpeed: 10
@@ -401,7 +401,7 @@ MonoBehaviour:
   sfxProfiles:
   - tag: Bouncer
     clip: {fileID: 8300000, guid: 9f8cbed50a2c746b6af86ab614db9d2c, type: 3}
-    volume: 0.3
+    volume: 0.2
     minCollisionForce: 0
     cooldown: 0
     lastPlayedTime: 0
@@ -413,7 +413,7 @@ MonoBehaviour:
     lastPlayedTime: 0
   - tag: Item
     clip: {fileID: 8300000, guid: 2f11f921228604590ae14c3aca0f4f52, type: 3}
-    volume: 0.5
+    volume: 0.4
     minCollisionForce: 0
     cooldown: 0.5
     lastPlayedTime: 0

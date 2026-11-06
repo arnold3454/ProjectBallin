@@ -6,8 +6,8 @@ using UnityEngine.Events;
 
 /// <summary>
 /// Runs the roulette boss trigger. Bet tunnels set the current bet, the wheel spins when the
-/// ball rolls over it with a bet placed, and a winning spin triggers the boss fight and locks
-/// the wheel for the rest of the round. Lives on the GameManager with the other managers.
+/// ball rolls over it with a bet placed, and a winning spin authorizes a corner trigger. The
+/// wheel stays locked until that authorization is used or the round is reset.
 /// </summary>
 public class RouletteManager : MonoBehaviour
 {
@@ -25,13 +25,14 @@ public class RouletteManager : MonoBehaviour
     [SerializeField] private string wonMessage = "{0} wins!  The dealer stirs...";
 
     [Header("Events")]
-    [Tooltip("Invoked once when a winning spin triggers the boss fight.")]
+    [Tooltip("Invoked each time a winning spin authorizes a corner trigger.")]
     [SerializeField] private UnityEvent onBossFightTriggered;
 
-    /// <summary>Raised once when a winning spin triggers the boss fight.</summary>
+    /// <summary>Raised when a winning spin authorizes a corner trigger.</summary>
     public static event Action BossFightTriggered;
 
     public BetColor CurrentBet { get; private set; }
+    /// <summary>True after winning until the roulette is reset for another corner trigger.</summary>
     public bool IsBossFightTriggered { get; private set; }
 
     /// <summary>The wheel currently registered in the scene, if any. The boss spawns on it.</summary>
@@ -88,7 +89,7 @@ public class RouletteManager : MonoBehaviour
         wheel = null;
     }
 
-    /// <summary>Forgets the win and the bet and unlocks the wheel, so a new round can spin for the boss again.</summary>
+    /// <summary>Forgets the win and bet and unlocks the wheel for another trigger or a new round.</summary>
     public void ResetRound()
     {
         IsBossFightTriggered = false;

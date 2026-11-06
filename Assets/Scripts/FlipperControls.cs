@@ -118,6 +118,9 @@ motorScale = multiplier;
 /// <summary>Re-reads the upgrade stats. A flipper that is mid-swing keeps its direction at the new speed.</summary>
 public void RefreshUpgrades()
     {
+if (hinge == null)
+    return;
+
 float target = hinge.motor.targetVelocity;
 if (target != 0f)
 SetDirection(Mathf.Sign(target) * Mathf.Abs(MotorSpeed));

@@ -16,7 +16,7 @@ MonoBehaviour:
   sockets:
   - id: 
     socketType: LeftMiddle
-    localPosition: {x: -6, y: -0.737, z: 1.38}
+    localPosition: {x: -15, y: -0.737, z: 9}
     localEulerAngles: {x: 0, y: 0, z: 0}
     allowedChunks:
     - {fileID: 11400000, guid: b8b4d741f71d0ff4fbc0f6531cd265b3, type: 2}
@@ -28,7 +28,7 @@ MonoBehaviour:
     randomRegionMax: {x: 0, y: 0}
   - id: 
     socketType: RightMiddle
-    localPosition: {x: 9.1, y: 0.223, z: 5.3}
+    localPosition: {x: 3.55, y: 0.223, z: 10.5}
     localEulerAngles: {x: 0, y: 0, z: 0}
     allowedChunks:
     - {fileID: 11400000, guid: 6e9039ebae0f58c45bff6f13df2dd407, type: 2}
@@ -41,7 +41,7 @@ MonoBehaviour:
     randomRegionMax: {x: 0, y: 0}
   - id: 
     socketType: CenterMiddle
-    localPosition: {x: -0.5, y: -0.52, z: -7.14}
+    localPosition: {x: -5, y: -0.52, z: -1.75}
     localEulerAngles: {x: 0, y: 0, z: 0}
     allowedChunks:
     - {fileID: 11400000, guid: 644eb96a3310f464ea25e5bbd659105e, type: 2}

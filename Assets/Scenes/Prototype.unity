@@ -15155,8 +15155,8 @@ MonoBehaviour:
   defeatedMessage: DEALER DEFEATED!
   escapedMessage: The dealer got away...
   messageDuration: 3
-  needCornersMessage: Light both corner buttons to summon the dealer
-  needRouletteMessage: Corners lit!  Win the roulette to summon the dealer
+  needCornersMessage: Hit an unlit corner button to continue
+  needRouletteMessage: Win the roulette to light a corner button
   startFightOnLoad: 0
   onBossDefeated:
     m_PersistentCalls:
