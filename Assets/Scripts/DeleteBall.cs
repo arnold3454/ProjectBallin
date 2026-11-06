@@ -7,10 +7,16 @@ public class DeleteBall : MonoBehaviour
     [SerializeField] private AudioClip drainClip;
     [SerializeField, Range(0f, 1f)] private float drainVolume = 1f;
 
+    private bool hasBeenDeleted;
+
 private void OnTriggerEnter(Collider other)
     {
-if (other.gameObject.CompareTag("Killzone"))
+if (!hasBeenDeleted && other.gameObject.CompareTag("Killzone"))
         {
+hasBeenDeleted = true;
+if (ScoreManager.Instance != null)
+    ScoreManager.Instance.AddScore(-15);
+
 PlayDrainSFX();
 Destroy(gameObject);
         }
