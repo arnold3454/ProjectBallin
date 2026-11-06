@@ -1,0 +1,27 @@
+fileFormatVersion: 2
+fileFormatVersion: 2
+guid: 1af6beb4bbc295d4a9cb3e6e3bb855d0
+  m_FileIDToRecycleName: {}
+  m_ObjectHideFlags: 0
+  serializedVersion: 3
+  m_ExternalObjects: {}
+  m_Direction: 0
+  m_Category: 0
+  m_ImportWarning: 0
+  m_ImportError: 0
+  m_Script: {fileID: 0}
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+  m_ExternalObjects: []
+  m_PrefabImporter:
+    externalObjects: {}
+    userData: 
+    assetBundleName: 
+    assetBundleVariant: 
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
