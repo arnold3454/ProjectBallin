@@ -16,6 +16,8 @@ public class ProgressionManager : MonoBehaviour
 {
     public static ProgressionManager Instance { get; private set; }
 
+    // Defaults only. The live values are the ones on the GameManager in the Inspector (saved in
+    // the scene), which override whatever is written here. Tune the scaling there, not in code.
     [Header("Enemy Scaling")]
     [Tooltip("Enemy health grows by this fraction for every upgrade the player has taken, compounding. 0.03 = +3% per upgrade, so ten upgrades make enemies about 34% tougher.")]
     [SerializeField, Range(0f, 0.5f)] private float enemyHealthPerUpgrade = 0.03f;

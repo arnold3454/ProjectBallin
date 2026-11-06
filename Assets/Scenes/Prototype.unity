@@ -15188,9 +15188,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeManager
   standardPegScore: 1
-  levelCoefficient: 1.05
-  levelExponent: 1.15
-  priceGrowthPerLevel: 1.25
+  levelCoefficient: 2
+  levelExponent: 1.75
+  priceGrowthPerLevel: 1.75
   choicesPerOffer: 3
   popup: {fileID: 4353136509651835977}
   critPopup: {fileID: 9036815142208820233}

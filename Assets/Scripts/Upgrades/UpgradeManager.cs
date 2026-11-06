@@ -56,15 +56,17 @@ public class UpgradeManager : MonoBehaviour
     /// <summary>The most splits per ball the Split Amount upgrade can reach.</summary>
     public const int MaxSplitsPerBall = 10;
 
+    // Defaults only. The live values are the ones on the GameManager in the Inspector (saved in
+    // the scene), which override whatever is written here. Tune the curve there, not in code.
     [Header("XP Curve (economy document)")]
     [Tooltip("Points a standard peg scores (see Bouncer). The economy document's XP formula starts from this: XP for the next level = peg score + coefficient x level^exponent.")]
     [SerializeField, Min(0)] private int standardPegScore = 1;
-    [Tooltip("The 1.05 in the economy document's formula.")]
-    [SerializeField, Min(0f)] private float levelCoefficient = 1.05f;
-    [Tooltip("The 1.15 in the economy document's formula. Level is the player's current level, 1 at the start of a run.")]
-    [SerializeField, Min(0f)] private float levelExponent = 1.15f;
+    [Tooltip("The coefficient in the economy document's XP formula. The Inspector value is the one in play.")]
+    [SerializeField, Min(0f)] private float levelCoefficient = 2f;
+    [Tooltip("The exponent in the economy document's XP formula. The Inspector value is the one in play. Level is the player's current level, 1 at the start of a run.")]
+    [SerializeField, Min(0f)] private float levelExponent = 1.75f;
     [Tooltip("Shop prices multiply by this for every level the player has gained.")]
-    [SerializeField, Min(1f)] private float priceGrowthPerLevel = 1.25f;
+    [SerializeField, Min(1f)] private float priceGrowthPerLevel = 1.75f;
     [SerializeField, Min(1)] private int choicesPerOffer = 3;
 
     [Header("Upgrade UI")]
@@ -289,7 +291,8 @@ public class UpgradeManager : MonoBehaviour
 
     /// <summary>
     /// XP needed to fill the bar after the given number of bars have been filled. From the economy
-    /// document: peg score + 1.05 x level^1.15, where level is the player's level (1 at the start).
+    /// document: peg score + coefficient x level^exponent, where level is the player's level (1 at the
+    /// start). The coefficient and exponent come from the Inspector, not the defaults in this file.
     /// </summary>
     private int XpRequiredFor(int barsFilled)
     {
