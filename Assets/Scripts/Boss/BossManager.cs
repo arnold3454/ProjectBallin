@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 /// <summary>
-/// Runs the boss fight. It starts once both summoning conditions are met, in either order:
-/// every corner boss trigger on the table is lit, and the roulette wheel has been won. Then
-/// the dealer spawns over the wheel, the <see cref="BossTimer"/> runs its own countdown
+/// Runs the boss fight. Each roulette win enables one corner boss trigger; once every
+/// registered trigger is lit, the dealer spawns. Then the <see cref="BossTimer"/> runs its own
+/// countdown
 /// (always shorter than the main game clock) and the boss switches to a random phase on a
 /// fixed interval. The fight ends when the boss dies or the boss timer runs out. Lives on the
 /// GameManager with the other managers.
@@ -19,7 +20,7 @@ public class BossManager : MonoBehaviour
     [Header("Summoning")]
     [Tooltip("Require every CornerBossTrigger in the scene to be lit before the fight can start.")]
     [SerializeField] private bool requireCornerTriggers = true;
-    [Tooltip("Require the roulette wheel to have been won before the fight can start.")]
+    [Tooltip("Require a roulette win before each corner trigger can be lit.")]
     [SerializeField] private bool requireRouletteWin = true;
 
     [Header("Boss")]
@@ -54,8 +55,10 @@ public class BossManager : MonoBehaviour
     [SerializeField] private string defeatedMessage = "DEALER DEFEATED!";
     [SerializeField] private string escapedMessage = "The dealer got away...";
     [SerializeField, Min(0f)] private float messageDuration = 3f;
-    [SerializeField] private string needCornersMessage = "Light both corner buttons to summon the dealer";
-    [SerializeField] private string needRouletteMessage = "Corners lit!  Win the roulette to summon the dealer";
+    [SerializeField] private string needCornersMessage = "Hit an unlit corner button to continue";
+    [SerializeField] private string needRouletteMessage = "Win the roulette to light a corner button";
+    [Tooltip("UI images shown in order as the player lights corner triggers.")]
+    [SerializeField] private Image[] triggerIndicators;
 
     [Header("Debug")]
     [Tooltip("Start the fight as soon as the scene loads, without winning the roulette.")]
@@ -94,7 +97,7 @@ public class BossManager : MonoBehaviour
     public Vector2 BoardMax => boardMax;
     public float SurfaceHeight => surfaceHeight;
 
-    /// <summary>True once the roulette has been won this round.</summary>
+    /// <summary>True while a roulette win is available to authorize one corner trigger.</summary>
     public bool RouletteWon { get; private set; }
     /// <summary>True while every registered corner trigger is lit (or none are required).</summary>
     public bool CornersArmed => !requireCornerTriggers || cornerTriggers.TrueForAll(t => t == null || t.IsLit);
@@ -117,6 +120,7 @@ public class BossManager : MonoBehaviour
             Debug.LogError("BossManager needs a BossTimer component on the same object. Add one in the Inspector.", this);
 
         SetHud(string.Empty);
+        RefreshTriggerTracker();
     }
 
     private void OnEnable()
@@ -140,6 +144,7 @@ public class BossManager : MonoBehaviour
 
         cornerTriggers.Add(trigger);
         trigger.LitChanged += OnCornerTriggerChanged;
+        RefreshTriggerTracker();
         TryStartFight();
     }
 
@@ -149,6 +154,29 @@ public class BossManager : MonoBehaviour
             return;
 
         trigger.LitChanged -= OnCornerTriggerChanged;
+        RefreshTriggerTracker();
+    }
+
+    /// <summary>Lights one unlit corner trigger if the player has won the roulette.</summary>
+    public bool TryLightCornerTrigger(CornerBossTrigger trigger)
+    {
+        if (trigger == null || !cornerTriggers.Contains(trigger) || trigger.IsLit || IsFightActive)
+            return false;
+
+        if (requireRouletteWin && !RouletteWon)
+            return false;
+
+        bool consumedRouletteWin = requireRouletteWin && RouletteWon;
+        if (consumedRouletteWin)
+            RouletteWon = false;
+
+        trigger.SetLit(true);
+
+        // Keep the wheel locked during the boss fight; otherwise reset it for the next light.
+        if (consumedRouletteWin && !IsFightActive && !CornersArmed && RouletteManager.Instance != null)
+            RouletteManager.Instance.ResetRound();
+
+        return true;
     }
 
     private void OnRouletteWon()
@@ -159,12 +187,32 @@ public class BossManager : MonoBehaviour
 
     private void OnCornerTriggerChanged(CornerBossTrigger trigger)
     {
+        RefreshTriggerTracker();
         TryStartFight();
     }
 
+    private void RefreshTriggerTracker()
+    {
+        if (triggerIndicators == null)
+            return;
+
+        int litCount = 0;
+        foreach (CornerBossTrigger trigger in cornerTriggers)
+        {
+            if (trigger != null && trigger.IsLit)
+                litCount++;
+        }
+
+        for (int i = 0; i < triggerIndicators.Length; i++)
+        {
+            if (triggerIndicators[i] != null)
+                triggerIndicators[i].fillAmount = i < litCount ? 1f : 0f;
+        }
+    }
+
     /// <summary>
-    /// Clears the summoning progress for a new round: any running fight is stopped, the roulette
-    /// win is forgotten and every corner trigger goes dark, so the dealer has to be summoned again.
+    /// Clears the summoning progress: any running fight is stopped, the roulette authorization
+    /// is forgotten and every corner trigger goes dark, so the dealer has to be summoned again.
     /// </summary>
     public void ResetSummoning()
     {
@@ -178,6 +226,7 @@ public class BossManager : MonoBehaviour
                 trigger.SetLit(false);
         }
 
+        RefreshTriggerTracker();
         SetHud(string.Empty);
         messageTimer = 0f;
     }
@@ -212,24 +261,34 @@ public class BossManager : MonoBehaviour
         boss.SetAllowedPhases(allowed);
     }
 
-    /// <summary>Starts the fight if every summoning condition is met; otherwise shows what is still missing.</summary>
+    /// <summary>Starts the fight when every required corner is lit, or reports the next summoning step.</summary>
     private void TryStartFight()
     {
         if (IsFightActive)
             return;
 
         bool rouletteReady = !requireRouletteWin || RouletteWon;
-        bool cornersReady = CornersArmed;
 
-        if (rouletteReady && cornersReady)
+        if (requireCornerTriggers)
+        {
+            if (cornerTriggers.Count > 0 && CornersArmed)
+            {
+                StartFight();
+                return;
+            }
+
+            SetHud(rouletteReady ? needCornersMessage : needRouletteMessage);
+            messageTimer = 0f;
+            return;
+        }
+
+        if (rouletteReady)
         {
             StartFight();
             return;
         }
 
-        if (rouletteReady && !cornersReady)
-            SetHud(needCornersMessage);
-        else if (cornersReady && !rouletteReady && requireCornerTriggers && cornerTriggers.Count > 0)
+        if (requireRouletteWin)
             SetHud(needRouletteMessage);
         else
             SetHud(string.Empty);

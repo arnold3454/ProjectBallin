@@ -54,6 +54,7 @@ public class CornerBossTrigger : MonoBehaviour
     private Vector3 restPosition;
     private Color baseColor = Color.white;
     private float lastHitTime = float.NegativeInfinity;
+    private bool warnedMissingBossManager;
 
     private void Awake()
     {
@@ -126,7 +127,13 @@ public class CornerBossTrigger : MonoBehaviour
         if (ScoreManager.Instance != null)
             ScoreManager.Instance.AddScore(pointValue);
 
-        SetLit(true);
+        if (BossManager.Instance != null)
+            BossManager.Instance.TryLightCornerTrigger(this);
+        else if (!warnedMissingBossManager)
+        {
+            Debug.LogWarning($"Corner trigger '{name}' needs a BossManager to require roulette wins.", this);
+            warnedMissingBossManager = true;
+        }
 
         if (feedback != null)
             StopCoroutine(feedback);
