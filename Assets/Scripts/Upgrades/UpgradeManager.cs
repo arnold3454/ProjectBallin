@@ -5,8 +5,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// Hands the player a choice of upgrades every time the XP bar fills. XP per level follows the
-/// economy document (peg score + 1.05 x level^1.15). Filling the bar doesn't interrupt play: the
+/// Hands the player a choice of upgrades every time the XP bar fills. XP per level is peg score +
+/// coefficient x level^exponent (the economy document's formula, tuned steeper). Filling the bar doesn't interrupt play: the
 /// UpgradeReadyPanel under the Canvas stays up until the player presses the choose key or clicks
 /// it, and only then does gameplay pause for the choice. Also holds the resulting stat bonuses for
 /// the rest of the game to read (score, ball, flipper and nudge tuning).
@@ -299,15 +299,6 @@ public class UpgradeManager : MonoBehaviour
         int playerLevel = barsFilled + 1;
         float xp = standardPegScore + levelCoefficient * Mathf.Pow(playerLevel, levelExponent);
         return Mathf.Max(1, Mathf.RoundToInt(xp));
-    }
-
-    /// <summary>
-    /// Grows an amount with the player's level: amount * growth^level. Shop prices use this so
-    /// they keep pace with levelling.
-    /// </summary>
-    public int ScaleWithLevel(int amount)
-    {
-        return Mathf.RoundToInt(amount * Mathf.Pow(priceGrowthPerLevel, upgradeLevel));
     }
 
     /// <summary>Every upgrade that can still be picked: not maxed out, and for the ball in play.</summary>

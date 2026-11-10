@@ -10,8 +10,9 @@ using UnityEngine.UI;
 /// The dealer's shop, shown after every boss the player beats. Continue on the win screen
 /// opens it; Next Round in the shop starts the next round. It sells three one-time use
 /// items (from the ItemManager's pool) and one upgrade (from the UpgradeManager's list),
-/// paid for with score. Prices scale the same way the XP bar does: base cost times the XP
-/// growth per level, raised to the player's upgrade level. Stock is rerolled every visit
+/// paid for with score. Prices are a share of the XP bar at the player's current level, so
+/// they rise with levelling at the same pace the score a round brings in does and an item
+/// or two stays affordable. Stock is rerolled every visit
 /// and each offer can be bought once. Gameplay stays paused while the shop is open.
 /// Lives on the GameManager; the ShopPanel and its cards live under the Canvas.
 /// </summary>
@@ -20,10 +21,10 @@ public class ShopManager : MonoBehaviour
     public static ShopManager Instance { get; private set; }
 
     [Header("Stock")]
-    [Tooltip("Base price of a one-time use item, before level scaling.")]
-    [SerializeField, Min(0)] private int itemBaseCost = 10;
-    [Tooltip("Base price of an upgrade, before level scaling.")]
-    [SerializeField, Min(0)] private int upgradeBaseCost = 25;
+    [Tooltip("Price of a one-time use item, as a share of the XP needed for the player's current level. 0.6 = 60% of the current XP bar.")]
+    [SerializeField, Min(0f)] private float itemCostInXpBars = 0.6f;
+    [Tooltip("Price of an upgrade, as a share of the XP needed for the player's current level. 1.5 = one and a half XP bars.")]
+    [SerializeField, Min(0f)] private float upgradeCostInXpBars = 1.5f;
 
     [Header("Shop UI")]
     [Tooltip("The ShopPanel under the Canvas. Hidden until a boss is beaten.")]
@@ -66,10 +67,10 @@ public class ShopManager : MonoBehaviour
     public event Action<string> Purchased;
 
     /// <summary>Price of an item at the player's current level.</summary>
-    public int ItemCost => ScaleCost(itemBaseCost);
+    public int ItemCost => PriceFor(itemCostInXpBars);
 
     /// <summary>Price of an upgrade at the player's current level.</summary>
-    public int UpgradeCost => ScaleCost(upgradeBaseCost);
+    public int UpgradeCost => PriceFor(upgradeCostInXpBars);
 
     private void Awake()
     {
@@ -146,10 +147,17 @@ public class ShopManager : MonoBehaviour
         closed?.Invoke();
     }
 
-    /// <summary>Scales a base cost with the XP bar's growth curve, so prices rise with the player's level.</summary>
-    private static int ScaleCost(int baseCost)
+    // What a share of an XP bar costs when there is no UpgradeManager to ask for the real bar.
+    private const int FallbackXpBar = 10;
+
+    /// <summary>
+    /// A price as a share of the current XP bar. The bar grows with the player's level about as
+    /// fast as the score a round earns, so prices keep pace without running away from the player.
+    /// </summary>
+    private static int PriceFor(float xpBars)
     {
-        return UpgradeManager.Instance != null ? UpgradeManager.Instance.ScaleWithLevel(baseCost) : baseCost;
+        int bar = UpgradeManager.Instance != null ? UpgradeManager.Instance.XpPerUpgrade : FallbackXpBar;
+        return Mathf.Max(1, Mathf.RoundToInt(xpBars * bar));
     }
 
     private void RollStock()
