@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class NudgeController : MonoBehaviour
 {
+    public static NudgeController Instance { get; private set; }
+
     [Header("Nudge Settings")]
     [SerializeField] private float shakeDuration = 0.2f;
     [SerializeField] private float shakeInterval = 0.04f;
@@ -24,6 +26,12 @@ public class NudgeController : MonoBehaviour
 
     private float currentTilt;
     private bool isTilted;
+
+    // Upgrades (UpgradeManager): Nudge Stamina adds nudges before the tilt, Nudge Strength
+    // shoves harder but builds more tilt per nudge.
+    private float MaxTilt => tiltThreshold + tiltPerNudge * (UpgradeManager.Instance != null ? UpgradeManager.Instance.NudgeStaminaBonus : 0);
+    private float TiltPerNudge => tiltPerNudge * (UpgradeManager.Instance != null ? UpgradeManager.Instance.NudgeCostMultiplier : 1f);
+    private float StrengthMultiplier => UpgradeManager.Instance != null ? UpgradeManager.Instance.NudgeStrengthMultiplier : 1f;
     private Vector3 cameraRestLocalPosition;
     private Coroutine cameraShakeRoutine;
 
@@ -35,29 +43,63 @@ public class NudgeController : MonoBehaviour
             UpdateTiltMeter();
         }
 
-        if (Keyboard.current == null)
+        if (Keyboard.current == null || BallTypeManager.IsSelecting)
             return;
 
-        float nudgeDirection = 0f;
+        if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsChoosing)
+            return;
+
         if (Keyboard.current.leftShiftKey.wasPressedThisFrame)
-            nudgeDirection = 1f;
+            Nudge(1f);
         else if (Keyboard.current.rightShiftKey.wasPressedThisFrame)
-            nudgeDirection = -1f;
+            Nudge(-1f);
+    }
 
-        if (!isTilted && nudgeDirection != 0f)
-        {
-            currentTilt += tiltPerNudge;
-            UpdateTiltMeter();
-            StartCoroutine(ShakeBalls(nudgeDirection));
-            StartCameraShake();
+    /// <summary>
+    /// Nudges the table exactly as a shift key press does: +1 is left shift (balls pushed right),
+    /// -1 is right shift. Builds tilt like a real nudge and locks the flippers past the threshold.
+    /// Used by the Bouncer enemy to force a nudge on contact.
+    /// </summary>
+    public void Nudge(float direction)
+    {
+        if (isTilted || direction == 0f)
+            return;
 
-            if (currentTilt >= tiltThreshold)
-                StartCoroutine(TiltFlippers());
-        }
+        direction = Mathf.Sign(direction);
+        currentTilt += TiltPerNudge;
+        UpdateTiltMeter();
+        StartCoroutine(ShakeBalls(direction));
+        StartCameraShake();
+
+        if (currentTilt >= MaxTilt)
+            StartCoroutine(TiltFlippers());
+    }
+
+    /// <summary>Nudges left or right at random, as if the player had hit one of the shift keys.</summary>
+    public void NudgeRandom()
+    {
+        Nudge(Random.value < 0.5f ? 1f : -1f);
+    }
+
+    /// <summary>Re-reads the nudge upgrades, so the tilt meter shows the new stamina.</summary>
+    public void RefreshUpgrades()
+    {
+        if (tiltMeter != null)
+            tiltMeter.maxValue = MaxTilt;
+
+        UpdateTiltMeter();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
     }
 
     private void Awake()
     {
+        Instance = this;
+
         if (cameraToShake == null && Camera.main != null)
             cameraToShake = Camera.main.transform;
 
@@ -67,7 +109,7 @@ public class NudgeController : MonoBehaviour
         if (tiltMeter != null)
         {
             tiltMeter.minValue = 0f;
-            tiltMeter.maxValue = tiltThreshold;
+            tiltMeter.maxValue = MaxTilt;
         }
 
         UpdateTiltMeter();
@@ -89,7 +131,7 @@ public class NudgeController : MonoBehaviour
                     float shakeForce = ShakeSettingsManager.Instance != null
                         ? ShakeSettingsManager.Instance.ShakeForce
                         : horizontalForce;
-                    float xForce = shakeForce * direction;
+                    float xForce = shakeForce * StrengthMultiplier * direction;
                     ballBody.AddForce(Vector3.right * xForce, ForceMode.Impulse);
                 }
             }
@@ -134,7 +176,7 @@ public class NudgeController : MonoBehaviour
     private IEnumerator TiltFlippers()
     {
         isTilted = true;
-        currentTilt = tiltThreshold;
+        currentTilt = MaxTilt;
         UpdateTiltMeter();
 
         foreach (FlipperControls flipper in FindObjectsByType<FlipperControls>(FindObjectsInactive.Include))
@@ -153,6 +195,6 @@ public class NudgeController : MonoBehaviour
     private void UpdateTiltMeter()
     {
         if (tiltMeter != null)
-            tiltMeter.SetValueWithoutNotify(Mathf.Clamp(currentTilt, 0f, tiltThreshold));
+            tiltMeter.SetValueWithoutNotify(Mathf.Clamp(currentTilt, 0f, MaxTilt));
     }
 }
