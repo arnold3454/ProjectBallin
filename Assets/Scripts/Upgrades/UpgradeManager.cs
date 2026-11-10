@@ -5,8 +5,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// Hands the player a choice of upgrades every time the XP bar fills. XP per level follows the
-/// economy document (peg score + 1.05 x level^1.15). Filling the bar doesn't interrupt play: the
+/// Hands the player a choice of upgrades every time the XP bar fills. XP per level is peg score +
+/// coefficient x level^exponent (the economy document's formula, tuned steeper). Filling the bar doesn't interrupt play: the
 /// UpgradeReadyPanel under the Canvas stays up until the player presses the choose key or clicks
 /// it, and only then does gameplay pause for the choice. Also holds the resulting stat bonuses for
 /// the rest of the game to read (score, ball, flipper and nudge tuning).
@@ -56,15 +56,13 @@ public class UpgradeManager : MonoBehaviour
     /// <summary>The most splits per ball the Split Amount upgrade can reach.</summary>
     public const int MaxSplitsPerBall = 10;
 
-    [Header("XP Curve (economy document)")]
-    [Tooltip("Points a standard peg scores (see Bouncer). The economy document's XP formula starts from this: XP for the next level = peg score + coefficient x level^exponent.")]
+    [Header("XP Curve")]
+    [Tooltip("Points a standard peg scores (see Bouncer). The XP formula starts from this: XP for the next level = peg score + coefficient x level^exponent.")]
     [SerializeField, Min(0)] private int standardPegScore = 1;
-    [Tooltip("The 1.05 in the economy document's formula.")]
-    [SerializeField, Min(0f)] private float levelCoefficient = 1.05f;
-    [Tooltip("The 1.15 in the economy document's formula. Level is the player's current level, 1 at the start of a run.")]
-    [SerializeField, Min(0f)] private float levelExponent = 1.15f;
-    [Tooltip("Shop prices multiply by this for every level the player has gained.")]
-    [SerializeField, Min(1f)] private float priceGrowthPerLevel = 1.25f;
+    [Tooltip("How much XP every level costs. The economy document has 1.05; this is steeper so levels come more slowly.")]
+    [SerializeField, Min(0f)] private float levelCoefficient = 3f;
+    [Tooltip("How quickly the XP needed grows from one level to the next. The economy document has 1.15. Level is the player's current level, 1 at the start of a run.")]
+    [SerializeField, Min(0f)] private float levelExponent = 1.6f;
     [SerializeField, Min(1)] private int choicesPerOffer = 3;
 
     [Header("Upgrade UI")]
@@ -288,23 +286,16 @@ public class UpgradeManager : MonoBehaviour
     }
 
     /// <summary>
-    /// XP needed to fill the bar after the given number of bars have been filled. From the economy
-    /// document: peg score + 1.05 x level^1.15, where level is the player's level (1 at the start).
+    /// XP needed to fill the bar after the given number of bars have been filled: peg score +
+    /// coefficient x level^exponent, where level is the player's level (1 at the start). The shape
+    /// is the economy document's, with a steeper coefficient and exponent. With the defaults the
+    /// bars are 4, 10, 18, 29, 40, 54, 68, 85, 102, 120 for levels 1 to 10.
     /// </summary>
     private int XpRequiredFor(int barsFilled)
     {
         int playerLevel = barsFilled + 1;
         float xp = standardPegScore + levelCoefficient * Mathf.Pow(playerLevel, levelExponent);
         return Mathf.Max(1, Mathf.RoundToInt(xp));
-    }
-
-    /// <summary>
-    /// Grows an amount with the player's level: amount * growth^level. Shop prices use this so
-    /// they keep pace with levelling.
-    /// </summary>
-    public int ScaleWithLevel(int amount)
-    {
-        return Mathf.RoundToInt(amount * Mathf.Pow(priceGrowthPerLevel, upgradeLevel));
     }
 
     /// <summary>Every upgrade that can still be picked: not maxed out, and for the ball in play.</summary>

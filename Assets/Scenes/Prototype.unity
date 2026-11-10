@@ -16278,9 +16278,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeManager
   standardPegScore: 1
-  levelCoefficient: 1.05
-  levelExponent: 1.15
-  priceGrowthPerLevel: 1.25
+  levelCoefficient: 3
+  levelExponent: 1.6
   choicesPerOffer: 3
   popup: {fileID: 4353136509651835977}
   critPopup: {fileID: 9036815142208820233}
@@ -19075,8 +19074,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5418f251e11673e48870c755c963e012, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShopManager
-  itemBaseCost: 10
-  upgradeBaseCost: 25
+  itemCostInXpBars: 0.6
+  upgradeCostInXpBars: 1.5
   shopPanel: {fileID: 2032978000}
   scoreText: {fileID: 47539595}
   messageText: {fileID: 1504689529}
