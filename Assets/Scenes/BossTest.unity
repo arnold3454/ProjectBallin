@@ -18016,8 +18016,7 @@ MonoBehaviour:
   requireCornerTriggers: 1
   requireRouletteWin: 1
   bossPrefab: {fileID: 689247322737324970, guid: bcdbf128d05740f5b4648be3dd28c959, type: 3}
-  fallbackSpawnPoint: {x: -0.8, y: 1.75, z: 20}
-  spawnOffset: {x: 0, y: 0, z: 7}
+  bossSpawnPosition: {x: -0.8, y: 1.75, z: 27}
   bossTimer: {fileID: 8912345678901234502}
   mainClockBonus: 90
   phaseInterval: 8
@@ -18033,6 +18032,7 @@ MonoBehaviour:
   messageDuration: 3
   needCornersMessage: Hit an unlit corner button to continue
   needRouletteMessage: Win the roulette to light a corner button
+  triggerIndicators: []
   startFightOnLoad: 0
   onBossDefeated:
     m_PersistentCalls:

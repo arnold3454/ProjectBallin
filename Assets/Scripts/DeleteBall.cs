@@ -11,14 +11,20 @@ public class DeleteBall : MonoBehaviour
 
 private void OnTriggerEnter(Collider other)
     {
-if (!hasBeenDeleted && other.gameObject.CompareTag("Killzone"))
+    if (!hasBeenDeleted && other.gameObject.CompareTag("Killzone"))
         {
-hasBeenDeleted = true;
-if (ScoreManager.Instance != null)
-    ScoreManager.Instance.AddScore(-15);
+            hasBeenDeleted = true;
+            if (ScoreManager.Instance != null && ScoreManager.Instance.CurrentScore >= 5)
+            {
+                ScoreManager.Instance.AddScore(-5);
+            }
+            else
+            {
+                ScoreManager.Instance.AddScore(-ScoreManager.Instance.CurrentScore);
+            }
 
-PlayDrainSFX();
-Destroy(gameObject);
+            PlayDrainSFX();
+            Destroy(gameObject);
         }
     }
 
