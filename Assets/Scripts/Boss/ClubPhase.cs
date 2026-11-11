@@ -17,6 +17,14 @@ public class ClubPhase : BossPhase
     [Tooltip("How heavy the rain is, 0 to 1. 0 is a light sprinkle for an early mini phase; 1 blankets most of the playfield.")]
     [SerializeField, Range(0f, 1f)] private float intensity = 0.5f;
 
+    [Header("Audio")]
+    [Tooltip("Sound that loops for as long as the club phase is active (e.g. club music or a chip-rain ambience).")]
+    [SerializeField] private AudioClip loopClip;
+    [Tooltip("Volume of the looping sound.")]
+    [SerializeField, Range(0f, 1f)] private float loopVolume = 0.6f;
+    [Tooltip("Seconds to fade the loop in and out. 0 for an instant start and stop.")]
+    [SerializeField, Min(0f)] private float loopFadeTime = 0.5f;
+
     [Header("Intensity range (0 -> 1)")]
     [Tooltip("Seconds between chips at intensity 0.")]
     [SerializeField, Min(0.1f)] private float spawnIntervalLight = 1.3f;
@@ -63,6 +71,10 @@ public class ClubPhase : BossPhase
     private readonly List<PokerChip> chips = new List<PokerChip>();
     private float spawnTimer;
 
+    // ---- NEW: audio state ----
+    private AudioSource loopSource;
+    private float loopTargetVolume;
+
     private float SpawnInterval => Mathf.Lerp(spawnIntervalLight, spawnIntervalHeavy, intensity);
     private int MaxChips => Mathf.RoundToInt(Mathf.Lerp(maxChipsLight, maxChipsHeavy, intensity));
     private float ChipRadius => Mathf.Lerp(chipRadiusLight, chipRadiusHeavy, intensity);
@@ -71,11 +83,13 @@ public class ClubPhase : BossPhase
     {
         chips.RemoveAll(c => c == null);
         spawnTimer = 0.5f;
+        StartLoop(); // NEW
     }
 
     protected override void OnEnd()
     {
         // Chips already on the table finish their fall.
+        StopLoop(); // NEW
     }
 
     public override void Cleanup()
@@ -86,10 +100,20 @@ public class ClubPhase : BossPhase
                 Destroy(chip.gameObject);
         }
         chips.Clear();
+
+        // NEW: make sure the loop never outlives the phase.
+        if (loopSource != null)
+        {
+            loopSource.Stop();
+            loopSource.volume = 0f;
+        }
+        loopTargetVolume = 0f;
     }
 
     private void Update()
     {
+        UpdateLoopFade(); // NEW (runs even after the phase ends so the fade-out can finish)
+
         if (!IsActive)
             return;
 
@@ -104,6 +128,61 @@ public class ClubPhase : BossPhase
             return;
 
         SpawnChip();
+    }
+
+    private void StartLoop()
+    {
+        if (loopClip == null)
+            return;
+
+        if (loopSource == null)
+        {
+            loopSource = gameObject.AddComponent<AudioSource>();
+            loopSource.playOnAwake = false;
+            loopSource.loop = true;
+            loopSource.spatialBlend = 0f; // 2D sound, same volume everywhere
+        }
+
+        loopSource.clip = loopClip;
+        loopTargetVolume = loopVolume;
+
+        if (loopFadeTime <= 0f)
+            loopSource.volume = loopVolume;
+        else if (!loopSource.isPlaying)
+            loopSource.volume = 0f;
+
+        if (!loopSource.isPlaying)
+            loopSource.Play();
+    }
+
+    private void StopLoop()
+    {
+        if (loopSource == null)
+            return;
+
+        loopTargetVolume = 0f;
+
+        if (loopFadeTime <= 0f)
+        {
+            loopSource.Stop();
+            loopSource.volume = 0f;
+        }
+    }
+
+    private void UpdateLoopFade()
+    {
+        if (loopSource == null || !loopSource.isPlaying)
+            return;
+
+        if (loopFadeTime > 0f)
+        {
+            float step = (loopVolume / loopFadeTime) * Time.deltaTime;
+            loopSource.volume = Mathf.MoveTowards(loopSource.volume, loopTargetVolume, step);
+        }
+
+        // Fade-out finished: stop the source.
+        if (loopTargetVolume <= 0f && loopSource.volume <= 0.001f)
+            loopSource.Stop();
     }
 
     private void SpawnChip()

@@ -3,9 +3,11 @@ guid: b233dad824194f4daf64284bd673609b
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - chipPrefab: {instanceID: 0}
+  - loopClip: {fileID: 8300000, guid: 22a5ebe0cf543440cbd1c41b9b0661e9, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
-  userData:
-  assetBundleName:
-  assetBundleVariant:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -155,8 +155,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b67637a635b8a540b168fdee895b34d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DeleteBall
-  drainClip: {fileID: 8300000, guid: cece9100574214b359c99bb90bfda843, type: 3}
-  drainVolume: 0.8
+  drainClip: {fileID: 8300000, guid: 1069e6c070ba344838ed5d1bbbfce64f, type: 3}
+  drainVolume: 0.5
 --- !u!114 &5271397974061694444
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -170,7 +170,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   rollClip: {fileID: 8300000, guid: 5be4f62cedc9e44e588deb1b5d1b5289, type: 3}
-  maxVolume: 0.9
+  maxVolume: 0.6
   boardTag: Board
   minRollSpeed: 0.5
   maxRollSpeed: 10

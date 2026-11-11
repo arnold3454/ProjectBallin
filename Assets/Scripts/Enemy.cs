@@ -25,6 +25,13 @@ public class Enemy : MonoBehaviour
     [SerializeField] private Color flashColor = Color.white;
     [SerializeField] private float flashTime = 0.1f;
 
+    [Header("Audio")]
+    [Tooltip("Sound played when the enemy dies.")]
+    [SerializeField] private AudioClip deathClip;
+    [SerializeField, Range(0f, 1f)] private float deathVolume = 0.8f;
+    [Tooltip("Random pitch variation so repeated kills don't sound identical. 0 for none.")]
+    [SerializeField, Range(0f, 0.3f)] private float deathPitchVariance = 0.05f;
+
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
     private static readonly int ColorId = Shader.PropertyToID("_Color");
 
@@ -113,6 +120,7 @@ public class Enemy : MonoBehaviour
         }
 
         AddScore(killPoints);
+        PlayDeathSound(); // NEW
         Died?.Invoke(this);
         Destroy(gameObject);
     }
@@ -124,6 +132,24 @@ public class Enemy : MonoBehaviour
     {
         if (ScoreManager.Instance != null)
             ScoreManager.Instance.AddScore(amount);
+    }
+    private void PlayDeathSound()
+    {
+        if (deathClip == null)
+            return;
+
+        // Play from a temporary object so the sound isn't cut off when the enemy is destroyed.
+        GameObject soundObject = new GameObject("EnemyDeathSound");
+        soundObject.transform.position = transform.position;
+
+        AudioSource source = soundObject.AddComponent<AudioSource>();
+        source.clip = deathClip;
+        source.volume = deathVolume;
+        source.pitch = 1f + UnityEngine.Random.Range(-deathPitchVariance, deathPitchVariance);
+        source.spatialBlend = 0f; // 2D, so volume doesn't depend on camera distance
+        source.Play();
+
+        Destroy(soundObject, deathClip.length / Mathf.Max(0.1f, source.pitch) + 0.1f);
     }
 
     private void ApplyColor(Color color)

@@ -1070,7 +1070,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ScoreManager
   scoreText: {fileID: 1391632141}
   scoreClip: {fileID: 8300000, guid: baf8d20e0dc2f4cb4ad0fe5a789b63d8, type: 3}
-  scoreVolume: 0.2
+  scoreVolume: 0.5
 --- !u!4 &136284776
 Transform:
   m_ObjectHideFlags: 0
