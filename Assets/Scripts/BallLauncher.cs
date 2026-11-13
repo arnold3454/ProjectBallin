@@ -114,6 +114,10 @@ public class BallLauncher : MonoBehaviour
         if (BallTypeManager.IsSelecting)
             return;
 
+        // A minigame is open on top of the board; leave the ball in play alone until it closes.
+        if (MinigamePortal.IsMinigameOpen)
+            return;
+
         HandleInput();
         HandleAutoLaunch();
         HandleReload();

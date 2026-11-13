@@ -68,6 +68,9 @@ if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsChoosing)
 if (BallTypeManager.IsSelecting)
     return;
 
+if (MinigamePortal.IsMinigameOpen)
+    return;
+
 SetDirection(MotorSpeed);
 PlayFlipSFX();
     }

@@ -58,6 +58,9 @@ public class MenuManager : MonoBehaviour
         // Same for the dealer's shop.
         if (ShopManager.Instance != null && ShopManager.Instance.IsOpen) return;
 
+        // Same for a minigame opened from a portal; it hands the time scale back when it closes.
+        if (MinigamePortal.IsMinigameOpen) return;
+
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             ToggleMenu();

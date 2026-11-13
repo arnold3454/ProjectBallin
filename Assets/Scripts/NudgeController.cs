@@ -49,6 +49,9 @@ public class NudgeController : MonoBehaviour
         if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsChoosing)
             return;
 
+        if (MinigamePortal.IsMinigameOpen)
+            return;
+
         if (Keyboard.current.leftShiftKey.wasPressedThisFrame)
             Nudge(1f);
         else if (Keyboard.current.rightShiftKey.wasPressedThisFrame)

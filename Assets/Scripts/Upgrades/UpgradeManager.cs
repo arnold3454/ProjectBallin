@@ -240,6 +240,10 @@ public class UpgradeManager : MonoBehaviour
             return;
         }
 
+        // The offer waits while a minigame is open on top of the board.
+        if (MinigamePortal.IsMinigameOpen)
+            return;
+
         if (Keyboard.current != null && chooseKey != Key.None && Keyboard.current[chooseKey].wasPressedThisFrame)
             OpenPendingOffer();
     }

@@ -17,6 +17,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/BossTest.unity
     guid: 68d577f672364a30a85c614c44468bc2
+  - enabled: 1
+    path: Assets/Scenes/PortalTest.unity
+    guid: 67023eb76666bbf4dba840d81e45b45c
+  - enabled: 1
+    path: Assets/Scenes/Minigame1.unity
+    guid: 55b37051874444cb9d93551b5377a397
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: ffcd004953032864ea0e531a8838506c, type: 3}
