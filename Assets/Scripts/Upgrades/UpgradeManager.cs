@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 /// <summary>
 /// Hands the player a choice of upgrades every time the XP bar fills. XP per level is peg score +
@@ -78,13 +79,21 @@ public class UpgradeManager : MonoBehaviour
     [Header("Upgrade Ready Notification")]
     [Tooltip("The UpgradeReadyPanel under the Canvas. Shown from when the bar fills until the player opens the choice.")]
     [SerializeField] private GameObject readyPanel;
-    [Tooltip("The panel's headline. Reads UPGRADE READY!, or counts them when more than one is waiting.")]
     [SerializeField] private TextMeshProUGUI readyText;
-    [Tooltip("The key cap on the panel. Shows the choose key below, so the panel always matches the binding.")]
-    [SerializeField] private TextMeshProUGUI readyKeyText;
+    [Tooltip("Keep the ready panel visible as an XP display, enabling its button only when ready.")]
+    [SerializeField] private bool readyPanelAsXpProgress;
+    [Tooltip("Token count text format; {0} is the number of available tokens.")]
+    [SerializeField] private string tokenCountFormat = "x{0}";
+    [Tooltip("Single-offer notification format; {0} is the choose-key prompt.")]
+    [SerializeField] private string singleOfferReadyFormat = "UPGRADE READY!\nPress {0}click here to choose";
+    [Tooltip("Multiple-offer notification format; {0} is the offer count and {1} is the choose-key prompt.")]
+    [SerializeField] private string multipleOffersReadyFormat = "{0} UPGRADES READY!\nPress {1}click here to choose";
+    [Tooltip("Choose-key prompt format; {0} is the key. Set empty to omit it.")]
+    [SerializeField] private string chooseKeyPromptFormat = "[{0}] or ";
     [Tooltip("Pressing this key opens the upgrade choice. The panel's button calls OpenPendingOffer as well.")]
     [SerializeField] private Key chooseKey = Key.U;
 
+    private Button readyButton;
     private readonly int[] stacks = new int[System.Enum.GetValues(typeof(UpgradeId)).Length];
     private List<UpgradeDefinition> allUpgrades;
     private List<UpgradeDefinition> currentChoices;
@@ -179,6 +188,23 @@ public class UpgradeManager : MonoBehaviour
 
         if (readyPanel == null)
             Debug.LogWarning("UpgradeManager has no UpgradeReadyPanel assigned (under the Canvas), so earned upgrades can only be opened with the choose key.", this);
+        else if (readyPanelAsXpProgress)
+        {
+            readyButton = readyPanel.GetComponent<Button>();
+            readyPanel.SetActive(true);
+
+            if (readyButton != null)
+            {
+                readyButton.interactable = false;
+                readyButton.transition = Selectable.Transition.None;
+            }
+
+            if (readyText != null)
+            {
+                readyText.text = string.Format(tokenCountFormat, pendingOffers);
+                readyText.gameObject.SetActive(true);
+            }
+        }
         else
             readyPanel.SetActive(false);
 
@@ -391,15 +417,30 @@ public class UpgradeManager : MonoBehaviour
         if (readyPanel == null)
             return;
 
-        if (visible)
+        if (readyPanelAsXpProgress)
         {
-            // Only the headline and the key cap change. The rest of the panel (the "press ... or
-            // click" line, the colours, the pulse) is laid out on the UpgradeReadyPanel in the scene.
-            if (readyText != null)
-                readyText.text = pendingOffers > 1 ? $"{pendingOffers} UPGRADES READY!" : "UPGRADE READY!";
+            readyPanel.SetActive(true);
 
-            if (readyKeyText != null && chooseKey != Key.None)
-                readyKeyText.text = chooseKey.ToString();
+            if (readyButton != null)
+                readyButton.interactable = visible;
+
+            if (readyText != null)
+            {
+                readyText.text = string.Format(tokenCountFormat, pendingOffers);
+                readyText.gameObject.SetActive(true);
+            }
+
+            return;
+        }
+
+        if (visible && readyText != null)
+        {
+            string keyPrompt = chooseKey != Key.None
+                ? string.Format(chooseKeyPromptFormat, chooseKey)
+                : string.Empty;
+            readyText.text = pendingOffers > 1
+                ? string.Format(multipleOffersReadyFormat, pendingOffers, keyPrompt)
+                : string.Format(singleOfferReadyFormat, keyPrompt);
         }
 
         readyPanel.SetActive(visible);
@@ -426,6 +467,8 @@ public class UpgradeManager : MonoBehaviour
         resolvingPick = true;
         ApplyUpgrade(currentChoices[index]);
         pendingOffers--;
+        if (readyPanelAsXpProgress)
+            ShowReadyPanel(false);
         popup.Hide();
         StartCoroutine(FinishPick());
     }

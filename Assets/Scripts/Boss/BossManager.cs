@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// Runs the boss fight. Each roulette win enables one corner boss trigger; once every
@@ -31,7 +32,7 @@ public class BossManager : MonoBehaviour
     [Header("Timer")]
     [Tooltip("The fight's own countdown, separate from the main game clock. Left empty, the BossTimer on this object is used, or one is added with its default settings.")]
     [SerializeField] private BossTimer bossTimer;
-    [Tooltip("Seconds added to the main game clock when the fight starts, so the fight doesn't eat the round.")]
+    [Tooltip("Seconds added to the boss timer when the fight starts.")]
     [SerializeField, Min(0f)] private float mainClockBonus = 90f;
     [Tooltip("Seconds between random phase switches.")]
     [SerializeField, Min(1f)] private float phaseInterval = 8f;
@@ -57,8 +58,11 @@ public class BossManager : MonoBehaviour
     [SerializeField, Min(0f)] private float messageDuration = 3f;
     [SerializeField] private string needCornersMessage = "Hit an unlit corner button to continue";
     [SerializeField] private string needRouletteMessage = "Win the roulette to light a corner button";
-    [Tooltip("UI images shown in order as the player lights corner triggers.")]
-    [SerializeField] private Image[] triggerIndicators;
+    [FormerlySerializedAs("triggerIndicators")]
+    [Tooltip("Lit-state Images in order. Set each Image's Sprite to its lit artwork.")]
+    [SerializeField] private Image[] litTriggerIndicators;
+    [Tooltip("Unlit-state sprites for the lit Images above, in the same order.")]
+    [SerializeField] private Sprite[] unlitTriggerIndicatorSprites;
 
     [Header("Debug")]
     [Tooltip("Start the fight as soon as the scene loads, without winning the roulette.")]
@@ -103,8 +107,10 @@ public class BossManager : MonoBehaviour
     public bool CornersArmed => !requireCornerTriggers || cornerTriggers.TrueForAll(t => t == null || t.IsLit);
 
     private readonly List<CornerBossTrigger> cornerTriggers = new List<CornerBossTrigger>();
+    private Sprite[] litTriggerIndicatorSprites;
     private float phaseTimer;
     private float messageTimer;
+    private bool resumeMainTimerAfterFight;
     /// <summary>Health the dealer had left when it last got away. 0 means it spawns at full health.</summary>
     private int carriedHealth;
     /// <summary>The prefab's phase indices in a random order: the first half for fight one, the rest for fight two.</summary>
@@ -120,6 +126,7 @@ public class BossManager : MonoBehaviour
             Debug.LogError("BossManager needs a BossTimer component on the same object. Add one in the Inspector.", this);
 
         SetHud(string.Empty);
+        CacheLitTriggerIndicatorSprites();
         RefreshTriggerTracker();
     }
 
@@ -193,7 +200,7 @@ public class BossManager : MonoBehaviour
 
     private void RefreshTriggerTracker()
     {
-        if (triggerIndicators == null)
+        if (litTriggerIndicators == null)
             return;
 
         int litCount = 0;
@@ -203,10 +210,57 @@ public class BossManager : MonoBehaviour
                 litCount++;
         }
 
-        for (int i = 0; i < triggerIndicators.Length; i++)
+        for (int i = 0; i < litTriggerIndicators.Length; i++)
         {
-            if (triggerIndicators[i] != null)
-                triggerIndicators[i].fillAmount = i < litCount ? 1f : 0f;
+            Image indicator = litTriggerIndicators[i];
+            if (indicator == null)
+                continue;
+
+            Sprite stateSprite = null;
+            if (i < litCount
+                && litTriggerIndicatorSprites != null
+                && i < litTriggerIndicatorSprites.Length)
+            {
+                stateSprite = litTriggerIndicatorSprites[i];
+            }
+            else if (i >= litCount
+                && unlitTriggerIndicatorSprites != null
+                && i < unlitTriggerIndicatorSprites.Length)
+            {
+                stateSprite = unlitTriggerIndicatorSprites[i];
+            }
+
+            if (stateSprite != null)
+                indicator.sprite = stateSprite;
+        }
+    }
+
+    private void CacheLitTriggerIndicatorSprites()
+    {
+        if (litTriggerIndicators == null)
+            return;
+
+        litTriggerIndicatorSprites = new Sprite[litTriggerIndicators.Length];
+        for (int i = 0; i < litTriggerIndicators.Length; i++)
+        {
+            Image indicator = litTriggerIndicators[i];
+            if (indicator == null)
+                continue;
+
+            litTriggerIndicatorSprites[i] = indicator.sprite;
+            if (litTriggerIndicatorSprites[i] == null)
+                Debug.LogWarning($"Trigger tracker {i + 1} needs its lit sprite assigned on its Image.", indicator);
+
+            if (unlitTriggerIndicatorSprites == null
+                || i >= unlitTriggerIndicatorSprites.Length
+                || unlitTriggerIndicatorSprites[i] == null)
+            {
+                Debug.LogWarning($"Trigger tracker {i + 1} needs an unlit sprite assigned in the BossManager Inspector.", this);
+            }
+            else if (litTriggerIndicatorSprites[i] == unlitTriggerIndicatorSprites[i])
+            {
+                Debug.LogWarning($"Trigger tracker {i + 1} uses the same sprite for both states. Assign a dull sprite in the BossManager Inspector.", this);
+            }
         }
     }
 
@@ -348,9 +402,8 @@ public class BossManager : MonoBehaviour
             return;
         }
 
-        // Extend the round first so the boss timer's main clock cap sees the longer clock.
-        if (GameTimer.Instance != null && mainClockBonus > 0f)
-            GameTimer.Instance.AddTime(mainClockBonus);
+        GameTimer mainTimer = GameTimer.Instance;
+        resumeMainTimerAfterFight = mainTimer != null && mainTimer.IsRunning;
 
         ActiveBoss = Instantiate(bossPrefab, bossSpawnPosition, Quaternion.identity);
         ActiveBoss.Died += OnBossDied;
@@ -365,6 +418,9 @@ public class BossManager : MonoBehaviour
         messageTimer = 0f;
         phaseTimer = phaseInterval;
         bossTimer.Begin();
+        if (mainClockBonus > 0f)
+            bossTimer.AddTime(mainClockBonus);
+        mainTimer?.PauseTimer();
         ActiveBoss.SwitchToRandomPhase(this);
         UpdateHud();
 
@@ -409,6 +465,10 @@ public class BossManager : MonoBehaviour
 
         IsFightActive = false;
         bossTimer.Stop();
+
+        if (resumeMainTimerAfterFight && GameTimer.Instance != null)
+            GameTimer.Instance.ResumeTimer();
+        resumeMainTimerAfterFight = false;
 
         if (ActiveBoss != null)
         {

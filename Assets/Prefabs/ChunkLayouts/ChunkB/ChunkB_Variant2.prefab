@@ -423,8 +423,8 @@ MonoBehaviour:
   - {fileID: 8862663157380508567}
   - {fileID: 6714886265862007769}
   sideLength: 12
-  speed: 10
-  clockwise: 0
+  speed: 8
+  clockwise: 1
 --- !u!1 &6481914758176053546
 GameObject:
   m_ObjectHideFlags: 0

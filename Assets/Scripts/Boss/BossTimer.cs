@@ -1,12 +1,12 @@
 using System;
-using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// The boss fight's own countdown, separate from the main <see cref="GameTimer"/>. It is always
 /// shorter than the main clock: the duration is capped to a fraction of whatever the main timer
-/// has left, so the fight never outlives the round. It draws on its own label, the BossTimer text
-/// under the Canvas, assigned in the Inspector. Lives on the GameManager next to
+/// has left, so the fight never outlives the round. It draws on its own progress bar under the
+/// Canvas, assigned in the Inspector. Lives on the GameManager next to
 /// <see cref="BossManager"/>, which starts and stops it.
 /// </summary>
 public class BossTimer : MonoBehaviour
@@ -18,12 +18,10 @@ public class BossTimer : MonoBehaviour
     [SerializeField, Range(0.1f, 1f)] private float maxFractionOfMainClock = 0.75f;
 
     [Header("UI")]
-    [Tooltip("Label that shows the countdown: the BossTimer text under the Canvas.")]
-    [SerializeField] private TextMeshProUGUI timerText;
-    [Tooltip("Text shown in front of the time, e.g. \"BOSS \".")]
-    [SerializeField] private string prefix = "";
-    [Tooltip("Hide the label while no boss fight is running.")]
-    [SerializeField] private bool hideWhenIdle = true;
+    [Tooltip("Filled Image that shows the boss countdown under the Canvas.")]
+    [SerializeField] private Image timerBar;
+    [Tooltip("Container holding the boss timer background and fill. Hidden until the boss fight starts.")]
+    [SerializeField] private GameObject timerContainer;
 
     [Header("Low Time Warning")]
     [SerializeField] private float warningThreshold = 10f;
@@ -100,27 +98,38 @@ public class BossTimer : MonoBehaviour
 
     private void UpdateUI()
     {
-        if (timerText == null)
+        if (timerContainer == null)
         {
-            if (!warnedNoLabel)
+            if (!warnedNoContainer)
             {
-                Debug.LogWarning("BossTimer has no label assigned. Assign the BossTimer text under the Canvas.", this);
-                warnedNoLabel = true;
+                Debug.LogWarning("BossTimer has no timer container assigned. Assign the boss time container in the Inspector.", this);
+                warnedNoContainer = true;
+            }
+        }
+        else if (timerContainer.activeSelf != IsRunning)
+        {
+            timerContainer.SetActive(IsRunning);
+        }
+
+        if (timerBar == null)
+        {
+            if (!warnedNoBar)
+            {
+                Debug.LogWarning("BossTimer has no progress bar assigned. Assign its filled Image in the Inspector.", this);
+                warnedNoBar = true;
             }
             return;
         }
 
-        if (hideWhenIdle && timerText.gameObject.activeSelf != IsRunning)
-            timerText.gameObject.SetActive(IsRunning);
-
-        if (!IsRunning && hideWhenIdle)
+        if (!IsRunning)
             return;
 
-        int minutes = Mathf.FloorToInt(TimeRemaining / 60f);
-        int seconds = Mathf.FloorToInt(TimeRemaining % 60f);
-        timerText.text = $"{prefix}{minutes:00}:{seconds:00}";
-        timerText.color = TimeRemaining <= warningThreshold ? warningColor : normalColor;
+        timerBar.fillAmount = Duration > 0f
+            ? Mathf.Clamp01(TimeRemaining / Duration)
+            : 0f;
+        timerBar.color = TimeRemaining <= warningThreshold ? warningColor : normalColor;
     }
 
-    private bool warnedNoLabel;
+    private bool warnedNoBar;
+    private bool warnedNoContainer;
 }

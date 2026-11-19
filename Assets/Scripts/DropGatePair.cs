@@ -37,12 +37,18 @@ public class DropGatePair : MonoBehaviour
         }
 
         foreach (DropGateTarget target in targets)
-            target.SetDown(false, instant: true);
+            target.Raise(instantly: true);
     }
 
     public void TargetHit(DropGateTarget hitTarget)
     {
-        if (!enabled || Array.IndexOf(targets, hitTarget) < 0)
+        if (hitTarget == null)
+        {
+            Debug.LogError($"Drop gate pair '{name}' received a hit from a null target.", this);
+            return;
+        }
+
+        if (!enabled || targets == null || Array.IndexOf(targets, hitTarget) < 0)
         {
             Debug.LogError($"Drop gate target '{hitTarget.name}' is not registered with pair '{name}'.", this);
             return;
@@ -52,9 +58,9 @@ public class DropGatePair : MonoBehaviour
             return;
 
         if (loweredTarget != null)
-            loweredTarget.SetDown(false);
+            loweredTarget.Raise();
 
         loweredTarget = hitTarget;
-        loweredTarget.SetDown(true);
+        loweredTarget.Lower();
     }
 }
