@@ -78,7 +78,10 @@ public class UpgradeManager : MonoBehaviour
     [Header("Upgrade Ready Notification")]
     [Tooltip("The UpgradeReadyPanel under the Canvas. Shown from when the bar fills until the player opens the choice.")]
     [SerializeField] private GameObject readyPanel;
+    [Tooltip("The panel's headline. Reads UPGRADE READY!, or counts them when more than one is waiting.")]
     [SerializeField] private TextMeshProUGUI readyText;
+    [Tooltip("The key cap on the panel. Shows the choose key below, so the panel always matches the binding.")]
+    [SerializeField] private TextMeshProUGUI readyKeyText;
     [Tooltip("Pressing this key opens the upgrade choice. The panel's button calls OpenPendingOffer as well.")]
     [SerializeField] private Key chooseKey = Key.U;
 
@@ -388,12 +391,15 @@ public class UpgradeManager : MonoBehaviour
         if (readyPanel == null)
             return;
 
-        if (visible && readyText != null)
+        if (visible)
         {
-            string key = chooseKey != Key.None ? $"[{chooseKey}] or " : "";
-            readyText.text = pendingOffers > 1
-                ? $"{pendingOffers} UPGRADES READY!\nPress {key}click here to choose"
-                : $"UPGRADE READY!\nPress {key}click here to choose";
+            // Only the headline and the key cap change. The rest of the panel (the "press ... or
+            // click" line, the colours, the pulse) is laid out on the UpgradeReadyPanel in the scene.
+            if (readyText != null)
+                readyText.text = pendingOffers > 1 ? $"{pendingOffers} UPGRADES READY!" : "UPGRADE READY!";
+
+            if (readyKeyText != null && chooseKey != Key.None)
+                readyKeyText.text = chooseKey.ToString();
         }
 
         readyPanel.SetActive(visible);

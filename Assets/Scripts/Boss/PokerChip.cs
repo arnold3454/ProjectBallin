@@ -1,50 +1,67 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
-/// One of the dealer's chips from the Club phase. Purely cosmetic: a big disc that floats above
-/// the table and slides down it, hiding whatever is underneath. It has no collider or rigidbody,
-/// so it never touches the ball, the flippers or anything else. It disappears once it reaches
-/// the line just above the flippers.
+/// One of the dealer's chips from the Club phase. It is a HUD element, not a board object: a big
+/// disc under the Canvas's ChipRain that slides down the screen and hides whatever is behind it,
+/// the table and the rest of the HUD alike. Purely cosmetic, so it never blocks clicks or touches
+/// the ball. The chips sit switched off under ChipRain in the scene; <see cref="ChipRain"/> switches
+/// one on for each drop and the chip switches itself off again once it has fallen off the screen.
 /// </summary>
+[RequireComponent(typeof(RectTransform))]
 public class PokerChip : MonoBehaviour
 {
     [Header("Visuals")]
-    [Tooltip("Renderer tinted with the chip colour. Defaults to the first renderer found.")]
-    [SerializeField] private Renderer face;
+    [Tooltip("Image tinted with the chip colour: a plain circle. Defaults to the Image on this object.")]
+    [SerializeField] private Image face;
 
-    private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
-    private static readonly int ColorId = Shader.PropertyToID("_Color");
+    /// <summary>Radius in canvas units (pixels at the canvas's reference resolution).</summary>
+    public float Radius { get; private set; }
 
-    public float Radius { get; private set; } = 1.5f;
+    /// <summary>True while the chip is on screen.</summary>
+    public bool IsFalling => gameObject.activeSelf;
 
-    private MaterialPropertyBlock colorBlock;
+    /// <summary>Centre of the chip, measured from the top-centre of ChipRain.</summary>
+    public Vector2 Position => Rect.anchoredPosition;
+
+    private RectTransform rect;
     private float speed;
-    private float despawnZ;
+    private float endY;
+    private float spin;
 
-    private void Awake()
+    private RectTransform Rect => rect != null ? rect : rect = (RectTransform)transform;
+
+    /// <summary>
+    /// Sizes, colours and shows the chip at <paramref name="start"/>, then lets it fall until its
+    /// centre reaches <paramref name="vanishY"/>. Positions are measured from the top-centre of
+    /// ChipRain, so y goes negative down the screen.
+    /// </summary>
+    public void Drop(Vector2 start, float radius, float fallSpeed, float vanishY, Color chipColor, float spinSpeed)
     {
-        if (face == null)
-            face = GetComponentInChildren<Renderer>();
+        Radius = Mathf.Max(1f, radius);
+        speed = fallSpeed;
+        endY = vanishY;
+        spin = spinSpeed;
 
-        // Safety net: the chip must never be part of the physics world, whatever the prefab holds.
-        foreach (Collider collider in GetComponentsInChildren<Collider>(true))
-            Destroy(collider);
-        foreach (Rigidbody body in GetComponentsInChildren<Rigidbody>(true))
-            Destroy(body);
+        Rect.sizeDelta = Vector2.one * (Radius * 2f);
+        Rect.anchoredPosition = start;
+        Rect.localRotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
+
+        if (face == null)
+            face = GetComponent<Image>();
+        if (face != null)
+            face.color = chipColor;
+
+        // The newest chip lands on top of the ones already falling.
+        transform.SetAsLastSibling();
+        gameObject.SetActive(true);
     }
 
-    /// <summary>Sizes and arms the chip. Call right after spawning.</summary>
-    public void Initialize(float radius, float driftSpeed, float despawnLineZ, Color chipColor)
+    /// <summary>Takes the chip off the screen and back into the pool.</summary>
+    public void Hide()
     {
-        Radius = Mathf.Max(0.1f, radius);
-        speed = driftSpeed;
-        despawnZ = despawnLineZ;
-
-        // The chip is one unit across at scale 1; keep whatever thickness the prefab set.
-        Vector3 scale = transform.localScale;
-        transform.localScale = new Vector3(Radius * 2f, scale.y, Radius * 2f);
-
-        ApplyColor(chipColor);
+        speed = 0f;
+        gameObject.SetActive(false);
     }
 
     private void Update()
@@ -55,26 +72,15 @@ public class PokerChip : MonoBehaviour
         if (GameTimer.Instance != null && GameTimer.Instance.IsGameOver)
             return;
 
-        // Reached the line above the flippers: the chip has done its job and goes away.
-        if (transform.position.z <= despawnZ)
-        {
-            Destroy(gameObject);
-            return;
-        }
+        Vector2 position = Rect.anchoredPosition;
+        position.y -= speed * Time.deltaTime;
+        Rect.anchoredPosition = position;
 
-        // Straight down the table. Nothing can block a cosmetic chip, so no obstacle checks.
-        transform.position += Vector3.back * (speed * Time.deltaTime);
-    }
+        if (spin != 0f)
+            Rect.Rotate(0f, 0f, spin * Time.deltaTime);
 
-    private void ApplyColor(Color value)
-    {
-        if (face == null)
-            return;
-
-        colorBlock ??= new MaterialPropertyBlock();
-        face.GetPropertyBlock(colorBlock);
-        colorBlock.SetColor(BaseColorId, value);
-        colorBlock.SetColor(ColorId, value);
-        face.SetPropertyBlock(colorBlock);
+        // Fallen far enough: the chip has done its job and goes back into the pool.
+        if (position.y <= endY)
+            Hide();
     }
 }

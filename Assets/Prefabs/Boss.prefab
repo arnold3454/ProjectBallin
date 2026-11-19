@@ -203,19 +203,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ClubPhase
   phaseName: Club
   lampColor: {r: 0.2, g: 0.9, b: 0.3, a: 1}
-  chipPrefab: {fileID: 7421933120044851207, guid: 3d28c850341148e985f18624a305fe41, type: 3}
   intensity: 0.5
   spawnIntervalLight: 1.3
   spawnIntervalHeavy: 0.25
   maxChipsLight: 5
   maxChipsHeavy: 30
-  chipRadiusLight: 2.5
-  chipRadiusHeavy: 4.5
-  hoverHeight: 2
-  driftSpeed: 7.5
-  despawnDepthFromBottom: 12
-  spawnDepthFromTop: 4
-  sideMargin: 2.5
+  chipRadiusLight: 130
+  chipRadiusHeavy: 210
+  fallSpeed: 260
+  vanishHeightFromBottom: 0
+  sideMargin: 60
+  maxSpin: 25
   placementAttempts: 8
   chipColors:
   - {r: 0.85, g: 0.12, b: 0.12, a: 1}
