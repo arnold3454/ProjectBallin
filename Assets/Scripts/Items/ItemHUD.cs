@@ -69,6 +69,7 @@ public class ItemHUD : MonoBehaviour
         {
             ItemSlotUI slot = Instantiate(slotPrefab, slotContainer);
             slot.name = $"Slot {i + 1}";
+            slot.gameObject.SetActive(false);
             slots.Add(slot);
         }
     }
@@ -77,8 +78,10 @@ public class ItemHUD : MonoBehaviour
     {
         for (int i = 0; i < slots.Count; i++)
         {
+            ItemDefinition item = itemManager.GetItem(i);
             slots[i].SetKey(itemManager.GetKeyLabel(i));
-            slots[i].SetItem(itemManager.GetItem(i));
+            slots[i].SetItem(item);
+            slots[i].gameObject.SetActive(item != null);
         }
     }
 
@@ -87,7 +90,8 @@ public class ItemHUD : MonoBehaviour
         if (slot < slots.Count)
         {
             slots[slot].SetItem(item);
-            slots[slot].Pop();
+            slots[slot].gameObject.SetActive(true);
+            slots[slot].Dispense();
         }
 
         ShowMessage($"+ {item.DisplayName}", item.Color);
@@ -96,7 +100,10 @@ public class ItemHUD : MonoBehaviour
     private void OnItemUsed(int slot, ItemDefinition item)
     {
         if (slot < slots.Count)
+        {
             slots[slot].SetItem(null);
+            slots[slot].gameObject.SetActive(false);
+        }
 
         ShowMessage($"{item.DisplayName}!", item.Color);
     }

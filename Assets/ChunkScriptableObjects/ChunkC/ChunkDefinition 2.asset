@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: ChunkDefinition 2
   m_EditorClassIdentifier: Assembly-CSharp::ChunkDefinition
   chunkId: ChunkC_VariantA
-  prefab: {fileID: 2222520612065544811, guid: 4cf8c0cc6c8666e42bc163ab78a1365b, type: 3}
+  prefab: {fileID: 5187175581756824386, guid: 7aa6f9d3c7b76af4faca6eebfc14df97, type: 3}
   socketType: RightMiddle
-  weight: 1
+  weight: 4
   allowRepeat: 1
   allowRandomRotation: 0
-  localPositionOffset: {x: 0, y: 0, z: 0}
+  localPositionOffset: {x: 0, y: -2, z: 0}

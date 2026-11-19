@@ -7,18 +7,15 @@ public class DropGateTarget : MonoBehaviour
     [SerializeField] private DropGatePair pair;
 
     [Header("Movement")]
-    [Tooltip("The transform moved between the raised and lowered poses. Usually the target's moving root.")]
+    [Tooltip("The transform moved up and down. Usually the target's moving root.")]
     [SerializeField] private Transform movingPart;
-    [SerializeField] private Transform raisedPose;
-    [SerializeField] private Transform loweredPose;
-    [Tooltip("Use the moving part's authored starting transform as its raised position.")]
-    [SerializeField] private bool useInitialPoseAsRaised = true;
+    [Tooltip("How far the target moves downward, in world units.")]
+    [SerializeField, Min(0f)] private float dropDistance = 4.5f;
     [SerializeField, Min(0.01f)] private float moveDuration = 0.35f;
 
     private BallHitboxTrigger hitbox;
     private Coroutine movement;
-    private Vector3 initialLocalPosition;
-    private Quaternion initialLocalRotation;
+    private Vector3 raisedLocalPosition;
 
     private void Awake()
     {
@@ -27,15 +24,11 @@ public class DropGateTarget : MonoBehaviour
         if (movingPart == null)
             movingPart = transform;
 
-        initialLocalPosition = movingPart.localPosition;
-        initialLocalRotation = movingPart.localRotation;
+        raisedLocalPosition = movingPart.localPosition;
     }
 
     private void OnEnable()
     {
-        if (hitbox == null)
-            hitbox = GetComponent<BallHitboxTrigger>();
-
         hitbox.BallHit += OnBallHit;
     }
 
@@ -44,14 +37,20 @@ public class DropGateTarget : MonoBehaviour
         if (hitbox != null)
             hitbox.BallHit -= OnBallHit;
 
-        if (movement != null)
-        {
-            StopCoroutine(movement);
-            movement = null;
-        }
+        StopMovement();
     }
 
-    public void SetDown(bool down, bool instant = false)
+    public void Raise(bool instantly = false)
+    {
+        MoveToPose(lowered: false, instantly: instantly);
+    }
+
+    public void Lower(bool instantly = false)
+    {
+        MoveToPose(lowered: true, instantly: instantly);
+    }
+
+    private void MoveToPose(bool lowered, bool instantly)
     {
         if (movingPart == null)
         {
@@ -59,38 +58,33 @@ public class DropGateTarget : MonoBehaviour
             return;
         }
 
-        Vector3 targetPosition;
-        Quaternion targetRotation;
-        if (!down && useInitialPoseAsRaised)
-        {
-            targetPosition = initialLocalPosition;
-            targetRotation = initialLocalRotation;
-        }
-        else
-        {
-            Transform pose = down ? loweredPose : raisedPose;
-            if (pose == null)
-            {
-                Debug.LogError($"Drop gate target '{name}' needs its {(down ? "lowered" : "raised")} pose assigned.", this);
-                return;
-            }
+        StopMovement();
+        Vector3 targetPosition = lowered ? GetLoweredPosition() : raisedLocalPosition;
 
-            GetLocalPose(pose, out targetPosition, out targetRotation);
-        }
-
-        if (movement != null)
+        if (instantly || moveDuration <= 0f)
         {
-            StopCoroutine(movement);
-            movement = null;
-        }
-
-        if (instant)
-        {
-            movingPart.SetLocalPositionAndRotation(targetPosition, targetRotation);
+            movingPart.localPosition = targetPosition;
             return;
         }
 
-        movement = StartCoroutine(MoveTo(targetPosition, targetRotation));
+        movement = StartCoroutine(AnimateTo(targetPosition));
+    }
+
+    private Vector3 GetLoweredPosition()
+    {
+        Vector3 worldDrop = Vector3.down * dropDistance;
+        Transform parent = movingPart.parent;
+        Vector3 localDrop = parent != null ? parent.InverseTransformVector(worldDrop) : worldDrop;
+        return raisedLocalPosition + localDrop;
+    }
+
+    private void StopMovement()
+    {
+        if (movement == null)
+            return;
+
+        StopCoroutine(movement);
+        movement = null;
     }
 
     private void OnBallHit(Collider ball)
@@ -104,37 +98,20 @@ public class DropGateTarget : MonoBehaviour
         pair.TargetHit(this);
     }
 
-    private void GetLocalPose(Transform pose, out Vector3 position, out Quaternion rotation)
-    {
-        Transform parent = movingPart.parent;
-        if (parent == null)
-        {
-            position = pose.position;
-            rotation = pose.rotation;
-            return;
-        }
-
-        position = parent.InverseTransformPoint(pose.position);
-        rotation = Quaternion.Inverse(parent.rotation) * pose.rotation;
-    }
-
-    private IEnumerator MoveTo(Vector3 targetPosition, Quaternion targetRotation)
+    private IEnumerator AnimateTo(Vector3 targetPosition)
     {
         Vector3 startPosition = movingPart.localPosition;
-        Quaternion startRotation = movingPart.localRotation;
         float elapsed = 0f;
 
         while (elapsed < moveDuration)
         {
             elapsed += Time.deltaTime;
             float t = Mathf.SmoothStep(0f, 1f, elapsed / moveDuration);
-            movingPart.SetLocalPositionAndRotation(
-                Vector3.Lerp(startPosition, targetPosition, t),
-                Quaternion.Slerp(startRotation, targetRotation, t));
+            movingPart.localPosition = Vector3.Lerp(startPosition, targetPosition, t);
             yield return null;
         }
 
-        movingPart.SetLocalPositionAndRotation(targetPosition, targetRotation);
+        movingPart.localPosition = targetPosition;
         movement = null;
     }
 }

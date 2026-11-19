@@ -23,6 +23,7 @@ public class NudgeController : MonoBehaviour
     [SerializeField] private float tiltDecayPerSecond = 0.5f;
     [SerializeField] private float flipperLockDuration = 3f;
     [SerializeField] private Slider tiltMeter;
+    [SerializeField] private Slider[] additionalTiltMeters;
 
     private float currentTilt;
     private bool isTilted;
@@ -90,6 +91,15 @@ public class NudgeController : MonoBehaviour
         if (tiltMeter != null)
             tiltMeter.maxValue = MaxTilt;
 
+        if (additionalTiltMeters != null)
+        {
+            foreach (Slider meter in additionalTiltMeters)
+            {
+                if (meter != null)
+                    meter.maxValue = MaxTilt;
+            }
+        }
+
         UpdateTiltMeter();
     }
 
@@ -113,6 +123,18 @@ public class NudgeController : MonoBehaviour
         {
             tiltMeter.minValue = 0f;
             tiltMeter.maxValue = MaxTilt;
+        }
+
+        if (additionalTiltMeters != null)
+        {
+            foreach (Slider meter in additionalTiltMeters)
+            {
+                if (meter == null)
+                    continue;
+
+                meter.minValue = 0f;
+                meter.maxValue = MaxTilt;
+            }
         }
 
         UpdateTiltMeter();
@@ -199,5 +221,14 @@ public class NudgeController : MonoBehaviour
     {
         if (tiltMeter != null)
             tiltMeter.SetValueWithoutNotify(Mathf.Clamp(currentTilt, 0f, MaxTilt));
+
+        if (additionalTiltMeters != null)
+        {
+            foreach (Slider meter in additionalTiltMeters)
+            {
+                if (meter != null)
+                    meter.SetValueWithoutNotify(Mathf.Clamp(currentTilt, 0f, MaxTilt));
+            }
+        }
     }
 }

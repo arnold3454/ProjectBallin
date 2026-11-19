@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine.UI;
 
 public class GameTimer : MonoBehaviour
 {
@@ -14,7 +15,7 @@ get; private set;
     [SerializeField] private bool startOnLoad = true;
 
     [Header("UI References")]
-    [SerializeField] private TextMeshProUGUI timerText;
+    [SerializeField] private Image timerBar;
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private TextMeshProUGUI finalScoreText;
     [Tooltip("Title on the game over panel. Says the game over title when the clock runs out and the win title when the last boss is beaten.")]
@@ -48,11 +49,13 @@ get; private set;
 
 private AudioSource audioSource;
 private bool hasPlayedTimeWarning;
+private float timerCapacity;
 
 private void Awake()
     {
 Instance = this;
 TimeRemaining = startingTime;
+timerCapacity = Mathf.Max(0f, startingTime);
 
 if (gameOverPanel != null)
         {
@@ -122,6 +125,7 @@ public void AddTime(float seconds)
 if (IsGameOver) return;
 
 TimeRemaining = Mathf.Max(0f, TimeRemaining + seconds);
+timerCapacity = Mathf.Max(timerCapacity, TimeRemaining);
 
 // Adding time back above the trigger point should let the warning play again later.
 if (TimeRemaining > audioTriggerTime)
@@ -136,6 +140,7 @@ public void ResetTimer()
     {
 IsGameOver = false;
 TimeRemaining = startingTime;
+timerCapacity = Mathf.Max(0f, startingTime);
 hasPlayedTimeWarning = false;
 
 if (gameOverPanel != null)
@@ -166,12 +171,12 @@ audioSource.PlayOneShot(timeWarningClip, timeWarningVolume);
 
 private void UpdateTimerUI()
     {
-if (timerText == null) return;
+if (timerBar == null) return;
 
-int minutes = Mathf.FloorToInt(TimeRemaining / 60f);
-int seconds = Mathf.FloorToInt(TimeRemaining % 60f);
-timerText.text = $"{minutes:00}:{seconds:00}";
-timerText.color = TimeRemaining <= warningThreshold ? warningColor : normalColor;
+timerBar.fillAmount = timerCapacity > 0f
+    ? Mathf.Clamp01(TimeRemaining / timerCapacity)
+    : 0f;
+timerBar.color = TimeRemaining <= warningThreshold ? warningColor : normalColor;
     }
 
 /// <summary>The last boss is beaten: the same end panel comes up, titled as a win.</summary>

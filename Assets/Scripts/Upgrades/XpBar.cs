@@ -5,13 +5,13 @@ using UnityEngine.UI;
 /// <summary>
 /// HUD bar that fills as points are earned toward the next upgrade. A full bar is what hands
 /// the player an upgrade choice (see UpgradeManager); the bar then empties and starts over.
-/// Built in the scene hierarchy as the XpBar along the bottom of the screen (a non-interactable
-/// Slider with a Fill, plus a label); the references are assigned in the Inspector.
+/// Drives a Slider and/or a filled Image, plus an optional label; references are assigned in the Inspector.
 /// </summary>
 public class XpBar : MonoBehaviour
 {
     [Header("UI References")]
     [SerializeField] private Slider slider;
+    [SerializeField] private Image fillImage;
     [SerializeField] private TextMeshProUGUI label;
 
     [Header("Display")]
@@ -32,6 +32,13 @@ public class XpBar : MonoBehaviour
             slider.maxValue = 1f;
             slider.value = 0f;
             slider.interactable = false;
+        }
+
+        if (fillImage != null)
+        {
+            fillImage.type = Image.Type.Filled;
+            fillImage.fillAmount = 0f;
+            fillImage.raycastTarget = false;
         }
     }
 
@@ -56,25 +63,27 @@ public class XpBar : MonoBehaviour
         if (!subscribed)
             TrySubscribe();
 
-        if (slider == null)
+        if (!HasProgressTarget)
             return;
 
         // Unscaled so the bar still moves while the upgrade popup has the game paused.
         float step = fillSpeed <= 0f ? 1f : fillSpeed * Time.unscaledDeltaTime;
+        float currentProgress = GetProgress();
 
         if (fillingToTop)
         {
             // Show the bar actually filling before it resets for the next level.
-            slider.value = Mathf.MoveTowards(slider.value, 1f, step);
-            if (slider.value >= 1f)
+            currentProgress = Mathf.MoveTowards(currentProgress, 1f, step);
+            SetProgress(currentProgress);
+            if (currentProgress >= 1f)
             {
                 fillingToTop = false;
-                slider.value = 0f;
+                SetProgress(0f);
             }
             return;
         }
 
-        slider.value = Mathf.MoveTowards(slider.value, target, step);
+        SetProgress(Mathf.MoveTowards(currentProgress, target, step));
     }
 
     private void TrySubscribe()
@@ -85,8 +94,7 @@ public class XpBar : MonoBehaviour
         UpgradeManager.Instance.XpChanged += OnXpChanged;
         subscribed = true;
         OnXpChanged(UpgradeManager.Instance.CurrentXp, UpgradeManager.Instance.XpPerUpgrade);
-        if (slider != null)
-            slider.value = target;
+        SetProgress(target);
     }
 
     private void Unsubscribe()
@@ -104,7 +112,7 @@ public class XpBar : MonoBehaviour
         float newTarget = xpPerUpgrade > 0 ? Mathf.Clamp01(xp / (float)xpPerUpgrade) : 0f;
 
         // Dropping back means the bar just filled and an upgrade was earned.
-        if (newTarget < target && slider != null)
+        if (newTarget < target && HasProgressTarget)
             fillingToTop = true;
 
         target = newTarget;
@@ -114,5 +122,21 @@ public class XpBar : MonoBehaviour
             int level = UpgradeManager.Instance != null ? UpgradeManager.Instance.UpgradeLevel + 1 : 1;
             label.text = string.Format(labelFormat, xp, xpPerUpgrade, level);
         }
+    }
+
+    private bool HasProgressTarget => slider != null || fillImage != null;
+
+    private float GetProgress()
+    {
+        return fillImage != null ? fillImage.fillAmount : slider.value;
+    }
+
+    private void SetProgress(float progress)
+    {
+        if (slider != null)
+            slider.value = progress;
+
+        if (fillImage != null)
+            fillImage.fillAmount = progress;
     }
 }
