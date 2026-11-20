@@ -8,14 +8,15 @@ using UnityEngine.Events;
 /// Runs the roulette boss trigger. Bet tunnels set the current bet, the wheel spins when the
 /// ball rolls over it with a bet placed, and a winning spin authorizes a corner trigger. The
 /// wheel stays locked until that authorization is used or the round is reset. Every losing spin
-/// improves the odds of the next one, until the boss spawns and the odds start over.
+/// improves the odds of the next one; spending a win on a corner trigger (or the boss spawning)
+/// puts the odds back where they started.
 /// </summary>
 public class RouletteManager : MonoBehaviour
 {
     public static RouletteManager Instance { get; private set; }
 
     [Header("Odds")]
-    [Tooltip("Chance a spin lands on the player's bet, by how many spins they have lost since the boss last spawned: the first entry is the opening odds, the second applies after one loss, and so on. Losses past the end of the list keep using the last entry. Goes back to the first entry when the boss spawns.")]
+    [Tooltip("Chance a spin lands on the player's bet, by how many spins in a row they have lost: the first entry is the opening odds, the second applies after one loss, and so on. Losses past the end of the list keep using the last entry. Goes back to the first entry when a win is spent on a corner trigger or the boss spawns.")]
     [SerializeField, Range(0f, 1f)] private float[] winChances = { 0.5f, 2f / 3f, 0.75f, 1f };
 
     [Header("HUD")]
@@ -37,8 +38,8 @@ public class RouletteManager : MonoBehaviour
     /// <summary>True after winning until the roulette is reset for another corner trigger.</summary>
     public bool IsBossFightTriggered { get; private set; }
 
-    /// <summary>Losing spins since the boss last spawned (or since the scene loaded). Each one improves the odds.</summary>
-    public int LossesSinceBoss { get; private set; }
+    /// <summary>Losing spins since the odds were last reset. Each one improves the odds.</summary>
+    public int LossStreak { get; private set; }
 
     /// <summary>Chance the next spin lands on the player's bet, after the losses so far.</summary>
     public float CurrentWinChance
@@ -48,7 +49,7 @@ public class RouletteManager : MonoBehaviour
             if (winChances == null || winChances.Length == 0)
                 return 0.5f;
 
-            return winChances[Mathf.Min(LossesSinceBoss, winChances.Length - 1)];
+            return winChances[Mathf.Min(LossStreak, winChances.Length - 1)];
         }
     }
 
@@ -80,10 +81,14 @@ public class RouletteManager : MonoBehaviour
             Instance = null;
     }
 
-    /// <summary>Puts the odds back to the opening chance. Runs when the boss spawns.</summary>
+    /// <summary>
+    /// Puts the odds back to the opening chance. Runs when a win is spent (through
+    /// <see cref="ResetRound"/>) and when the boss spawns, which covers the win spent on the last
+    /// corner trigger: that one starts the fight instead of resetting the round.
+    /// </summary>
     public void ResetOdds()
     {
-        LossesSinceBoss = 0;
+        LossStreak = 0;
     }
 
     public void RegisterTunnel(BetTunnel tunnel)
@@ -124,12 +129,13 @@ public class RouletteManager : MonoBehaviour
 
     /// <summary>
     /// Forgets the win and bet and unlocks the wheel for another trigger or a new round. The odds
-    /// are left alone: losses keep counting until the boss spawns.
+    /// go back to the opening chance, so the spin after a spent win starts fresh.
     /// </summary>
     public void ResetRound()
     {
         IsBossFightTriggered = false;
         CurrentBet = BetColor.None;
+        ResetOdds();
 
         if (wheel != null)
             wheel.Unlock();
@@ -188,7 +194,7 @@ public class RouletteManager : MonoBehaviour
         }
 
         // A loss makes the next spin more likely to land on the player's bet.
-        LossesSinceBoss++;
+        LossStreak++;
         CurrentBet = BetColor.None;
         RefreshBetVisuals();
         SetHud(string.Format(lostMessage, result.ToString().ToUpperInvariant()));
