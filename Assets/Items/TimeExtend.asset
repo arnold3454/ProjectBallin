@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TimeExtend
   m_EditorClassIdentifier: Assembly-CSharp::TimeExtendItem
   displayName: Time Extend
-  shortLabel: +15s
+  shortLabel: +Time
   icon: {fileID: 0}
   color: {r: 1, g: 0.8, b: 0.2, a: 1}
   secondsToAdd: 15

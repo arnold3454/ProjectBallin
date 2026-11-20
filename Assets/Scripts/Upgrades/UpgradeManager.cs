@@ -6,11 +6,12 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 /// <summary>
-/// Hands the player a choice of upgrades every time the XP bar fills. XP per level is peg score +
+/// The legacy system hands the player a choice of upgrades every time the XP bar fills. XP per level is peg score +
 /// coefficient x level^exponent (the economy document's formula, tuned steeper). Filling the bar doesn't interrupt play: the
 /// UpgradeReadyPanel under the Canvas stays up until the player presses the choose key or clicks
 /// it, and only then does gameplay pause for the choice. Also holds the resulting stat bonuses for
 /// the rest of the game to read (score, ball, flipper and nudge tuning).
+/// When ProgressionManager selects skill-tree mode, the same XP levels instead award skill tokens.
 /// Lives on the scene's GameManager. The UpgradePopup, CritPopup and UpgradeReadyPanel it drives are
 /// objects under the Canvas, assigned in the Inspector.
 /// </summary>
@@ -130,6 +131,12 @@ public class UpgradeManager : MonoBehaviour
 
     /// <summary>Raised with the new total after every upgrade pick.</summary>
     public event System.Action<int> UpgradePicked;
+    /// <summary>Raised once for each XP bar filled, regardless of which reward system is active.</summary>
+    public event System.Action<int> XpLevelCompleted;
+
+    /// <summary>True when the legacy mid-round offer flow is active.</summary>
+    public bool LegacyFlowEnabled =>
+        ProgressionManager.Instance == null || !ProgressionManager.Instance.UseSkillTreeSystem;
 
     public float BallWeightMultiplier => 1f + BallWeightPerPick * Stacks(UpgradeId.BallWeight);
     public float BallSpeedMultiplier => 1f + BallSpeedPerPick * Stacks(UpgradeId.BallSpeed);
@@ -163,7 +170,7 @@ public class UpgradeManager : MonoBehaviour
     /// Damage a ball hit deals to enemies and the boss, as a multiple of the base. Follows the
     /// score multipliers only: the flat bonus point and crits don't make hits harder.
     /// </summary>
-    public float DamageMultiplier => ScoreMultiplier * FlatMultiplier;
+    public float DamageMultiplier => ScoreMultiplier * FlatMultiplier * SkillTreeManager.DamageMultiplier;
 
     /// <summary>Static so hit code needn't null-check the manager. 1 without one in the scene.</summary>
     public static float CurrentDamageMultiplier => Instance != null ? Instance.DamageMultiplier : 1f;
@@ -241,6 +248,19 @@ public class UpgradeManager : MonoBehaviour
 
     private void Update()
     {
+        if (!LegacyFlowEnabled)
+        {
+            if (IsChoosing)
+            {
+                popup.Hide();
+                IsChoosing = false;
+            }
+
+            pendingOffers = 0;
+            ShowReadyPanel(false);
+            return;
+        }
+
         bool gameOver = GameTimer.Instance != null && GameTimer.Instance.IsGameOver;
 
         if (IsChoosing)
@@ -284,7 +304,7 @@ public class UpgradeManager : MonoBehaviour
     /// </summary>
     public void OpenPendingOffer()
     {
-        if (IsChoosing || pendingOffers <= 0)
+        if (!LegacyFlowEnabled || IsChoosing || pendingOffers <= 0)
             return;
 
         if (GameTimer.Instance != null && GameTimer.Instance.IsGameOver)
@@ -308,18 +328,23 @@ public class UpgradeManager : MonoBehaviour
 
         while (score >= nextThreshold)
         {
-            pendingOffers++;
             upgradeLevel++;
+            if (LegacyFlowEnabled)
+                pendingOffers++;
+
             xpForCurrentBar = XpRequiredFor(upgradeLevel);
             nextThreshold += xpForCurrentBar;
+            XpLevelCompleted?.Invoke(upgradeLevel);
         }
 
         // Filling the bar is what earned the offer above; whatever spilled over starts the next bar.
         CurrentXp = Mathf.Max(0, score - (nextThreshold - xpForCurrentBar));
         XpChanged?.Invoke(CurrentXp, xpForCurrentBar);
 
-        if (pendingOffers > 0 && !IsChoosing)
+        if (LegacyFlowEnabled && pendingOffers > 0 && !IsChoosing)
             ShowReadyPanel(true);
+        else if (!LegacyFlowEnabled)
+            ShowReadyPanel(false);
     }
 
     /// <summary>
@@ -371,17 +396,19 @@ public class UpgradeManager : MonoBehaviour
     /// Order: +flat points, then multipliers, then the crit roll. Fractions carry over
     /// to the next score so small percentage bonuses still add up.
     /// </summary>
-    public int ModifyPoints(int amount, out bool crit)
+    public int ModifyPoints(int amount, out bool crit, bool? forceCritical = null)
     {
         crit = false;
         if (amount <= 0)
             return amount;
 
-        float value = (amount + FlatPointBonus) * ScoreMultiplier * FlatMultiplier;
+        float value = (amount + FlatPointBonus) * ScoreMultiplier * FlatMultiplier * SkillTreeManager.ScoreMultiplier;
+        float criticalChance = Mathf.Clamp01(CritChance + SkillTreeManager.CriticalChance);
+        bool critical = forceCritical ?? (criticalChance > 0f && Random.value < criticalChance);
 
-        if (CritChance > 0f && Random.value < CritChance)
+        if (critical)
         {
-            value *= CritMultiplier;
+            value *= Mathf.Max(CritMultiplier, SkillTreeManager.CriticalMultiplier);
             crit = true;
         }
 
@@ -422,14 +449,20 @@ public class UpgradeManager : MonoBehaviour
             readyPanel.SetActive(true);
 
             if (readyButton != null)
-                readyButton.interactable = visible;
+                readyButton.interactable = LegacyFlowEnabled && visible;
 
-            if (readyText != null)
+            if (LegacyFlowEnabled && readyText != null)
             {
                 readyText.text = string.Format(tokenCountFormat, pendingOffers);
                 readyText.gameObject.SetActive(true);
             }
 
+            return;
+        }
+
+        if (!LegacyFlowEnabled)
+        {
+            readyPanel.SetActive(false);
             return;
         }
 

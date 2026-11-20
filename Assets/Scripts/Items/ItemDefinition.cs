@@ -19,6 +19,7 @@ public abstract class ItemDefinition : ScriptableObject
     public string ShortLabel => shortLabel;
     public Sprite Icon => icon;
     public Color Color => color;
+    protected float EffectMultiplier => SkillTreeManager.ItemEffectMultiplier;
 
     /// <summary>A sentence on what the item does, shown in the shop. Defaults to the short label.</summary>
     public virtual string Description => shortLabel;

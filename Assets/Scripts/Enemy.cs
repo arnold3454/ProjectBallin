@@ -33,14 +33,13 @@ public class Enemy : MonoBehaviour
     private Vector3 leftPoint;
     private Vector3 rightPoint;
     private int direction = 1;
-    private int health;
+    private float health;
     private float flashTimer;
-    private float damageRemainder;
 
     /// <summary>Raised once when the enemy's health reaches zero, just before it is destroyed.</summary>
     public event Action<Enemy> Died;
 
-    public int Health => health;
+    public int Health => Mathf.CeilToInt(health);
     public int MaxHealth => maxHealth;
 
     private void Awake()
@@ -75,7 +74,7 @@ public class Enemy : MonoBehaviour
 
         flashTimer -= Time.deltaTime;
         if (flashTimer <= 0f)
-            ApplyColor(Color.Lerp(damagedColor, healthyColor, (float)health / maxHealth));
+            ApplyColor(Color.Lerp(damagedColor, healthyColor, health / maxHealth));
     }
 
     private void FixedUpdate()
@@ -96,34 +95,48 @@ public class Enemy : MonoBehaviour
         if (health <= 0 || !collision.collider.CompareTag("Ball"))
             return;
 
-        // Hits land harder with the score multiplier upgrades. Fractions carry over to the
-        // next hit so a x1.2 multiplier still shows up as an extra hit every fifth ball.
-        float value = UpgradeManager.CurrentDamageMultiplier + damageRemainder;
-        int damage = Mathf.Max(1, Mathf.FloorToInt(value));
-        damageRemainder = Mathf.Max(0f, value - damage);
-        health = Mathf.Max(0, health - damage);
-        AddScore(hitPoints);
+        bool hasTreeCritical = SkillTreeManager.CriticalChance > 0f;
+        bool critical = SkillTreeManager.RollCritical(out float criticalMultiplier);
+        float damage = UpgradeManager.CurrentDamageMultiplier * (critical ? criticalMultiplier : 1f);
+        ApplyDamage(damage, hitPoints, critical, hasTreeCritical);
         OnBallHit(collision);
+    }
 
-        if (health > 0)
+    /// <summary>Applies fractional skill damage without awarding points for each damage tick.</summary>
+    public void ApplySkillDamage(float amount)
+    {
+        ApplyDamage(amount * UpgradeManager.CurrentDamageMultiplier, 0, false, false);
+    }
+
+    /// <summary>Called on every ball hit, after the damage and score. Variants add their effect here.</summary>
+    protected virtual void OnBallHit(Collision collision) { }
+
+    private void ApplyDamage(float amount, int hitScore, bool critical, bool forceCriticalScore)
+    {
+        if (health <= 0f || amount <= 0f)
+            return;
+
+        health = Mathf.Max(0f, health - amount);
+
+        if (hitScore > 0)
+            AddScore(hitScore, forceCriticalScore ? critical : (bool?)null);
+
+        if (health > 0f)
         {
             flashTimer = flashTime;
             ApplyColor(flashColor);
             return;
         }
 
-        AddScore(killPoints);
+        AddScore(killPoints, forceCriticalScore ? critical : (bool?)null);
         Died?.Invoke(this);
         Destroy(gameObject);
     }
 
-    /// <summary>Called on every ball hit, after the damage and score. Variants add their effect here.</summary>
-    protected virtual void OnBallHit(Collision collision) { }
-
-    private static void AddScore(int amount)
+    private static void AddScore(int amount, bool? forceCritical)
     {
         if (ScoreManager.Instance != null)
-            ScoreManager.Instance.AddScore(amount);
+            ScoreManager.Instance.AddScore(amount, forceCritical);
     }
 
     private void ApplyColor(Color color)

@@ -12,5 +12,9 @@ public class MultiballSplitItem : ItemDefinition
 
     public override string Description => "Splits the ball in play into two.";
 
-    public override bool Use() => BallSplitter.TrySplit(spawnGap);
+    public override bool Use()
+    {
+        int splits = Mathf.Max(1, Mathf.RoundToInt(EffectMultiplier));
+        return BallSplitter.TrySplit(spawnGap, splits);
+    }
 }

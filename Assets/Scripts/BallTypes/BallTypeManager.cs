@@ -4,8 +4,8 @@ using UnityEngine.InputSystem;
 
 /// <summary>
 /// Shows the start screen where the player picks a ball type, then holds that choice for
-/// the rest of the game: points multiplier, weight, speed, looks, and the Split ball's
-/// duplicate ability. The game is paused until a ball is chosen.
+/// the rest of the game: points multiplier, weight, speed, looks, and split abilities. The game
+/// is paused until a ball is chosen.
 /// </summary>
 public class BallTypeManager : MonoBehaviour
 {
@@ -15,7 +15,7 @@ public class BallTypeManager : MonoBehaviour
     public static bool IsSelecting { get; private set; }
 
     [Header("Split Ball")]
-    [Tooltip("Seconds between splits. The Split ball gets a limited number of splits per ball (see UpgradeManager's Split Amount upgrade); a fresh set once the table is empty.")]
+    [Tooltip("Seconds between splits for the Split ball or the Split Ball skill-tree ability.")]
     [SerializeField, Min(0f)] private float splitCooldown = 3f;
     [Tooltip("The Split ball can't duplicate while this many balls are already on the table.")]
     [SerializeField, Min(2)] private int maxBalls = 8;
@@ -184,28 +184,72 @@ public class BallTypeManager : MonoBehaviour
 
     private void ApplyTo(GameObject ball)
     {
-        if (current == null || current.Type == BallType.Default || ball == null)
+        if (current == null || ball == null)
             return;
 
-        // Called once per ball. The weight slider applies the same multiplier when it is moved.
-        if (ball.TryGetComponent(out Rigidbody body))
-            body.mass *= current.WeightMultiplier;
-
-        if (ball.TryGetComponent(out MeshRenderer ballRenderer))
+        if (current.Type != BallType.Default)
         {
-            if (ballMaterial == null)
-                ballMaterial = CreateTintedMaterial(ballRenderer.sharedMaterial, current.Color);
+            // Called once per ball. The weight slider applies the same multiplier when it is moved.
+            if (ball.TryGetComponent(out Rigidbody body))
+                body.mass *= current.WeightMultiplier;
 
-            ballRenderer.sharedMaterial = ballMaterial;
+            if (ball.TryGetComponent(out MeshRenderer ballRenderer))
+            {
+                if (ballMaterial == null)
+                    ballMaterial = CreateTintedMaterial(ballRenderer.sharedMaterial, current.Color);
+
+                ballRenderer.sharedMaterial = ballMaterial;
+            }
         }
 
-        if (current.Bounciness >= 0f && ball.TryGetComponent(out Collider ballCollider))
+        if (ball.TryGetComponent(out Collider ballCollider))
         {
-            if (ballPhysicsMaterial == null)
-                ballPhysicsMaterial = CreateBouncyMaterial(ballCollider.sharedMaterial, current.Bounciness);
-
-            ballCollider.sharedMaterial = ballPhysicsMaterial;
+            ApplyBounciness(ballCollider);
         }
+
+        if (SkillTreeManager.HasBallImpactEffects && !ball.TryGetComponent(out BallSkillEffects _))
+            ball.AddComponent<BallSkillEffects>();
+    }
+
+    /// <summary>Refreshes skills on balls that already exist after a tree purchase.</summary>
+    public void RefreshSkillEffects()
+    {
+        if (ballPhysicsMaterial != null)
+        {
+            Destroy(ballPhysicsMaterial);
+            ballPhysicsMaterial = null;
+        }
+
+        foreach (GameObject ball in GameObject.FindGameObjectsWithTag("Ball"))
+        {
+            if (ball.TryGetComponent(out Collider ballCollider))
+                ApplyBounciness(ballCollider);
+
+            if (SkillTreeManager.HasBallImpactEffects && !ball.TryGetComponent(out BallSkillEffects _))
+                ball.AddComponent<BallSkillEffects>();
+        }
+    }
+
+    private void ApplyBounciness(Collider ballCollider)
+    {
+        float skillMultiplier = SkillTreeManager.BouncinessMultiplier;
+        if (current.Bounciness < 0f && Mathf.Approximately(skillMultiplier, 1f))
+            return;
+
+        float baseBounciness = current.Bounciness >= 0f
+            ? current.Bounciness
+            : ballCollider.sharedMaterial != null ? ballCollider.sharedMaterial.bounciness : 0f;
+        float bounciness = Mathf.Clamp01(baseBounciness * skillMultiplier);
+
+        if (ballPhysicsMaterial == null || !Mathf.Approximately(ballPhysicsMaterial.bounciness, bounciness))
+        {
+            if (ballPhysicsMaterial != null)
+                Destroy(ballPhysicsMaterial);
+
+            ballPhysicsMaterial = CreateBouncyMaterial(ballCollider.sharedMaterial, bounciness);
+        }
+
+        ballCollider.sharedMaterial = ballPhysicsMaterial;
     }
 
     private static Material CreateTintedMaterial(Material source, Color color)
@@ -238,7 +282,8 @@ public class BallTypeManager : MonoBehaviour
 
     private void UpdateSplit()
     {
-        bool active = current.Type == BallType.Split;
+        bool skillSplit = SkillTreeManager.SplitUnlocked;
+        bool active = current != null && current.Type == BallType.Split || skillSplit;
         if (splitHud != null)
             splitHud.SetVisible(active);
 
@@ -258,14 +303,19 @@ public class BallTypeManager : MonoBehaviour
         float wait = nextSplitTime - Time.time;
         string key = $"[{BallTypeInfo.SplitKey}]";
 
-        if (splitsLeft <= 0)
+        if (!skillSplit && splitsLeft <= 0)
             splitHud.SetStatus($"{key} No splits left this ball", new Color(0.6f, 0.6f, 0.65f));
         else if (wait > 0f)
-            splitHud.SetStatus($"{key} Split in {wait:0.0}s  ({splitsLeft} left)", new Color(0.7f, 0.72f, 0.8f));
+            splitHud.SetStatus(skillSplit
+                ? $"{key} Split in {wait:0.0}s"
+                : $"{key} Split in {wait:0.0}s  ({splitsLeft} left)", new Color(0.7f, 0.72f, 0.8f));
         else
-            splitHud.SetStatus($"{key} Split ready  ({splitsLeft} left)", new Color(0.55f, 0.7f, 1f));
+            splitHud.SetStatus(skillSplit
+                ? $"{key} Split ready"
+                : $"{key} Split ready  ({splitsLeft} left)", new Color(0.55f, 0.7f, 1f));
 
-        if (splitsLeft <= 0 || wait > 0f || Keyboard.current == null || !Keyboard.current[BallTypeInfo.SplitKey].wasPressedThisFrame)
+        if ((!skillSplit && splitsLeft <= 0) || wait > 0f || Keyboard.current == null ||
+            !Keyboard.current[BallTypeInfo.SplitKey].wasPressedThisFrame)
             return;
 
         if (GameObject.FindGameObjectsWithTag("Ball").Length >= maxBalls)
@@ -275,7 +325,8 @@ public class BallTypeManager : MonoBehaviour
         if (BallSplitter.TrySplit())
         {
             nextSplitTime = Time.time + splitCooldown;
-            splitsUsed++;
+            if (!skillSplit)
+                splitsUsed++;
         }
     }
 

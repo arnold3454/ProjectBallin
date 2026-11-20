@@ -112,7 +112,7 @@ public class BossManager : MonoBehaviour
     private float messageTimer;
     private bool resumeMainTimerAfterFight;
     /// <summary>Health the dealer had left when it last got away. 0 means it spawns at full health.</summary>
-    private int carriedHealth;
+    private float carriedHealth;
     /// <summary>The prefab's phase indices in a random order: the first half for fight one, the rest for fight two.</summary>
     private List<int> phaseOrder;
 
@@ -473,7 +473,7 @@ public class BossManager : MonoBehaviour
         if (ActiveBoss != null)
         {
             // Remember how much was left so the next summon picks up where this one ended.
-            carriedHealth = defeated ? 0 : ActiveBoss.Health;
+            carriedHealth = defeated ? 0f : ActiveBoss.ExactHealth;
 
             ActiveBoss.Died -= OnBossDied;
             ActiveBoss.HealthChanged -= OnBossHealthChanged;

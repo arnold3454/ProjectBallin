@@ -40,10 +40,12 @@ public class Boss : MonoBehaviour
     /// <summary>Raised whenever a new phase begins.</summary>
     public event Action<BossPhase> PhaseChanged;
 
-    public int Health { get; private set; }
+    private float health;
+    public int Health => Mathf.CeilToInt(health);
+    public float ExactHealth => health;
     public int MaxHealth => maxHealth;
     public BossPhase CurrentPhase { get; private set; }
-    public bool IsDead => Health <= 0;
+    public bool IsDead => health <= 0f;
     /// <summary>Number of phases on the prefab. The manager picks which of them a fight may use.</summary>
     public int PhaseCount => phases != null ? phases.Length : 0;
 
@@ -56,7 +58,6 @@ public class Boss : MonoBehaviour
     private MaterialPropertyBlock colorBlock;
     private float flashTimer;
     private Color? tint;
-    private float damageRemainder;
 
     private void Awake()
     {
@@ -69,7 +70,7 @@ public class Boss : MonoBehaviour
 
         // Tougher with every boss already beaten this run.
         maxHealth = ProgressionManager.ScaleBossHealth(maxHealth);
-        Health = maxHealth;
+        health = maxHealth;
         ApplyHealthColor();
         ApplyLamp(Color.gray);
     }
@@ -156,7 +157,12 @@ public class Boss : MonoBehaviour
     /// </summary>
     public void SetHealth(int health)
     {
-        Health = Mathf.Clamp(health, 1, maxHealth);
+        SetHealth((float)health);
+    }
+
+    public void SetHealth(float health)
+    {
+        this.health = Mathf.Clamp(health, 1f, maxHealth);
         ApplyHealthColor();
         HealthChanged?.Invoke(Health, maxHealth);
     }
@@ -166,23 +172,43 @@ public class Boss : MonoBehaviour
         if (IsDead || hits <= 0)
             return;
 
-        // Phase multiplier (Club opens a weak spot) times the score multiplier upgrades. Fractions
-        // carry over to the next hit so small multipliers still add up.
-        float value = hits * DamageMultiplier * UpgradeManager.CurrentDamageMultiplier + damageRemainder;
-        int damage = Mathf.Max(1, Mathf.FloorToInt(value));
-        damageRemainder = Mathf.Max(0f, value - damage);
-        Health = Mathf.Max(0, Health - damage);
-        AddScore(hitPoints);
+        bool hasTreeCritical = SkillTreeManager.CriticalChance > 0f;
+        bool critical = SkillTreeManager.RollCritical(out float criticalMultiplier);
+        ApplyDamage(
+            hits * (critical ? criticalMultiplier : 1f),
+            hitPoints,
+            critical,
+            hasTreeCritical);
+    }
+
+    /// <summary>Applies fractional skill damage without awarding points for each damage tick.</summary>
+    public void ApplySkillDamage(float amount)
+    {
+        if (amount > 0f)
+            ApplyDamage(amount, 0, false, false);
+    }
+
+    private void ApplyDamage(float baseDamage, int hitScore, bool critical, bool forceCriticalScore)
+    {
+        if (IsDead || baseDamage <= 0f)
+            return;
+
+        float damage = baseDamage * DamageMultiplier * UpgradeManager.CurrentDamageMultiplier;
+        health = Mathf.Max(0f, health - damage);
+
+        if (hitScore > 0)
+            AddScore(hitScore, forceCriticalScore ? critical : (bool?)null);
+
         HealthChanged?.Invoke(Health, maxHealth);
 
-        if (Health > 0)
+        if (!IsDead)
         {
             flashTimer = flashTime;
             ApplyColor(flashColor);
             return;
         }
 
-        AddScore(killPoints);
+        AddScore(killPoints, forceCriticalScore ? critical : (bool?)null);
         Died?.Invoke(this);
     }
 
@@ -215,7 +241,7 @@ public class Boss : MonoBehaviour
             return;
         }
 
-        ApplyColor(Color.Lerp(damagedColor, healthyColor, (float)Health / maxHealth));
+        ApplyColor(Color.Lerp(damagedColor, healthyColor, health / maxHealth));
     }
 
     private void ApplyColor(Color color)
@@ -240,9 +266,9 @@ public class Boss : MonoBehaviour
         target.SetPropertyBlock(colorBlock);
     }
 
-    private static void AddScore(int amount)
+    private static void AddScore(int amount, bool? forceCritical)
     {
         if (ScoreManager.Instance != null)
-            ScoreManager.Instance.AddScore(amount);
+            ScoreManager.Instance.AddScore(amount, forceCritical);
     }
 }

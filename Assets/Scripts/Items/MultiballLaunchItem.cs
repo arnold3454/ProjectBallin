@@ -20,7 +20,8 @@ public class MultiballLaunchItem : ItemDefinition
         if (launcher == null)
             return false;
 
-        launcher.QueueAutoLaunch(ballsToLaunch);
+        int effectiveBalls = Mathf.Max(1, Mathf.RoundToInt(ballsToLaunch * EffectMultiplier));
+        launcher.QueueAutoLaunch(effectiveBalls);
         return true;
     }
 }

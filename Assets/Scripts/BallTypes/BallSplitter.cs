@@ -11,18 +11,34 @@ public static class BallSplitter
     /// <param name="spawnGap">Space left between the two balls, as a fraction of the ball's radius.</param>
     public static bool TrySplit(float spawnGap = 0.1f)
     {
+        return TrySplit(spawnGap, 1);
+    }
+
+    /// <summary>Creates the requested number of twins, stopping if there is no safe spawn space.</summary>
+    public static bool TrySplit(float spawnGap, int count)
+    {
+        if (count <= 0)
+            return false;
+
         Rigidbody source = FindBallToSplit();
         if (source == null)
             return false;
 
-        Vector3 velocity = source.linearVelocity;
-        if (!TryFindSpawnPosition(source, velocity, spawnGap, out Vector3 position))
-            return false;
+        bool splitAny = false;
+        for (int i = 0; i < count; i++)
+        {
+            Vector3 velocity = source.linearVelocity;
+            if (!TryFindSpawnPosition(source, velocity, spawnGap, out Vector3 position))
+                break;
 
-        Rigidbody twin = Object.Instantiate(source, position, source.rotation);
-        twin.linearVelocity = -velocity;
-        twin.angularVelocity = -source.angularVelocity;
-        return true;
+            Rigidbody twin = Object.Instantiate(source, position, source.rotation);
+            twin.linearVelocity = -velocity;
+            twin.angularVelocity = -source.angularVelocity;
+            source = twin;
+            splitAny = true;
+        }
+
+        return splitAny;
     }
 
     /// <summary>The fastest ball in play. A ball parked on the plunger doesn't count.</summary>

@@ -50,12 +50,13 @@ get; private set;
 private AudioSource audioSource;
 private bool hasPlayedTimeWarning;
 private float timerCapacity;
+private float RoundStartingTime => Mathf.Max(0f, startingTime + SkillTreeManager.AdditionalTime);
 
 private void Awake()
     {
 Instance = this;
-TimeRemaining = startingTime;
-timerCapacity = Mathf.Max(0f, startingTime);
+TimeRemaining = RoundStartingTime;
+timerCapacity = RoundStartingTime;
 
 if (gameOverPanel != null)
         {
@@ -139,8 +140,8 @@ UpdateTimerUI();
 public void ResetTimer()
     {
 IsGameOver = false;
-TimeRemaining = startingTime;
-timerCapacity = Mathf.Max(0f, startingTime);
+TimeRemaining = RoundStartingTime;
+timerCapacity = RoundStartingTime;
 hasPlayedTimeWarning = false;
 
 if (gameOverPanel != null)

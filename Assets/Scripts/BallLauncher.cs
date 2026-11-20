@@ -106,6 +106,9 @@ public class BallLauncher : MonoBehaviour
             return;
         }
 
+        if (SkillTreeManager.IsSkillTreeOpen || Time.timeScale <= 0f)
+            return;
+
         // The upgrade popup has the screen; keep the plunger from reacting to its key presses.
         if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsChoosing)
             return;

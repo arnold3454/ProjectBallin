@@ -22,17 +22,23 @@ public class NudgeController : MonoBehaviour
     [SerializeField] private float tiltThreshold = 3f;
     [SerializeField] private float tiltDecayPerSecond = 0.5f;
     [SerializeField] private float flipperLockDuration = 3f;
-    [SerializeField] private Slider tiltMeter;
-    [SerializeField] private Slider[] additionalTiltMeters;
+    [SerializeField] private Image tiltMeter;
+    [SerializeField] private Image[] additionalTiltMeters;
 
     private float currentTilt;
     private bool isTilted;
 
     // Upgrades (UpgradeManager): Nudge Stamina adds nudges before the tilt, Nudge Strength
     // shoves harder but builds more tilt per nudge.
-    private float MaxTilt => tiltThreshold + tiltPerNudge * (UpgradeManager.Instance != null ? UpgradeManager.Instance.NudgeStaminaBonus : 0);
-    private float TiltPerNudge => tiltPerNudge * (UpgradeManager.Instance != null ? UpgradeManager.Instance.NudgeCostMultiplier : 1f);
-    private float StrengthMultiplier => UpgradeManager.Instance != null ? UpgradeManager.Instance.NudgeStrengthMultiplier : 1f;
+    private float MaxTilt => tiltThreshold + tiltPerNudge *
+        ((UpgradeManager.Instance != null ? UpgradeManager.Instance.NudgeStaminaBonus : 0) +
+         SkillTreeManager.NudgeStaminaBonus);
+    private float TiltPerNudge => tiltPerNudge *
+        (UpgradeManager.Instance != null ? UpgradeManager.Instance.NudgeCostMultiplier : 1f) *
+        SkillTreeManager.NudgeCostMultiplier;
+    private float StrengthMultiplier =>
+        (UpgradeManager.Instance != null ? UpgradeManager.Instance.NudgeStrengthMultiplier : 1f) *
+        (1f + SkillTreeManager.NudgeStrengthBonus);
     private Vector3 cameraRestLocalPosition;
     private Coroutine cameraShakeRoutine;
 
@@ -40,11 +46,17 @@ public class NudgeController : MonoBehaviour
     {
         if (!isTilted)
         {
-            currentTilt = Mathf.Max(0f, currentTilt - tiltDecayPerSecond * Time.deltaTime);
-            UpdateTiltMeter();
+            if (currentTilt > 0f)
+            {
+                currentTilt = Mathf.Max(0f, currentTilt - tiltDecayPerSecond * Time.deltaTime);
+                UpdateTiltMeter();
+            }
         }
 
         if (Keyboard.current == null || BallTypeManager.IsSelecting)
+            return;
+
+        if (Time.timeScale <= 0f || SkillTreeManager.IsSkillTreeOpen)
             return;
 
         if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsChoosing)
@@ -88,18 +100,6 @@ public class NudgeController : MonoBehaviour
     /// <summary>Re-reads the nudge upgrades, so the tilt meter shows the new stamina.</summary>
     public void RefreshUpgrades()
     {
-        if (tiltMeter != null)
-            tiltMeter.maxValue = MaxTilt;
-
-        if (additionalTiltMeters != null)
-        {
-            foreach (Slider meter in additionalTiltMeters)
-            {
-                if (meter != null)
-                    meter.maxValue = MaxTilt;
-            }
-        }
-
         UpdateTiltMeter();
     }
 
@@ -119,22 +119,12 @@ public class NudgeController : MonoBehaviour
         if (cameraToShake != null)
             cameraRestLocalPosition = cameraToShake.localPosition;
 
-        if (tiltMeter != null)
-        {
-            tiltMeter.minValue = 0f;
-            tiltMeter.maxValue = MaxTilt;
-        }
+        ConfigureTiltMeter(tiltMeter);
 
         if (additionalTiltMeters != null)
         {
-            foreach (Slider meter in additionalTiltMeters)
-            {
-                if (meter == null)
-                    continue;
-
-                meter.minValue = 0f;
-                meter.maxValue = MaxTilt;
-            }
+            foreach (Image meter in additionalTiltMeters)
+                ConfigureTiltMeter(meter);
         }
 
         UpdateTiltMeter();
@@ -219,16 +209,29 @@ public class NudgeController : MonoBehaviour
 
     private void UpdateTiltMeter()
     {
+        float maxTilt = MaxTilt;
+        float fill = maxTilt > 0f ? Mathf.Clamp01(currentTilt / maxTilt) : 0f;
+
         if (tiltMeter != null)
-            tiltMeter.SetValueWithoutNotify(Mathf.Clamp(currentTilt, 0f, MaxTilt));
+            tiltMeter.fillAmount = fill;
 
         if (additionalTiltMeters != null)
         {
-            foreach (Slider meter in additionalTiltMeters)
+            foreach (Image meter in additionalTiltMeters)
             {
                 if (meter != null)
-                    meter.SetValueWithoutNotify(Mathf.Clamp(currentTilt, 0f, MaxTilt));
+                    meter.fillAmount = fill;
             }
         }
+    }
+
+    private static void ConfigureTiltMeter(Image meter)
+    {
+        if (meter == null)
+            return;
+
+        meter.type = Image.Type.Filled;
+        meter.fillMethod = Image.FillMethod.Vertical;
+        meter.fillOrigin = (int)Image.OriginVertical.Bottom;
     }
 }

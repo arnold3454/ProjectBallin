@@ -45,10 +45,26 @@ audioSource.spatialBlend = 0f;
     }
 
 public void AddScore(int amount)
+{
+AddScore(amount, null);
+}
+
+/// <summary>Adds score with a known critical result, or lets the upgrade systems roll one.</summary>
+public void AddScore(int amount, bool? forceCritical)
     {
 bool crit = false;
 if (UpgradeManager.Instance != null)
-    amount = UpgradeManager.Instance.ModifyPoints(amount, out crit);
+    amount = UpgradeManager.Instance.ModifyPoints(amount, out crit, forceCritical);
+else if (amount > 0)
+{
+    bool critical = forceCritical ?? SkillTreeManager.RollCritical(out _);
+    amount = Mathf.RoundToInt(amount * SkillTreeManager.ScoreMultiplier);
+    if (critical)
+    {
+        amount = Mathf.RoundToInt(amount * SkillTreeManager.CriticalMultiplier);
+        crit = true;
+    }
+}
 
 // The ball type's base multiplier. Fractions carry over to the next score so a below-1x
 // ball still earns points (0.5x scores a point every second hit).

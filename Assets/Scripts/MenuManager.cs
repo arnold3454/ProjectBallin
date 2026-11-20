@@ -46,6 +46,9 @@ public class MenuManager : MonoBehaviour
         // The game over popup owns the screen; don't let the pause menu fight it.
         if (GameTimer.Instance != null && GameTimer.Instance.IsGameOver) return;
 
+        // The skill-tree reward screen owns the input until the player continues.
+        if (SkillTreeManager.IsSkillTreeOpen) return;
+
         // Same for the upgrade choice, which has to be answered first.
         if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsChoosing) return;
 

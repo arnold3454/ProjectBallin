@@ -62,6 +62,9 @@ private void OnFlip(InputAction.CallbackContext ctx)
 if (tiltLocked)
     return;
 
+if (SkillTreeManager.IsSkillTreeOpen || Time.timeScale <= 0f)
+    return;
+
 if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsChoosing)
     return;
 

@@ -10,17 +10,18 @@ public class TimeExtendItem : ItemDefinition
 
     public override bool Use()
     {
+        float effectiveSeconds = secondsToAdd * EffectMultiplier;
         BossManager bossManager = BossManager.Instance;
         if (bossManager != null && bossManager.Timer != null && bossManager.Timer.IsRunning)
         {
-            bossManager.Timer.AddTime(secondsToAdd);
+            bossManager.Timer.AddTime(effectiveSeconds);
             return true;
         }
 
         if (GameTimer.Instance == null)
             return false;
 
-        GameTimer.Instance.AddTime(secondsToAdd);
+        GameTimer.Instance.AddTime(effectiveSeconds);
         return true;
     }
 }

@@ -9,7 +9,7 @@ using UnityEngine.UI;
 /// <summary>
 /// The dealer's shop, shown after every boss the player beats. Continue on the win screen
 /// opens it; Next Round in the shop starts the next round. It sells three one-time use
-/// items (from the ItemManager's pool) and one upgrade (from the UpgradeManager's list),
+/// items (from the ItemManager's pool) and, in legacy mode, one upgrade (from the UpgradeManager's list),
 /// paid for with score. Prices are a share of the XP bar at the player's current level, so
 /// they rise with levelling at the same pace the score a round brings in does and an item
 /// or two stays affordable. Stock is rerolled every visit
@@ -198,8 +198,9 @@ public class ShopManager : MonoBehaviour
 
         // One upgrade, chosen from whatever isn't maxed out.
         cards.Add(upgradeCard);
+        bool legacyUpgradeFlow = UpgradeManager.Instance == null || UpgradeManager.Instance.LegacyFlowEnabled;
         UpgradeDefinition upgrade = null;
-        if (UpgradeManager.Instance != null)
+        if (legacyUpgradeFlow && UpgradeManager.Instance != null)
         {
             List<UpgradeDefinition> available = UpgradeManager.Instance.GetAvailableUpgrades();
             if (available.Count > 0)
@@ -300,7 +301,12 @@ public class ShopManager : MonoBehaviour
             string header = isItem ? ItemHeader : UpgradeHeader;
             if (offer == null)
             {
-                card.ShowEmpty(header, isItem ? "No items in the pool." : "Every upgrade is maxed out.");
+                string emptyText = isItem
+                    ? "No items in the pool."
+                    : UpgradeManager.Instance != null && !UpgradeManager.Instance.LegacyFlowEnabled
+                        ? "Skill-tree upgrades are available after a round."
+                        : "Every upgrade is maxed out.";
+                card.ShowEmpty(header, emptyText);
             }
             else if (offer.Sold)
             {

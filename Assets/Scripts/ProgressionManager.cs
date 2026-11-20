@@ -8,7 +8,7 @@ using UnityEngine.UI;
 /// Tracks the run across rounds and scales the game to keep up with the player. Beating the
 /// boss brings up the win screen; Continue opens the dealer's shop (when there is one), and
 /// leaving the shop rebuilds the board, resets the boss summoning and the clock, and starts
-/// the next round. Score, upgrades and items carry over. Enemy health
+/// the next round. Score, upgrades, skill-tree ranks and items carry over. Enemy health
 /// grows with every upgrade taken and every boss beaten, and boss health with every boss
 /// beaten. Lives on the GameManager with the other managers.
 /// </summary>
@@ -25,6 +25,11 @@ public class ProgressionManager : MonoBehaviour
     [SerializeField, Min(0f)] private float enemyHealthPerRound = 0.3f;
     [Tooltip("Extra boss health per boss beaten, as a fraction of base health. 0.25 = +25% per round.")]
     [SerializeField, Min(0f)] private float bossHealthPerRound = 0.25f;
+
+    [Header("Upgrade System")]
+    [Tooltip("Use the between-round skill tree instead of the legacy mid-round upgrade offers.")]
+    [SerializeField] private bool useSkillTreeSystem;
+    [SerializeField] private SkillTreeManager skillTreeManager;
 
     [Header("Win Screen")]
     [Tooltip("Seconds after the boss dies before the win screen appears, so the kill can be seen.")]
@@ -49,6 +54,7 @@ public class ProgressionManager : MonoBehaviour
 
     /// <summary>True from the boss's death until the next round starts, shop included.</summary>
     public bool IsShowingWin { get; private set; }
+    public bool UseSkillTreeSystem => useSkillTreeSystem;
 
     /// <summary>Multiplier for regular enemy health. 1 when there is no manager in the scene.</summary>
     public static float EnemyHealthMultiplier => Instance != null ? Instance.GetEnemyHealthMultiplier() : 1f;
@@ -69,6 +75,12 @@ public class ProgressionManager : MonoBehaviour
         // The Continue button's On Click is wired to ContinueFromWin in the Inspector.
         if (winPanel != null)
             winPanel.SetActive(false);
+
+        if (skillTreeManager == null)
+            skillTreeManager = FindAnyObjectByType<SkillTreeManager>();
+
+        if (useSkillTreeSystem && skillTreeManager == null)
+            Debug.LogError("ProgressionManager is set to Skill Tree mode but has no SkillTreeManager in the scene.", this);
     }
 
     private void OnEnable()
@@ -100,6 +112,9 @@ public class ProgressionManager : MonoBehaviour
     private float GetEnemyHealthMultiplier(int roundsWon)
     {
         int upgrades = UpgradeManager.Instance != null ? UpgradeManager.Instance.TotalPicks : 0;
+        if (useSkillTreeSystem && skillTreeManager != null)
+            upgrades += skillTreeManager.TotalRanks;
+
         return Mathf.Pow(1f + enemyHealthPerUpgrade, upgrades) * (1f + enemyHealthPerRound * roundsWon);
     }
 
@@ -135,6 +150,18 @@ public class ProgressionManager : MonoBehaviour
             // The game over panel owns the screen now.
             IsShowingWin = false;
             yield break;
+        }
+
+        if (useSkillTreeSystem && skillTreeManager != null && skillTreeManager.TryOpenForRound())
+        {
+            while (skillTreeManager.IsOpen)
+                yield return null;
+
+            if (GameTimer.Instance != null && GameTimer.Instance.IsGameOver)
+            {
+                IsShowingWin = false;
+                yield break;
+            }
         }
 
         if (winPanel == null)
