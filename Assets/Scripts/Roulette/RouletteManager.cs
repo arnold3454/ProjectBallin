@@ -7,14 +7,16 @@ using UnityEngine.Events;
 /// <summary>
 /// Runs the roulette boss trigger. Bet tunnels set the current bet, the wheel spins when the
 /// ball rolls over it with a bet placed, and a winning spin authorizes a corner trigger. The
-/// wheel stays locked until that authorization is used or the round is reset.
+/// wheel stays locked until that authorization is used or the round is reset. Every losing spin
+/// improves the odds of the next one, until the boss spawns and the odds start over.
 /// </summary>
 public class RouletteManager : MonoBehaviour
 {
     public static RouletteManager Instance { get; private set; }
 
     [Header("Odds")]
-    [SerializeField, Range(0f, 1f)] private float winChance = 0.5f;
+    [Tooltip("Chance a spin lands on the player's bet, by how many spins they have lost since the boss last spawned: the first entry is the opening odds, the second applies after one loss, and so on. Losses past the end of the list keep using the last entry. Goes back to the first entry when the boss spawns.")]
+    [SerializeField, Range(0f, 1f)] private float[] winChances = { 0.5f, 2f / 3f, 0.75f, 1f };
 
     [Header("HUD")]
     [SerializeField] private TextMeshProUGUI betText;
@@ -35,6 +37,21 @@ public class RouletteManager : MonoBehaviour
     /// <summary>True after winning until the roulette is reset for another corner trigger.</summary>
     public bool IsBossFightTriggered { get; private set; }
 
+    /// <summary>Losing spins since the boss last spawned (or since the scene loaded). Each one improves the odds.</summary>
+    public int LossesSinceBoss { get; private set; }
+
+    /// <summary>Chance the next spin lands on the player's bet, after the losses so far.</summary>
+    public float CurrentWinChance
+    {
+        get
+        {
+            if (winChances == null || winChances.Length == 0)
+                return 0.5f;
+
+            return winChances[Mathf.Min(LossesSinceBoss, winChances.Length - 1)];
+        }
+    }
+
     /// <summary>The wheel currently registered in the scene, if any. The boss spawns on it.</summary>
     public RouletteWheel Wheel => wheel;
 
@@ -47,10 +64,26 @@ public class RouletteManager : MonoBehaviour
         UpdateHud();
     }
 
+    private void OnEnable()
+    {
+        BossManager.BossFightStarted += ResetOdds;
+    }
+
+    private void OnDisable()
+    {
+        BossManager.BossFightStarted -= ResetOdds;
+    }
+
     private void OnDestroy()
     {
         if (Instance == this)
             Instance = null;
+    }
+
+    /// <summary>Puts the odds back to the opening chance. Runs when the boss spawns.</summary>
+    public void ResetOdds()
+    {
+        LossesSinceBoss = 0;
     }
 
     public void RegisterTunnel(BetTunnel tunnel)
@@ -89,7 +122,10 @@ public class RouletteManager : MonoBehaviour
         wheel = null;
     }
 
-    /// <summary>Forgets the win and bet and unlocks the wheel for another trigger or a new round.</summary>
+    /// <summary>
+    /// Forgets the win and bet and unlocks the wheel for another trigger or a new round. The odds
+    /// are left alone: losses keep counting until the boss spawns.
+    /// </summary>
     public void ResetRound()
     {
         IsBossFightTriggered = false;
@@ -128,7 +164,10 @@ public class RouletteManager : MonoBehaviour
             return;
         }
 
-        BetColor result = UnityEngine.Random.value < winChance ? CurrentBet : Opposite(CurrentBet);
+        // Random.value can come back as exactly 1, so a chance of 1 is checked on its own to stay a sure win.
+        float chance = CurrentWinChance;
+        bool won = chance >= 1f || UnityEngine.Random.value < chance;
+        BetColor result = won ? CurrentBet : Opposite(CurrentBet);
         SetHud(spinningMessage);
         hitWheel.Spin(result);
     }
@@ -148,6 +187,8 @@ public class RouletteManager : MonoBehaviour
             return;
         }
 
+        // A loss makes the next spin more likely to land on the player's bet.
+        LossesSinceBoss++;
         CurrentBet = BetColor.None;
         RefreshBetVisuals();
         SetHud(string.Format(lostMessage, result.ToString().ToUpperInvariant()));
