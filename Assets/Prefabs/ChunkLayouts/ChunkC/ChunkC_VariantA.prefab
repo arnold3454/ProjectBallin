@@ -2990,6 +2990,22 @@ PrefabInstance:
       propertyPath: launchArc
       value: 110
       objectReference: {fileID: 0}
+    - target: {fileID: 6270751932115812565, guid: 9179c44d741188e4fb01f7b65a5ca5d9, type: 3}
+      propertyPath: m_Radius
+      value: 1.3973149
+      objectReference: {fileID: 0}
+    - target: {fileID: 6270751932115812565, guid: 9179c44d741188e4fb01f7b65a5ca5d9, type: 3}
+      propertyPath: m_Center.x
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 6270751932115812565, guid: 9179c44d741188e4fb01f7b65a5ca5d9, type: 3}
+      propertyPath: m_Center.y
+      value: -0.74999994
+      objectReference: {fileID: 0}
+    - target: {fileID: 6270751932115812565, guid: 9179c44d741188e4fb01f7b65a5ca5d9, type: 3}
+      propertyPath: m_Center.z
+      value: 0.55
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
