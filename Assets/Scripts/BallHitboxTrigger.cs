@@ -14,6 +14,11 @@ public class BallHitboxTrigger : MonoBehaviour
 
     private bool hasTriggered;
 
+    public void ResetTrigger()
+    {
+        hasTriggered = false;
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         if (hasTriggered && triggerOnce)
