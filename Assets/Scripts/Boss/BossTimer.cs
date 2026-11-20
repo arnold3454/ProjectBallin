@@ -1,12 +1,14 @@
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
 /// The boss fight's own countdown, separate from the main <see cref="GameTimer"/>. It is always
 /// shorter than the main clock: the duration is capped to a fraction of whatever the main timer
-/// has left, so the fight never outlives the round. It draws on its own progress bar under the
-/// Canvas, assigned in the Inspector. Lives on the GameManager next to
+/// has left, so the fight never outlives the round. It draws on its own widget under the Canvas,
+/// a progress bar, a mm:ss label or both, whichever the board assigns in the Inspector. Lives on
+/// the GameManager next to
 /// <see cref="BossManager"/>, which starts and stops it.
 /// </summary>
 public class BossTimer : MonoBehaviour
@@ -18,10 +20,16 @@ public class BossTimer : MonoBehaviour
     [SerializeField, Range(0.1f, 1f)] private float maxFractionOfMainClock = 0.75f;
 
     [Header("UI")]
-    [Tooltip("Filled Image that shows the boss countdown under the Canvas.")]
+    [Tooltip("Filled Image that shows the boss countdown under the Canvas. Optional: boards with a text countdown leave it empty.")]
     [SerializeField] private Image timerBar;
     [Tooltip("Container holding the boss timer background and fill. Hidden until the boss fight starts.")]
     [SerializeField] private GameObject timerContainer;
+    [Tooltip("Label that shows the countdown as mm:ss: the BossTimer text under the Canvas. Optional: boards with a bar leave it empty.")]
+    [SerializeField] private TextMeshProUGUI timerText;
+    [Tooltip("Text shown in front of the time on the label, e.g. \"BOSS \".")]
+    [SerializeField] private string prefix = "";
+    [Tooltip("Hide the label while no boss fight is running.")]
+    [SerializeField] private bool hideWhenIdle = true;
 
     [Header("Low Time Warning")]
     [SerializeField] private float warningThreshold = 10f;
@@ -98,38 +106,43 @@ public class BossTimer : MonoBehaviour
 
     private void UpdateUI()
     {
-        if (timerContainer == null)
+        // Each board shows the countdown its own way, a bar, a label or both, so drive whichever is assigned.
+        if (timerBar == null && timerText == null)
         {
-            if (!warnedNoContainer)
+            if (!warnedNoDisplay)
             {
-                Debug.LogWarning("BossTimer has no timer container assigned. Assign the boss time container in the Inspector.", this);
-                warnedNoContainer = true;
+                Debug.LogWarning("BossTimer has nothing to draw on. Assign its filled Image (and container) or its label in the Inspector.", this);
+                warnedNoDisplay = true;
             }
         }
-        else if (timerContainer.activeSelf != IsRunning)
-        {
+
+        Color color = TimeRemaining <= warningThreshold ? warningColor : normalColor;
+
+        if (timerContainer != null && timerContainer.activeSelf != IsRunning)
             timerContainer.SetActive(IsRunning);
-        }
 
-        if (timerBar == null)
+        if (timerBar != null && IsRunning)
         {
-            if (!warnedNoBar)
-            {
-                Debug.LogWarning("BossTimer has no progress bar assigned. Assign its filled Image in the Inspector.", this);
-                warnedNoBar = true;
-            }
-            return;
+            timerBar.fillAmount = Duration > 0f
+                ? Mathf.Clamp01(TimeRemaining / Duration)
+                : 0f;
+            timerBar.color = color;
         }
 
-        if (!IsRunning)
-            return;
+        if (timerText != null)
+        {
+            if (hideWhenIdle && timerText.gameObject.activeSelf != IsRunning)
+                timerText.gameObject.SetActive(IsRunning);
 
-        timerBar.fillAmount = Duration > 0f
-            ? Mathf.Clamp01(TimeRemaining / Duration)
-            : 0f;
-        timerBar.color = TimeRemaining <= warningThreshold ? warningColor : normalColor;
+            if (IsRunning || !hideWhenIdle)
+            {
+                int minutes = Mathf.FloorToInt(TimeRemaining / 60f);
+                int seconds = Mathf.FloorToInt(TimeRemaining % 60f);
+                timerText.text = $"{prefix}{minutes:00}:{seconds:00}";
+                timerText.color = color;
+            }
+        }
     }
 
-    private bool warnedNoBar;
-    private bool warnedNoContainer;
+    private bool warnedNoDisplay;
 }

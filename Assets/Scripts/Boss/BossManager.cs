@@ -216,6 +216,13 @@ public class BossManager : MonoBehaviour
             if (indicator == null)
                 continue;
 
+            // Boards without dull artwork use plain filled Images instead: full when lit, empty when not.
+            if (!HasUnlitTriggerSprite(i))
+            {
+                indicator.fillAmount = i < litCount ? 1f : 0f;
+                continue;
+            }
+
             Sprite stateSprite = null;
             if (i < litCount
                 && litTriggerIndicatorSprites != null
@@ -235,6 +242,14 @@ public class BossManager : MonoBehaviour
         }
     }
 
+    /// <summary>True when the tracker at this index swaps sprites; false when it fills instead.</summary>
+    private bool HasUnlitTriggerSprite(int index)
+    {
+        return unlitTriggerIndicatorSprites != null
+            && index < unlitTriggerIndicatorSprites.Length
+            && unlitTriggerIndicatorSprites[index] != null;
+    }
+
     private void CacheLitTriggerIndicatorSprites()
     {
         if (litTriggerIndicators == null)
@@ -248,16 +263,19 @@ public class BossManager : MonoBehaviour
                 continue;
 
             litTriggerIndicatorSprites[i] = indicator.sprite;
+
+            if (!HasUnlitTriggerSprite(i))
+            {
+                // No dull sprite: the tracker shows its state by filling, which only a Filled Image can do.
+                if (indicator.type != Image.Type.Filled)
+                    Debug.LogWarning($"Trigger tracker {i + 1} needs an unlit sprite assigned in the BossManager Inspector, or its Image set to Filled.", this);
+                continue;
+            }
+
             if (litTriggerIndicatorSprites[i] == null)
                 Debug.LogWarning($"Trigger tracker {i + 1} needs its lit sprite assigned on its Image.", indicator);
 
-            if (unlitTriggerIndicatorSprites == null
-                || i >= unlitTriggerIndicatorSprites.Length
-                || unlitTriggerIndicatorSprites[i] == null)
-            {
-                Debug.LogWarning($"Trigger tracker {i + 1} needs an unlit sprite assigned in the BossManager Inspector.", this);
-            }
-            else if (litTriggerIndicatorSprites[i] == unlitTriggerIndicatorSprites[i])
+            if (litTriggerIndicatorSprites[i] == unlitTriggerIndicatorSprites[i])
             {
                 Debug.LogWarning($"Trigger tracker {i + 1} uses the same sprite for both states. Assign a dull sprite in the BossManager Inspector.", this);
             }

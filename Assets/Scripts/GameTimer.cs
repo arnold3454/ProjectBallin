@@ -15,7 +15,10 @@ get; private set;
     [SerializeField] private bool startOnLoad = true;
 
     [Header("UI References")]
+    [Tooltip("Filled Image that drains as the clock runs down. Optional: boards with a text clock leave it empty.")]
     [SerializeField] private Image timerBar;
+    [Tooltip("Label that shows the clock as mm:ss. Optional: boards with a bar leave it empty.")]
+    [SerializeField] private TextMeshProUGUI timerText;
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private TextMeshProUGUI finalScoreText;
     [Tooltip("Title on the game over panel. Says the game over title when the clock runs out and the win title when the last boss is beaten.")]
@@ -171,12 +174,24 @@ audioSource.PlayOneShot(timeWarningClip, timeWarningVolume);
 
 private void UpdateTimerUI()
     {
-if (timerBar == null) return;
+// Each board shows the clock its own way, a bar, a label or both, so drive whichever is assigned.
+Color color = TimeRemaining <= warningThreshold ? warningColor : normalColor;
 
+if (timerBar != null)
+        {
 timerBar.fillAmount = timerCapacity > 0f
     ? Mathf.Clamp01(TimeRemaining / timerCapacity)
     : 0f;
-timerBar.color = TimeRemaining <= warningThreshold ? warningColor : normalColor;
+timerBar.color = color;
+        }
+
+if (timerText != null)
+        {
+int minutes = Mathf.FloorToInt(TimeRemaining / 60f);
+int seconds = Mathf.FloorToInt(TimeRemaining % 60f);
+timerText.text = $"{minutes:00}:{seconds:00}";
+timerText.color = color;
+        }
     }
 
 /// <summary>The last boss is beaten: the same end panel comes up, titled as a win.</summary>

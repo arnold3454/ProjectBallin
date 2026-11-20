@@ -80,6 +80,8 @@ public class UpgradeManager : MonoBehaviour
     [Tooltip("The UpgradeReadyPanel under the Canvas. Shown from when the bar fills until the player opens the choice.")]
     [SerializeField] private GameObject readyPanel;
     [SerializeField] private TextMeshProUGUI readyText;
+    [Tooltip("The key cap on the panel, on boards whose panel has one. When assigned it shows the choose key below, and the ready text is used as a headline only (UPGRADE READY!), since the panel lays out its own \"press ... or click\" line.")]
+    [SerializeField] private TextMeshProUGUI readyKeyText;
     [Tooltip("Keep the ready panel visible as an XP display, enabling its button only when ready.")]
     [SerializeField] private bool readyPanelAsXpProgress;
     [Tooltip("Token count text format; {0} is the number of available tokens.")]
@@ -433,7 +435,17 @@ public class UpgradeManager : MonoBehaviour
             return;
         }
 
-        if (visible && readyText != null)
+        if (visible && readyKeyText != null)
+        {
+            // The panel has its own key cap and "press ... or click" line laid out in the scene,
+            // so only the headline and the key change.
+            if (readyText != null)
+                readyText.text = pendingOffers > 1 ? $"{pendingOffers} UPGRADES READY!" : "UPGRADE READY!";
+
+            if (chooseKey != Key.None)
+                readyKeyText.text = chooseKey.ToString();
+        }
+        else if (visible && readyText != null)
         {
             string keyPrompt = chooseKey != Key.None
                 ? string.Format(chooseKeyPromptFormat, chooseKey)
