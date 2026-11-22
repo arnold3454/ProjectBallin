@@ -71,6 +71,8 @@ public class BallLauncher : MonoBehaviour
     /// <summary>0-1 charge of the plunger, for UI or audio hooks.</summary>
     public float ChargeAmount => charge;
     public bool HasBallLoaded => loadedBall != null;
+    public bool IsBallLoaded(GameObject ball) => loadedBall != null && loadedBall.gameObject == ball;
+    public event Action BallLoaded;
     public event Action BallLaunched;
 
     private void Awake()
@@ -273,6 +275,7 @@ public class BallLauncher : MonoBehaviour
         charge = 0f;
         isCharging = false;
         reloadTimer = 0f;
+        BallLoaded?.Invoke();
     }
 
     /// <summary>Fires the loaded ball up the lane at the charged power.</summary>
