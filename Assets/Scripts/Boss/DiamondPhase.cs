@@ -25,21 +25,32 @@ public class DiamondPhase : BossPhase
     [Tooltip("Fans sweeping down the table push the ball this way. The issue asks for right.")]
     [SerializeField] private bool pushRight = true;
 
+    [Header("Audio")]
+    [Tooltip("Loops for as long as the Diamond phase is active, e.g. wind or shuffling cards.")]
+    [SerializeField] private AudioClip loopClip;
+    [SerializeField, Range(0f, 1f)] private float loopVolume = 0.6f;
+
     private readonly List<CardFan> fans = new List<CardFan>();
     private float spawnTimer;
+
+    private AudioSource loopSource;
 
     protected override void OnBegin()
     {
         spawnTimer = 0.5f;
+        StartLoop();
     }
 
     protected override void OnEnd()
     {
         // Fans already in flight finish their sweep.
+        StopLoop();
     }
 
     public override void Cleanup()
     {
+        StopLoop();
+
         foreach (CardFan fan in fans)
         {
             if (fan != null)
@@ -59,6 +70,31 @@ public class DiamondPhase : BossPhase
 
         spawnTimer = spawnInterval;
         SpawnFan();
+    }
+
+    private void StartLoop()
+    {
+        if (loopClip == null)
+            return;
+
+        if (loopSource == null)
+        {
+            loopSource = gameObject.AddComponent<AudioSource>();
+            loopSource.playOnAwake = false;
+            loopSource.loop = true;
+            loopSource.spatialBlend = 0f; // 2D
+        }
+
+        loopSource.clip = loopClip;
+        loopSource.volume = loopVolume;
+        if (!loopSource.isPlaying)
+            loopSource.Play();
+    }
+
+    private void StopLoop()
+    {
+        if (loopSource != null)
+            loopSource.Stop();
     }
 
     private void SpawnFan()

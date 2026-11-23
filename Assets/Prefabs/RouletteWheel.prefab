@@ -92,7 +92,7 @@ MonoBehaviour:
   disc: {fileID: 534580775904971893}
   redUnderPointerAngle: 90
   landingSpread: 70
-  spinDuration: 3
+  spinDuration: 2.4
   minTurns: 3
   maxTurns: 5
   betLamp: {fileID: 7854023392632336037}
@@ -104,6 +104,10 @@ MonoBehaviour:
   spinLightIntensity: 4
   resultFlashIntensity: 12
   resultFlashDuration: 0.6
+  spinSound: {fileID: 8300000, guid: 6ac4b915821f14a5f9ce7f4672796058, type: 3}
+  spinVolume: 1
+  resultSound: {fileID: 0}
+  resultVolume: 1
 --- !u!1 &6189637843817497375
 GameObject:
   m_ObjectHideFlags: 0

@@ -10,6 +10,9 @@ TagManager:
   - Wall
   - Board
   - Item
+  - BossTrigger
+  - DropGate
+  - Enemy1
   layers:
   - Default
   - TransparentFX

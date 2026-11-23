@@ -69,8 +69,11 @@ public class EnemySpawner : MonoBehaviour
     {
         GameObject block = GameObject.CreatePrimitive(PrimitiveType.Cube);
         block.name = "Enemy";
+        block.tag = "Enemy1";
+
         block.transform.SetPositionAndRotation(position, transform.rotation);
         block.transform.localScale = defaultSize;
+
         return block.AddComponent<Enemy>();
     }
 

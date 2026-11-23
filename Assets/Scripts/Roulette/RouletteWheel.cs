@@ -36,6 +36,14 @@ public class RouletteWheel : MonoBehaviour
     [SerializeField, Min(0f)] private float resultFlashIntensity = 12f;
     [SerializeField, Min(0.01f)] private float resultFlashDuration = 0.6f;
 
+    [Header("Audio")]
+    [Tooltip("Played when the wheel starts spinning.")]
+    [SerializeField] private AudioClip spinSound;
+    [SerializeField, Range(0f, 1f)] private float spinVolume = 1f;
+    [Tooltip("Optional: played when the wheel stops on its result.")]
+    [SerializeField] private AudioClip resultSound;
+    [SerializeField, Range(0f, 1f)] private float resultVolume = 1f;
+
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
     private static readonly int ColorId = Shader.PropertyToID("_Color");
 
@@ -51,10 +59,16 @@ public class RouletteWheel : MonoBehaviour
     private Quaternion discRestRotation = Quaternion.identity;
     private float discAngle;
 
+    private AudioSource audioSource;
+
     private void Awake()
     {
         hitbox = GetComponent<BallHitboxTrigger>();
         colorBlock = new MaterialPropertyBlock();
+
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f;
 
         if (disc != null)
             discRestRotation = disc.localRotation;
@@ -107,6 +121,8 @@ public class RouletteWheel : MonoBehaviour
     {
         if (IsSpinning || IsLocked || result == BetColor.None)
             return;
+
+        PlaySound(spinSound, spinVolume);
 
         if (spin != null)
             StopCoroutine(spin);
@@ -162,6 +178,14 @@ public class RouletteWheel : MonoBehaviour
         int turns = UnityEngine.Random.Range(minTurns, maxTurns + 1);
         float start = discAngle;
         float end = start + 360f * turns + Mathf.Repeat(target - start, 360f);
+
+        SetDiscAngle(end);
+        IsSpinning = false;
+        spin = null;
+
+        PlaySound(resultSound, resultVolume);
+        SpinFinished?.Invoke(result);
+        StartCoroutine(FlashResult());
 
         float elapsed = 0f;
         while (elapsed < spinDuration)
@@ -221,4 +245,12 @@ public class RouletteWheel : MonoBehaviour
         colorBlock.SetColor(ColorId, color);
         betLamp.SetPropertyBlock(colorBlock);
     }
+    private void PlaySound(AudioClip clip, float volume)
+    {
+        if (clip == null || audioSource == null)
+            return;
+
+        audioSource.PlayOneShot(clip, volume);
+    }
 }
+
