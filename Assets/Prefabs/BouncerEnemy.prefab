@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 6307000000000000005}
   m_Layer: 0
   m_Name: BouncerEnemy
-  m_TagString: Enemy1
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -104,9 +104,6 @@ MonoBehaviour:
   damagedColor: {r: 0.22, g: 0.08, b: 0.45, a: 1}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   flashTime: 0.1
-  deathClip: {fileID: 8300000, guid: 470b474a0abc34cf0ac1f79d2461e501, type: 3}
-  deathVolume: 0.8
-  deathPitchVariance: 0.05
   nudgeOnHit: 1
 --- !u!1 &6307000000000000006
 GameObject:

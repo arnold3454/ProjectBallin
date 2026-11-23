@@ -17,3 +17,4 @@ public class MultiballSplitItem : ItemDefinition
         int splits = Mathf.Max(1, Mathf.RoundToInt(EffectMultiplier));
         return BallSplitter.TrySplit(spawnGap, splits);
     }
+}

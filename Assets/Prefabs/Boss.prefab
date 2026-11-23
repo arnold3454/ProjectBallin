@@ -141,8 +141,6 @@ MonoBehaviour:
   baseRange: 6
   extraRange: 8
   pushRight: 1
-  loopClip: {fileID: 8300000, guid: bb6721f81deb74cf5a017036cddff7cd, type: 3}
-  loopVolume: 0.6
 --- !u!114 &4744943629967947148
 MonoBehaviour:
   m_ObjectHideFlags: 0

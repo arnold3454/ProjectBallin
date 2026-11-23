@@ -77,11 +77,6 @@ public class UpgradeManager : MonoBehaviour
     [Tooltip("The CritPopup under the Canvas: the floating CRIT! labels.")]
     [SerializeField] private CritPopup critPopup;
 
-    [Header("Audio")]
-    [Tooltip("Played when the XP bar fills and the player levels up.")]
-    [SerializeField] private AudioClip levelUpSound;
-    [SerializeField, Range(0f, 1f)] private float levelUpVolume = 1f;
-
     [Header("Upgrade Ready Notification")]
     [Tooltip("The UpgradeReadyPanel under the Canvas. Shown from when the bar fills until the player opens the choice.")]
     [SerializeField] private GameObject readyPanel;
@@ -109,8 +104,6 @@ public class UpgradeManager : MonoBehaviour
     private int pendingOffers;
     private bool resolvingPick;
     private float scoreRemainder;
-
-    private AudioSource audioSource;
 
     /// <summary>True from when the choice appears until gameplay has resumed.</summary>
     public bool IsChoosing { get; private set; }
@@ -226,10 +219,6 @@ public class UpgradeManager : MonoBehaviour
         xpForCurrentBar = XpRequiredFor(0);
         nextThreshold = xpForCurrentBar;
         allUpgrades = BuildUpgradeList();
-
-        audioSource = gameObject.AddComponent<AudioSource>();
-        audioSource.playOnAwake = false;
-        audioSource.spatialBlend = 0f;
         popup.Hide();
     }
 
@@ -333,10 +322,9 @@ public class UpgradeManager : MonoBehaviour
 
     private void OnScoreChanged(int score)
     {
+        // Level off everything ever earned, so spending score in the shop doesn't drain the XP bar.
         if (ScoreManager.Instance != null)
             score = ScoreManager.Instance.TotalEarned;
-
-        bool leveledUp = false;
 
         while (score >= nextThreshold)
         {
@@ -347,12 +335,9 @@ public class UpgradeManager : MonoBehaviour
             xpForCurrentBar = XpRequiredFor(upgradeLevel);
             nextThreshold += xpForCurrentBar;
             XpLevelCompleted?.Invoke(upgradeLevel);
-            leveledUp = true;
         }
 
-        if (leveledUp)
-            PlayLevelUpSound();
-
+        // Filling the bar is what earned the offer above; whatever spilled over starts the next bar.
         CurrentXp = Mathf.Max(0, score - (nextThreshold - xpForCurrentBar));
         XpChanged?.Invoke(CurrentXp, xpForCurrentBar);
 
@@ -360,15 +345,6 @@ public class UpgradeManager : MonoBehaviour
             ShowReadyPanel(true);
         else if (!LegacyFlowEnabled)
             ShowReadyPanel(false);
-    }
-
-    private void PlayLevelUpSound()
-    {
-        if (levelUpSound == null || audioSource == null)
-            return;
-
-        audioSource.PlayOneShot(levelUpSound, levelUpVolume);
-
     }
 
     /// <summary>
