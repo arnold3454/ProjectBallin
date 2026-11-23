@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -70,6 +71,9 @@ public class BallLauncher : MonoBehaviour
     /// <summary>0-1 charge of the plunger, for UI or audio hooks.</summary>
     public float ChargeAmount => charge;
     public bool HasBallLoaded => loadedBall != null;
+    public bool IsBallLoaded(GameObject ball) => loadedBall != null && loadedBall.gameObject == ball;
+    public event Action BallLoaded;
+    public event Action BallLaunched;
 
     private void Awake()
     {
@@ -221,7 +225,7 @@ public class BallLauncher : MonoBehaviour
             return;
 
         charge = autoLaunchCharge;
-        Launch();
+        Launch(false);
         autoLaunchTimer = autoLaunchDelay;
 
         if (plungerClear)
@@ -271,10 +275,16 @@ public class BallLauncher : MonoBehaviour
         charge = 0f;
         isCharging = false;
         reloadTimer = 0f;
+        BallLoaded?.Invoke();
     }
 
     /// <summary>Fires the loaded ball up the lane at the charged power.</summary>
     public void Launch()
+    {
+        Launch(true);
+    }
+
+    private void Launch(bool notifyListeners)
     {
         isCharging = false;
 
@@ -296,6 +306,8 @@ public class BallLauncher : MonoBehaviour
         PlayReleaseSFX();
 
         charge = 0f;
+        if (notifyListeners)
+            BallLaunched?.Invoke();
     }
 
     private void PlayPullBackSFX()
