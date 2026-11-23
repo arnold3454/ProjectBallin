@@ -43,6 +43,27 @@ public class MenuManager : MonoBehaviour
 
     private void Update()
     {
+        // The game over popup owns the screen; don't let the pause menu fight it.
+        if (GameTimer.Instance != null && GameTimer.Instance.IsGameOver) return;
+
+        // The skill-tree reward screen owns the input until the player continues.
+        if (SkillTreeManager.IsSkillTreeOpen) return;
+
+        // Same for the upgrade choice, which has to be answered first.
+        if (UpgradeManager.Instance != null && UpgradeManager.Instance.IsChoosing) return;
+
+        // Same for the ball choice, which has to be answered first.
+        if (BallTypeManager.IsSelecting) return;
+
+        // Same for the win screen between rounds.
+        if (ProgressionManager.Instance != null && ProgressionManager.Instance.IsShowingWin) return;
+
+        // Same for the dealer's shop.
+        if (ShopManager.Instance != null && ShopManager.Instance.IsOpen) return;
+
+        // Same for a minigame opened from a portal; it hands the time scale back when it closes.
+        if (MinigamePortal.IsMinigameOpen) return;
+
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             ToggleMenu();
